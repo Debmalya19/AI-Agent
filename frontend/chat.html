@@ -3,131 +3,152 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Customer Support Chatbot</title>
+    <title>Customer Support Chat</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
         body {
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
-            background-color: #e6f0ff;
+            padding: 0;
+            background: #f0f0f0;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             height: 100vh;
         }
         #chat-container {
-            width: 400px;
-            max-width: 100%;
+            max-width: 600px;
+            margin: auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            height: 300px; /* Initially small */
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            transform: scale(0.8);
+        }
+        #chat-container.expanded {
+            transform: scale(1);
+            height: 100vh; /* Expanded height */
         }
         #chat-header {
-            background: linear-gradient(90deg, #0096d6 0%, #004a99 100%);
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
             color: white;
-            padding: 16px;
-            font-size: 1.25rem;
-            font-weight: 700;
+            padding: 1rem;
+            font-size: 1.5rem;
             text-align: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            font-weight: bold;
             letter-spacing: 1px;
+        }
+        #recommended-questions {
+            padding: 0.5rem;
+            background: #f9f9f9;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .recommended-question-btn {
+            background: #bc1888;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        .recommended-question-btn:hover {
+            background: #cc2366;
         }
         #chat-log {
             flex-grow: 1;
-            padding: 16px;
+            padding: 1rem;
             overflow-y: auto;
-            background-color: #f0f4ff;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            background: #fff;
+            border-radius: 0 0 12px 12px;
         }
         .chat-entry {
+            margin-bottom: 1rem;
             max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            line-height: 1.4;
-            white-space: pre-wrap;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            clear: both;
             word-wrap: break-word;
         }
         .user {
-            align-self: flex-end;
-            background-color: #0072ce;
+            background: #bc1888;
             color: white;
-            border-bottom-right-radius: 4px;
+            float: right;
+            text-align: right;
         }
         .bot {
-            align-self: flex-start;
-            background-color: #dbe9ff;
-            color: #003087;
-            border-bottom-left-radius: 4px;
+            background: #e1e1e1;
+            color: black;
+            float: left;
+            text-align: left;
         }
         #input-form {
             display: flex;
-            border-top: 1px solid #ccc;
-            background-color: white;
-            padding: 10px;
+            padding: 0.5rem;
+            background: #f0f0f0;
+            border-radius: 0 0 12px 12px;
         }
         #query-input {
             flex-grow: 1;
-            border: none;
-            padding: 14px 16px;
+            padding: 0.5rem;
             font-size: 1rem;
-            outline: none;
-            border-radius: 30px;
             border: 1px solid #ccc;
-        }
-        #send-button {
-            background: linear-gradient(90deg, #4c6ef5, #15aabf);
-            border: none;
-            color: white;
-            padding: 10px 25px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1.1rem;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: 10px;
-            transition: background 0.3s ease;
-        }
-        #send-button:hover:not(:disabled) {
-            background: linear-gradient(90deg, #15aabf, #4c6ef5);
-        }
-        #send-button:disabled {
-            background-color: #a0a0a0;
-            cursor: not-allowed;
-        }
-        /* Scrollbar styling */
-        #chat-log::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-log::-webkit-scrollbar-thumb {
-            background-color: #a0a0a0;
             border-radius: 4px;
         }
-        #chat-log::-webkit-scrollbar-track {
-            background-color: transparent;
+        #send-button {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            border: none;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+            border-radius: 30px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            gap: 8px;
+            min-width: 100px;
+            height: 40px;
         }
-        /* Send icon SVG styling */
-        .send-icon {
-            width: 18px;
-            height: 18px;
-            fill: white;
+        #send-button:hover {
+            background: #bc1888;
+        }
+        #send-button:disabled {
+            background: #a0a0a0;
+            cursor: not-allowed;
+        }
+        #send-button svg {
+            flex-shrink: 0;
         }
     </style>
 </head>
 <body>
     <div id="chat-container">
         <div id="chat-header">Customer Support Chat</div>
+        <div id="recommended-questions">
+            <button class="recommended-question-btn">How do I reset my password?</button>
+            <button class="recommended-question-btn">What are your support hours?</button>
+            <button class="recommended-question-btn">How can I check my data usage?</button>
+            <button class="recommended-question-btn">How do I upgrade my plan?</button>
+            <button class="recommended-question-btn">How to contact customer support?</button>
+        </div>
         <div id="chat-log"></div>
         <form id="input-form">
             <input type="text" id="query-input" placeholder="Type your question here..." autocomplete="off" required />
             <button type="submit" id="send-button" aria-label="Send message">
-                <svg class="send-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left: 12px; margin-right: 8px;">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
                 Send
@@ -140,6 +161,10 @@
         const inputForm = document.getElementById('input-form');
         const queryInput = document.getElementById('query-input');
         const sendButton = document.getElementById('send-button');
+        const recommendedQuestions = document.querySelectorAll('.recommended-question-btn');
+        const chatContainer = document.getElementById('chat-container');
+
+        let hasAskedQuestion = false;
 
         function appendMessage(sender, message) {
             const entry = document.createElement('div');
@@ -150,14 +175,14 @@
             chatLog.scrollTop = chatLog.scrollHeight;
         }
 
-        inputForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const query = queryInput.value.trim();
-            if (!query) return;
-
+        async function sendQuery(query) {
             appendMessage('user', query);
-            queryInput.value = '';
             sendButton.disabled = true;
+
+            if (!hasAskedQuestion) {
+                hasAskedQuestion = true;
+                chatContainer.classList.add('expanded');
+            }
 
             try {
                 const response = await fetch('/chat', {
@@ -180,6 +205,22 @@
             } finally {
                 sendButton.disabled = false;
             }
+        }
+
+        inputForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = queryInput.value.trim();
+            if (!query) return;
+            sendQuery(query);
+            queryInput.value = '';
+        });
+
+        recommendedQuestions.forEach(button => {
+            button.addEventListener('click', () => {
+                const question = button.textContent;
+                queryInput.value = question;
+                sendQuery(question);
+            });
         });
     </script>
 </body>

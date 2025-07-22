@@ -65,7 +65,19 @@ logging.info("Text vector store created.")
 # Define RAG tool function only for text knowledge base
 def rag_tool_func(query: str) -> str:
     docs = text_retriever.get_relevant_documents(query)
-    return "\n".join([doc.page_content for doc in docs[:5]])
+    # Collect page contents
+    contents = [doc.page_content for doc in docs[:5]]
+    # Collect sources, default to www.bt.com if not present
+    sources = []
+    for doc in docs[:5]:
+        if hasattr(doc, 'metadata') and 'source' in doc.metadata:
+            sources.append(doc.metadata['source'])
+        else:
+            sources.append("www.bt.com")
+    # Store sources in a global variable for access in chat endpoint
+    global last_rag_sources
+    last_rag_sources = list(set(sources))
+    return "\n".join(contents)
 
 rag_tool = Tool.from_function(
     func=rag_tool_func,
@@ -180,8 +192,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi import Request
 
-# Remove mounting of non-existent static directory
-# app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+from fastapi.staticfiles import StaticFiles
+
+# Mount frontend directory as static files
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 async def root():
@@ -202,48 +216,95 @@ class ChatResponse(PydanticBaseModel):
 import re
 
 
-# Simple in-memory chat history store (for demo purposes)
-# Store as list of (role, content) tuples
-chat_history_store = []
-
 from langchain_core.messages import HumanMessage, AIMessage
+from fastapi import Request
+import logging
 
 MAX_CHAT_HISTORY = 10  # Limit chat history length to last 10 messages
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest):
+import re
+
+def exact_knowledge_lookup(query: str) -> str:
+    """
+    Perform an exact lookup in knowledge.txt for the query.
+    Returns the answer if found, else empty string.
+    """
     try:
+        with open("data/knowledge.txt", "r", encoding="utf-8") as f:
+            content = f.read()
+        # Use regex to find Q&A pairs
+        pattern = re.compile(r"Q:\s*(.+?)\nA:\s*(.+?)(?=\nQ:|\Z)", re.DOTALL)
+        matches = pattern.findall(content)
+        for q, a in matches:
+            if q.strip().lower() == query.strip().lower():
+                return a.strip()
+        return ""
+    except Exception as e:
+        logging.error(f"Error reading knowledge.txt: {e}")
+        return ""
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_endpoint(request: Request, chat_request: ChatRequest):
+    try:
+        # Use request state to store chat history per request (thread-safe)
+        if not hasattr(request.state, "chat_history_store"):
+            request.state.chat_history_store = []
+
         # Append user message to chat history
-        chat_history_store.append(("human", request.query))
+        request.state.chat_history_store.append(("human", chat_request.query))
 
         # Limit chat history length
-        if len(chat_history_store) > MAX_CHAT_HISTORY:
-            chat_history_store[:] = chat_history_store[-MAX_CHAT_HISTORY:]
+        if len(request.state.chat_history_store) > MAX_CHAT_HISTORY:
+            request.state.chat_history_store[:] = request.state.chat_history_store[-MAX_CHAT_HISTORY:]
+
+        # Check exact knowledge base lookup first
+        exact_answer = exact_knowledge_lookup(chat_request.query)
+        if exact_answer:
+            # Return exact answer directly
+            response = ResearchResponse(
+                topic=chat_request.query,
+                summary=exact_answer,
+                sources=["data/knowledge.txt"],
+                tools_used=["ExactKnowledgeLookup"]
+            )
+            # Append assistant response to chat history as tuple
+            request.state.chat_history_store.append(("assistant", exact_answer))
+            return response.dict()
 
         # Convert chat_history_store to messages list expected by agent_executor
         messages = []
-        for role, content in chat_history_store:
+        for role, content in request.state.chat_history_store:
             if role == "user" or role == "human":
                 messages.append(HumanMessage(content=content))
             elif role == "assistant":
                 messages.append(AIMessage(content=content))
 
         # Invoke agent with query and chat history (as messages)
-        raw_response = agent_executor.invoke({"query": request.query, "chat_history": messages})
+        raw_response = agent_executor.invoke({"query": chat_request.query, "chat_history": messages})
 
-        print("DEBUG raw_response type:", type(raw_response))
-        print("DEBUG raw_response content:", raw_response)
+        logging.info(f"Raw response type: {type(raw_response)}")
+        logging.info(f"Raw response content: {raw_response}")
 
         output = raw_response.get("output", "")
 
-        # Extract JSON string inside triple backticks
+        # Extract JSON string inside triple backticks or fallback to entire output
         import re
-        match = re.search(r"```json\n(.+?)```", output, re.DOTALL)
+        match = re.search(r"```json\\n(.+?)```", output, re.DOTALL)
         if match:
             json_str = match.group(1)
+        else:
+            # Try to parse entire output as JSON string fallback
+            json_str = output
+
+        try:
             # Pass raw JSON string to parser.parse()
             structured_response = parser.parse(json_str)
-        else:
+            # Override sources with last_rag_sources if available
+            if 'last_rag_sources' in globals() and last_rag_sources:
+                structured_response.sources = last_rag_sources
+        except Exception as parse_exc:
+            logging.error(f"Failed to parse LLM output JSON: {parse_exc}")
+            logging.error(f"Raw LLM output: {output}")
             # Fallback response for unparseable output
             structured_response = ResearchResponse(
                 topic="Unknown",
@@ -253,11 +314,11 @@ async def chat_endpoint(request: ChatRequest):
             )
 
         # Append assistant response to chat history as tuple
-        chat_history_store.append(("assistant", output))
+        request.state.chat_history_store.append(("assistant", output))
 
         return structured_response.dict()
     except Exception as e:
         import traceback
         tb = traceback.format_exc()
-        print("Exception traceback:", tb)
+        logging.error(f"Exception traceback: {tb}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
