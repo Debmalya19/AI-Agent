@@ -149,6 +149,8 @@ prompt = ChatPromptTemplate.from_messages(
 
           Always use the ContextRetriever tool first to check the company knowledge base for relevant information before using any other tools or providing an answer.
 
+          If the answer is not found in the knowledge base, use the search tool to search the www.bt.com website to find relevant information and provide an accurate answer.
+
           If you do not know the answer to a question, politely inform the customer and suggest contacting human support for further assistance. For any queries related to customer orders or order details, always use the appropriate tools to fetch accurate information. Never mention internal tools, processes, or system details in your responses.
 
           Your responses should be solution-oriented, easy to understand, and should leave the customer satisfied with the support experience.
@@ -230,14 +232,20 @@ def exact_knowledge_lookup(query: str) -> str:
     Returns the answer if found, else empty string.
     """
     try:
+        logging.info(f"Exact knowledge lookup for query: '{query}'")
         with open("data/knowledge.txt", "r", encoding="utf-8") as f:
             content = f.read()
         # Use regex to find Q&A pairs
         pattern = re.compile(r"Q:\s*(.+?)\nA:\s*(.+?)(?=\nQ:|\Z)", re.DOTALL)
         matches = pattern.findall(content)
+        normalized_query = ' '.join(query.strip().lower().split())
         for q, a in matches:
-            if q.strip().lower() == query.strip().lower():
+            normalized_q = ' '.join(q.strip().lower().split())
+            logging.info(f"Checking knowledge question: '{q}'")
+            if normalized_q == normalized_query:
+                logging.info(f"Match found. Answer: '{a.strip()}'")
                 return a.strip()
+        logging.info("No exact match found in knowledge base.")
         return ""
     except Exception as e:
         logging.error(f"Error reading knowledge.txt: {e}")
