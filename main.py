@@ -12,9 +12,11 @@ from langchain.tools import Tool
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from tools import search_tool, wiki_tool, save_tool
 import os
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import secrets
 import pandas as pd
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
@@ -194,14 +196,28 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi import Request
 
-from fastapi.staticfiles import StaticFiles
 
 # Mount frontend directory as static files
+
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+from fastapi.staticfiles import StaticFiles
+
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 async def root():
+    return FileResponse("frontend/login.html")
+
+@app.get("/chat.html")
+async def chat_page():
     return FileResponse("frontend/chat.html")
+
+# @app.get("/login")
+# async def login_page():
+#     return FileResponse("frontend/login.html")
 
 # Request model for chat input
 class ChatRequest(PydanticBaseModel):
@@ -251,19 +267,45 @@ def exact_knowledge_lookup(query: str) -> str:
         logging.error(f"Error reading knowledge.txt: {e}")
         return ""
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(request: Request, chat_request: ChatRequest):
-    try:
-        # Use request state to store chat history per request (thread-safe)
-        if not hasattr(request.state, "chat_history_store"):
-            request.state.chat_history_store = []
+from fastapi import Cookie
 
+# In-memory chat history store keyed by session token (for demo purposes)
+chat_histories = {}
+
+from fastapi import Request
+
+from fastapi import Form
+
+@app.post("/login")
+async def login(username: str = Form(...), password: str = Form(...)):
+    valid_username = "user1"
+    valid_password = "password123"
+    if username == valid_username and password == valid_password:
+        session_token = "dummy-session-token"
+        response = JSONResponse(content={"message": "Login successful"})
+        response.set_cookie(key="session_token", value=session_token, httponly=True)
+        return response
+    else:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(None)):
+    try:
+        if not session_token:
+            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
+
+        # Get or create chat history for this session
+        chat_history_store = chat_histories.get(session_token, [])
+        
         # Append user message to chat history
-        request.state.chat_history_store.append(("human", chat_request.query))
+        chat_history_store.append(("human", chat_request.query))
 
         # Limit chat history length
-        if len(request.state.chat_history_store) > MAX_CHAT_HISTORY:
-            request.state.chat_history_store[:] = request.state.chat_history_store[-MAX_CHAT_HISTORY:]
+        if len(chat_history_store) > MAX_CHAT_HISTORY:
+            chat_history_store[:] = chat_history_store[-MAX_CHAT_HISTORY:]
+
+        # Save updated chat history
+        chat_histories[session_token] = chat_history_store
 
         # Check exact knowledge base lookup first
         exact_answer = exact_knowledge_lookup(chat_request.query)
@@ -276,12 +318,13 @@ async def chat_endpoint(request: Request, chat_request: ChatRequest):
                 tools_used=["ExactKnowledgeLookup"]
             )
             # Append assistant response to chat history as tuple
-            request.state.chat_history_store.append(("assistant", exact_answer))
+            chat_history_store.append(("assistant", exact_answer))
+            chat_histories[session_token] = chat_history_store
             return response.dict()
 
         # Convert chat_history_store to messages list expected by agent_executor
         messages = []
-        for role, content in request.state.chat_history_store:
+        for role, content in chat_history_store:
             if role == "user" or role == "human":
                 messages.append(HumanMessage(content=content))
             elif role == "assistant":
@@ -322,7 +365,8 @@ async def chat_endpoint(request: Request, chat_request: ChatRequest):
             )
 
         # Append assistant response to chat history as tuple
-        request.state.chat_history_store.append(("assistant", output))
+        chat_history_store.append(("assistant", output))
+        chat_histories[session_token] = chat_history_store
 
         return structured_response.dict()
     except Exception as e:
@@ -330,3 +374,4 @@ async def chat_endpoint(request: Request, chat_request: ChatRequest):
         tb = traceback.format_exc()
         logging.error(f"Exception traceback: {tb}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
+        import re

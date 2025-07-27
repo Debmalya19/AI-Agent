@@ -5,72 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Customer Support Chat</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             background: #f0f0f0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
         }
+
         #chat-container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
+            max-width: 320px;
+            width: 320px;
+            background: rgba(106, 17, 203, 0.3);
+            border-radius: 30px;
+            padding: 40px 50px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
             display: flex;
             flex-direction: column;
-            height: 300px; /* Initially small */
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            border-radius: 12px;
+            height: auto;
             transition: all 0.3s ease;
-            transform: scale(0.8);
-        }
-        #chat-container.expanded {
             transform: scale(1);
-            height: 100vh; /* Expanded height */
         }
+
         #chat-header {
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            color: white;
-            padding: 1rem;
             font-size: 1.5rem;
-            text-align: center;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
             font-weight: bold;
             letter-spacing: 1px;
+            margin-bottom: 20px;
+            text-align: center;
         }
+
         #recommended-questions {
             padding: 0.5rem;
-            background: #f9f9f9;
+            background: transparent;
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
             justify-content: center;
         }
+
         .recommended-question-btn {
-            background: #bc1888;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
             color: white;
             border: none;
             padding: 0.5rem 1rem;
-            border-radius: 20px;
+            border-radius: 25px;
             cursor: pointer;
             font-size: 0.9rem;
             transition: background 0.3s ease;
         }
+
         .recommended-question-btn:hover {
-            background: #cc2366;
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
         }
+
         #chat-log {
             flex-grow: 1;
             padding: 1rem;
             overflow-y: auto;
-            border-top: 1px solid #ddd;
-            border-bottom: 1px solid #ddd;
-            background: #fff;
-            border-radius: 0 0 12px 12px;
+            background: transparent;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 20px;
         }
+
         .chat-entry {
             margin-bottom: 1rem;
             max-width: 80%;
@@ -79,56 +84,66 @@
             clear: both;
             word-wrap: break-word;
         }
+
         .user {
-            background: #bc1888;
+            background: #6a11cb;
             color: white;
             float: right;
             text-align: right;
         }
+
         .bot {
             background: #e1e1e1;
             color: black;
             float: left;
             text-align: left;
         }
+
         #input-form {
             display: flex;
-            padding: 0.5rem;
-            background: #f0f0f0;
-            border-radius: 0 0 12px 12px;
+            padding: 0.5rem 0;
+            background: transparent;
+            border-radius: 0 0 30px 30px;
         }
+
         #query-input {
             flex-grow: 1;
-            padding: 0.5rem;
-            font-size: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            outline: none;
         }
+
         #send-button {
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
             border: none;
             margin-left: 0.5rem;
             cursor: pointer;
-            padding: 0.5rem 1.5rem;
+            padding: 10px 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.3s ease;
-            border-radius: 30px;
+            border-radius: 25px;
             color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
+            font-weight: bold;
+            font-size: 16px;
             gap: 8px;
-            min-width: 100px;
             height: 40px;
+            min-width: auto;
+            width: auto;
         }
+
         #send-button:hover {
-            background: #bc1888;
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
         }
+
         #send-button:disabled {
             background: #a0a0a0;
             cursor: not-allowed;
         }
+
         #send-button svg {
             flex-shrink: 0;
         }
@@ -148,10 +163,9 @@
         <form id="input-form">
             <input type="text" id="query-input" placeholder="Type your question here..." autocomplete="off" required />
             <button type="submit" id="send-button" aria-label="Send message">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left: 12px; margin-right: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28" style="margin: 0 auto;">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
-                Send
             </button>
         </form>
     </div>

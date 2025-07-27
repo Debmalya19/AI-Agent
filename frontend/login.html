@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+  body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #2c003e, #4a148c, #12005e);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .login-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    padding: 40px 50px;
+    width: 320px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    text-align: center;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin: 0 auto 30px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .avatar svg {
+    width: 50px;
+    height: 50px;
+    fill: white;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  label svg {
+    width: 18px;
+    height: 18px;
+    fill: white;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid white;
+    padding: 10px 5px;
+    margin-bottom: 25px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+  }
+
+  input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .options {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 30px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .options a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-style: italic;
+  }
+
+  .options a:hover {
+    text-decoration: underline;
+  }
+
+  button {
+    background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 12px 0;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  button:hover {
+    background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+  }
+</style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="avatar" aria-label="User avatar">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+      </svg>
+    </div>
+    <form id="login-form" method="post" action="/login">
+      <label for="username">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        Email ID
+      </label>
+      <input type="text" id="username" name="username" placeholder="Email ID" required />
+      <label for="password">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 17a2 2 0 0 0 2-2v-3a2 2 0 0 0-4 0v3a2 2 0 0 0 2 2zm6-6h-1V7a5 5 0 0 0-10 0v4H6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2z"/>
+        </svg>
+        Password
+      </label>
+      <input type="password" id="password" name="password" placeholder="Password" required />
+      <div class="options">
+        <label><input type="checkbox" name="remember" /> Remember me</label>
+        <a href="#">Forgot Password?</a>
+      </div>
+      <button type="submit">LOGIN</button>
+    </form>
+  </div>
+  <script src="/static/login.js"></script>
+</body>
+</html>

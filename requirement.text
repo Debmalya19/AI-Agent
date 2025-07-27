@@ -6,3 +6,4 @@ langchain-anthropic
 python-dotenv
 pydantic
 duckduckgo-search
+python-multipart
