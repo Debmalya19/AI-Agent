@@ -1,241 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Customer Support Chat</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Customer Support Chat</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #2c003e, #4a148c, #12005e);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        #chat-container {
-            max-width: 320px;
-            width: 320px;
-            background: rgba(106, 17, 203, 0.3);
-            border-radius: 30px;
-            padding: 40px 50px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: auto;
-            transition: all 0.3s ease;
-            transform: scale(1);
-        }
+    #chat-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      padding: 40px 50px;
+      width: 320px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: white;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+    }
 
-        #chat-header {
-            font-size: 1.5rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
+    #avatar {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      margin: 0 auto 30px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        #recommended-questions {
-            padding: 0.5rem;
-            background: transparent;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: center;
-        }
+    #avatar svg {
+      width: 50px;
+      height: 50px;
+      fill: white;
+    }
 
-        .recommended-question-btn {
-            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.3s ease;
-        }
+    #chat-header {
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
 
-        .recommended-question-btn:hover {
-            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
-        }
+    #recommended-questions {
+      padding: 0.5rem;
+      background: transparent;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
 
-        #chat-log {
-            flex-grow: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            background: transparent;
-            border-radius: 0 0 30px 30px;
-            margin-bottom: 20px;
-        }
+    .recommended-question-btn {
+      background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s ease;
+    }
 
-        .chat-entry {
-            margin-bottom: 1rem;
-            max-width: 80%;
-            padding: 0.5rem 1rem;
-            border-radius: 15px;
-            clear: both;
-            word-wrap: break-word;
-        }
+    .recommended-question-btn:hover {
+      background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+    }
 
-        .user {
-            background: #6a11cb;
-            color: white;
-            float: right;
-            text-align: right;
-        }
+    #chat-log {
+      flex-grow: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      background: transparent;
+      border-radius: 0 0 30px 30px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
 
-        .bot {
-            background: #e1e1e1;
-            color: black;
-            float: left;
-            text-align: left;
-        }
+    .chat-entry {
+      margin-bottom: 1rem;
+      max-width: 80%;
+      padding: 0.5rem 1rem;
+      border-radius: 15px;
+      clear: both;
+      word-wrap: break-word;
+    }
 
-        #input-form {
-            display: flex;
-            padding: 0.5rem 0;
-            background: transparent;
-            border-radius: 0 0 30px 30px;
-        }
+    .user {
+      background: #6a11cb;
+      color: white;
+      float: right;
+      text-align: right;
+    }
 
-        #query-input {
-            flex-grow: 1;
-            padding: 10px 15px;
-            font-size: 16px;
-            border: none;
-            border-radius: 25px;
-            outline: none;
-        }
+    .bot {
+      background: #e1e1e1;
+      color: black;
+      float: left;
+      text-align: left;
+    }
 
-        #send-button {
-            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
-            border: none;
-            margin-left: 0.5rem;
-            cursor: pointer;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s ease;
-            border-radius: 25px;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            gap: 8px;
-            height: 40px;
-            min-width: auto;
-            width: auto;
-        }
+    #input-form {
+      display: flex;
+      padding: 0.5rem 0;
+      background: transparent;
+      border-radius: 0 0 30px 30px;
+    }
 
-        #send-button:hover {
-            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
-        }
+    #query-input {
+      flex-grow: 1;
+      padding: 10px 5px;
+      font-size: 16px;
+      border: none;
+      border-bottom: 1px solid white;
+      background: transparent;
+      color: white;
+      outline: none;
+      border-radius: 0;
+    }
 
-        #send-button:disabled {
-            background: #a0a0a0;
-            cursor: not-allowed;
-        }
+    #query-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
 
-        #send-button svg {
-            flex-shrink: 0;
-        }
-    </style>
+    #send-button {
+      background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+      border: none;
+      border-radius: 25px;
+      padding: 12px 0;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 100px;
+      margin-left: 10px;
+    }
+
+    #send-button:hover {
+      background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+    }
+
+    #send-button:disabled {
+      background: #a0a0a0;
+      cursor: not-allowed;
+    }
+
+    #send-button svg {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-header">Customer Support Chat</div>
-        <div id="recommended-questions">
-            <button class="recommended-question-btn">How do I reset my password?</button>
-            <button class="recommended-question-btn">What are your support hours?</button>
-            <button class="recommended-question-btn">How can I check my data usage?</button>
-            <button class="recommended-question-btn">How do I upgrade my plan?</button>
-            <button class="recommended-question-btn">How to contact customer support?</button>
-        </div>
-        <div id="chat-log"></div>
-        <form id="input-form">
-            <input type="text" id="query-input" placeholder="Type your question here..." autocomplete="off" required />
-            <button type="submit" id="send-button" aria-label="Send message">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28" style="margin: 0 auto;">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
-            </button>
-        </form>
+  <div id="chat-container">
+    <div id="avatar" aria-label="User avatar">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+      </svg>
     </div>
+    <div id="chat-header">Customer Support Chat</div>
+    <div id="recommended-questions">
+      <button class="recommended-question-btn">How do I reset my password?</button>
+      <button class="recommended-question-btn">What are your support hours?</button>
+      <button class="recommended-question-btn">How can I check my data usage?</button>
+      <button class="recommended-question-btn">How do I upgrade my plan?</button>
+      <button class="recommended-question-btn">How to contact customer support?</button>
+    </div>
+    <div id="chat-log"></div>
+    <form id="input-form">
+      <input type="text" id="query-input" placeholder="Type your question here..." autocomplete="off" required />
+      <button type="submit" id="send-button" aria-label="Send message">SEND</button>
+    </form>
+  </div>
 
-    <script>
-        const chatLog = document.getElementById('chat-log');
-        const inputForm = document.getElementById('input-form');
-        const queryInput = document.getElementById('query-input');
-        const sendButton = document.getElementById('send-button');
-        const recommendedQuestions = document.querySelectorAll('.recommended-question-btn');
-        const chatContainer = document.getElementById('chat-container');
+  <script>
+    const chatLog = document.getElementById('chat-log');
+    const inputForm = document.getElementById('input-form');
+    const queryInput = document.getElementById('query-input');
+    const sendButton = document.getElementById('send-button');
+    const recommendedQuestions = document.querySelectorAll('.recommended-question-btn');
+    const chatContainer = document.getElementById('chat-container');
 
-        let hasAskedQuestion = false;
+    let hasAskedQuestion = false;
 
-        function appendMessage(sender, message) {
-            const entry = document.createElement('div');
-            entry.classList.add('chat-entry');
-            entry.classList.add(sender);
-            entry.textContent = message;
-            chatLog.appendChild(entry);
-            chatLog.scrollTop = chatLog.scrollHeight;
-        }
+    function appendMessage(sender, message) {
+      const entry = document.createElement('div');
+      entry.classList.add('chat-entry');
+      entry.classList.add(sender);
+      entry.textContent = message;
+      chatLog.appendChild(entry);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
 
-        async function sendQuery(query) {
-            appendMessage('user', query);
-            sendButton.disabled = true;
+    async function sendQuery(query) {
+      appendMessage('user', query);
+      sendButton.disabled = true;
 
-            if (!hasAskedQuestion) {
-                hasAskedQuestion = true;
-                chatContainer.classList.add('expanded');
-            }
+      if (!hasAskedQuestion) {
+        hasAskedQuestion = true;
+        chatContainer.classList.add('expanded');
+      }
 
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query })
-                });
-
-                if (!response.ok) {
-                    appendMessage('bot', 'Error: ' + response.statusText);
-                } else {
-                    const data = await response.json();
-                    let botMessage = data.summary || "Sorry, I couldn't find an answer to your question.";
-                    appendMessage('bot', botMessage);
-                }
-            } catch (error) {
-                appendMessage('bot', 'Error: ' + error.message);
-            } finally {
-                sendButton.disabled = false;
-            }
-        }
-
-        inputForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const query = queryInput.value.trim();
-            if (!query) return;
-            sendQuery(query);
-            queryInput.value = '';
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query })
         });
 
-        recommendedQuestions.forEach(button => {
-            button.addEventListener('click', () => {
-                const question = button.textContent;
-                queryInput.value = question;
-                sendQuery(question);
-            });
-        });
-    </script>
+        if (!response.ok) {
+          appendMessage('bot', 'Error: ' + response.statusText);
+        } else {
+          const data = await response.json();
+          let botMessage = data.summary || "Sorry, I couldn't find an answer to your question.";
+          appendMessage('bot', botMessage);
+        }
+      } catch (error) {
+        appendMessage('bot', 'Error: ' + error.message);
+      } finally {
+        sendButton.disabled = false;
+      }
+    }
+
+    inputForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const query = queryInput.value.trim();
+      if (!query) return;
+      sendQuery(query);
+      queryInput.value = '';
+    });
+
+    recommendedQuestions.forEach(button => {
+      button.addEventListener('click', () => {
+        const question = button.textContent;
+        queryInput.value = question;
+        sendQuery(question);
+      });
+    });
+  </script>
 </body>
 </html>
