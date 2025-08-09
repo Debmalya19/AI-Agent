@@ -1,4 +1,3 @@
-
 from dotenv import load_dotenv
 from pydantic import BaseModel as PydanticBaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -11,6 +10,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain.tools import Tool
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from tools import search_tool, wiki_tool, save_tool
+from customer_db_tool import get_customer_orders
 import os
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import FileResponse, JSONResponse
@@ -20,6 +20,7 @@ import secrets
 import pandas as pd
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
+
 
 load_dotenv()
 
@@ -151,7 +152,9 @@ prompt = ChatPromptTemplate.from_messages(
 
           Always use the ContextRetriever tool first to check the company knowledge base for relevant information before using any other tools or providing an answer.
 
-          If the answer is not found in the knowledge base, use the search tool to search the www.bt.com website to find relevant information and provide an accurate answer.
+          If the answer is not found in the knowledge base, use the SupportKnowledgeBase tool to check the customer support database for relevant information.
+
+          If the answer is still not found, use the search tool to search the www.bt.com website to find relevant information and provide an accurate answer.
 
           If you do not know the answer to a question, politely inform the customer and suggest contacting human support for further assistance. For any queries related to customer orders or order details, always use the appropriate tools to fetch accurate information. Never mention internal tools, processes, or system details in your responses.
 
@@ -190,6 +193,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+import json
+
+# Data lake API endpoints
+
+@app.get("/data_lake/catalog")
+async def get_data_lake_catalog():
+    try:
+        with open("data_lake/catalog.json", "r", encoding="utf-8") as f:
+            catalog = json.load(f)
+        return {"catalog": catalog}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/data_lake/file/{filename}")
+async def get_data_lake_file(filename: str):
+    import os
+    from fastapi.responses import FileResponse
+    file_path = os.path.join("data_lake", filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    else:
+        return {"error": "File not found in data lake."}
 
 # Serve frontend static files
 from fastapi.staticfiles import StaticFiles
@@ -269,8 +295,8 @@ def exact_knowledge_lookup(query: str) -> str:
 
 from fastapi import Cookie
 
-# In-memory chat history store keyed by session token (for demo purposes)
-chat_histories = {}
+# Use database for chat history storage instead of in-memory
+from db_utils import save_chat_history, get_chat_history
 
 from fastapi import Request
 
@@ -294,84 +320,92 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
         if not session_token:
             raise HTTPException(status_code=401, detail="Unauthorized: No session token")
 
-        # Get or create chat history for this session
-        chat_history_store = chat_histories.get(session_token, [])
+        from database import SessionLocal
         
-        # Append user message to chat history
-        chat_history_store.append(("human", chat_request.query))
-
-        # Limit chat history length
-        if len(chat_history_store) > MAX_CHAT_HISTORY:
-            chat_history_store[:] = chat_history_store[-MAX_CHAT_HISTORY:]
-
-        # Save updated chat history
-        chat_histories[session_token] = chat_history_store
-
-        # Check exact knowledge base lookup first
-        exact_answer = exact_knowledge_lookup(chat_request.query)
-        if exact_answer:
-            # Return exact answer directly
-            response = ResearchResponse(
-                topic=chat_request.query,
-                summary=exact_answer,
-                sources=["data/knowledge.txt"],
-                tools_used=["ExactKnowledgeLookup"]
-            )
-            # Append assistant response to chat history as tuple
-            chat_history_store.append(("assistant", exact_answer))
-            chat_histories[session_token] = chat_history_store
-            return response.dict()
-
-        # Convert chat_history_store to messages list expected by agent_executor
-        messages = []
-        for role, content in chat_history_store:
-            if role == "user" or role == "human":
-                messages.append(HumanMessage(content=content))
-            elif role == "assistant":
-                messages.append(AIMessage(content=content))
-
-        # Invoke agent with query and chat history (as messages)
-        raw_response = agent_executor.invoke({"query": chat_request.query, "chat_history": messages})
-
-        logging.info(f"Raw response type: {type(raw_response)}")
-        logging.info(f"Raw response content: {raw_response}")
-
-        output = raw_response.get("output", "")
-
-        # Extract JSON string inside triple backticks or fallback to entire output
-        import re
-        match = re.search(r"```json\\n(.+?)```", output, re.DOTALL)
-        if match:
-            json_str = match.group(1)
-        else:
-            # Try to parse entire output as JSON string fallback
-            json_str = output
-
+        # Get chat history from database
+        db = SessionLocal()
         try:
-            # Pass raw JSON string to parser.parse()
-            structured_response = parser.parse(json_str)
-            # Override sources with last_rag_sources if available
-            if 'last_rag_sources' in globals() and last_rag_sources:
-                structured_response.sources = last_rag_sources
-        except Exception as parse_exc:
-            logging.error(f"Failed to parse LLM output JSON: {parse_exc}")
-            logging.error(f"Raw LLM output: {output}")
-            # Fallback response for unparseable output
-            structured_response = ResearchResponse(
-                topic="Unknown",
-                summary="Sorry, I couldn't understand the response. Please try rephrasing your question or contact human support.",
-                sources=[],
-                tools_used=[]
+            chat_history_db = get_chat_history(db, session_token, limit=MAX_CHAT_HISTORY)
+            
+            # Convert database chat history to messages format
+            messages = []
+            for entry in reversed(chat_history_db):  # Reverse to get chronological order
+                messages.append(HumanMessage(content=entry.user_message))
+                messages.append(AIMessage(content=entry.bot_response))
+            
+            # Check exact knowledge base lookup first
+            exact_answer = exact_knowledge_lookup(chat_request.query)
+            if exact_answer:
+                # Save to database
+                save_chat_history(
+                    db, 
+                    session_token, 
+                    chat_request.query, 
+                    exact_answer,
+                    tools_used=["ExactKnowledgeLookup"],
+                    sources=["data/knowledge.txt"]
+                )
+                
+                response = ResearchResponse(
+                    topic=chat_request.query,
+                    summary=exact_answer,
+                    sources=["data/knowledge.txt"],
+                    tools_used=["ExactKnowledgeLookup"]
+                )
+                return response.dict()
+
+            # Add current user message to messages
+            messages.append(HumanMessage(content=chat_request.query))
+
+            # Invoke agent with query and chat history (as messages)
+            raw_response = agent_executor.invoke({"query": chat_request.query, "chat_history": messages})
+
+            logging.info(f"Raw response type: {type(raw_response)}")
+            logging.info(f"Raw response content: {raw_response}")
+
+            output = raw_response.get("output", "")
+
+            # Extract JSON string inside triple backticks or fallback to entire output
+            import re
+            match = re.search(r"```json\\n(.+?)```", output, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+            else:
+                # Try to parse entire output as JSON string fallback
+                json_str = output
+
+            try:
+                # Pass raw JSON string to parser.parse()
+                structured_response = parser.parse(json_str)
+                # Override sources with last_rag_sources if available
+                if 'last_rag_sources' in globals() and last_rag_sources:
+                    structured_response.sources = last_rag_sources
+            except Exception as parse_exc:
+                logging.error(f"Failed to parse LLM output JSON: {parse_exc}")
+                logging.error(f"Raw LLM output: {output}")
+                # Fallback response for unparseable output
+                structured_response = ResearchResponse(
+                    topic="Unknown",
+                    summary="Sorry, I couldn't understand the response. Please try rephrasing your question or contact human support.",
+                    sources=[],
+                    tools_used=[]
+                )
+
+            # Save to database
+            save_chat_history(
+                db,
+                session_token,
+                chat_request.query,
+                structured_response.summary,
+                tools_used=structured_response.tools_used,
+                sources=structured_response.sources
             )
 
-        # Append assistant response to chat history as tuple
-        chat_history_store.append(("assistant", output))
-        chat_histories[session_token] = chat_history_store
-
-        return structured_response.dict()
+            return structured_response.dict()
+        finally:
+            db.close()
     except Exception as e:
         import traceback
         tb = traceback.format_exc()
         logging.error(f"Exception traceback: {tb}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
-        import re

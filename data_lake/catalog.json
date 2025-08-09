@@ -1,0 +1,17 @@
+[
+    {
+        "filename": "knowledge.txt",
+        "size_bytes": 3017,
+        "path": "data_lake\\knowledge.txt"
+    },
+    {
+        "filename": "customer_support_knowledge_base.xlsx",
+        "size_bytes": 3361870,
+        "path": "data_lake\\customer_support_knowledge_base.xlsx"
+    },
+    {
+        "filename": "customer_knowledge_base.xlsx",
+        "size_bytes": 6061,
+        "path": "data_lake\\customer_knowledge_base.xlsx"
+    }
+]
