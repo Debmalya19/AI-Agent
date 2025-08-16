@@ -34,3 +34,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Initialize database function
+def init_db():
+    """Initialize database by creating all tables"""
+    print("Creating database tables...")
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created successfully.")

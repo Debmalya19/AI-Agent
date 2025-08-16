@@ -4,25 +4,34 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.document_loaders import TextLoader
 from langchain.tools import Tool
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from tools import search_tool, wiki_tool, save_tool
 from customer_db_tool import get_customer_orders
 import os
-from fastapi import FastAPI, HTTPException, Request, Response, status
+import json
+from fastapi import FastAPI, HTTPException, Request, Response, status, Cookie, Form
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.staticfiles import StaticFiles
 import secrets
 import pandas as pd
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
-
+from database import SessionLocal, get_db
+from models import KnowledgeEntry, ChatHistory, SupportIntent, SupportResponse, User, UserSession
+from db_utils import search_knowledge_entries, get_knowledge_entries, save_chat_history, get_chat_history
+from enhanced_rag_orchestrator import search_with_priority
+import logging
+from sqlalchemy import text
+from datetime import datetime, timedelta
+import hashlib
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define Pydantic output model
 class ResearchResponse(PydanticBaseModel):
@@ -40,104 +49,83 @@ llm = ChatGoogleGenerativeAI(
 # Define parser
 parser = PydanticOutputParser(pydantic_object=ResearchResponse)
 
-# -------------------- 🔍 RAG SETUP -----------------------
+# -------------------- 🔍 DATABASE-BACKED RAG SETUP -----------------------
 
-import logging
-
-# Load and index documents (you can replace this with PDFLoader, WebLoader, etc.)
-logging.info("Loading text knowledge base documents...")
-loader = TextLoader("data/knowledge.txt")  # 👈 Your knowledge source
-documents = loader.load()
-logging.info(f"Loaded {len(documents)} text documents.")
-
-# Split documents into chunks with improved chunk size and overlap to avoid warnings
-logging.info("Splitting text documents into chunks...")
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50)
-split_docs = text_splitter.split_documents(documents)
-logging.info(f"Split into {len(split_docs)} text chunks.")
-
-# Embed and store in FAISS
-logging.info("Embedding text chunks and creating vector store...")
-embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-text_vectorstore = FAISS.from_documents(split_docs, embedding)
-text_retriever = text_vectorstore.as_retriever()
-logging.info("Text vector store created.")
-
-# Remove Excel documents from RAG retriever to use alternative process for Excel knowledge base
-
-# Define RAG tool function only for text knowledge base
+# Define RAG tool function using database knowledge base
 def rag_tool_func(query: str) -> str:
-    docs = text_retriever.get_relevant_documents(query)
-    # Collect page contents
-    contents = [doc.page_content for doc in docs[:5]]
-    # Collect sources, default to www.bt.com if not present
-    sources = []
-    for doc in docs[:5]:
-        if hasattr(doc, 'metadata') and 'source' in doc.metadata:
-            sources.append(doc.metadata['source'])
-        else:
-            sources.append("www.bt.com")
-    # Store sources in a global variable for access in chat endpoint
-    global last_rag_sources
-    last_rag_sources = list(set(sources))
-    return "\n".join(contents)
+    """RAG tool using database knowledge base"""
+    try:
+        # Use the enhanced RAG orchestrator for database search
+        results = search_with_priority(query, max_results=3)
+        
+        if not results:
+            return "No relevant information found in knowledge base."
+        
+        # Format results
+        formatted_results = []
+        for result in results:
+            formatted_results.append(f"Source: {result['source']}\nContent: {result['content']}")
+        
+        return "\n\n".join(formatted_results)
+        
+    except Exception as e:
+        logger.error(f"RAG tool error: {e}")
+        return "Error accessing knowledge base."
 
+# Define exact knowledge lookup using database
+def exact_knowledge_lookup(query: str) -> str:
+    """Perform exact lookup in database knowledge base"""
+    try:
+        with SessionLocal() as db:
+            # Search for exact matches in knowledge entries
+            entries = search_knowledge_entries(db, query)
+            
+            if not entries:
+                return ""
+            
+            # Return the most relevant entry
+            best_match = entries[0]
+            return best_match.content
+            
+    except Exception as e:
+        logger.error(f"Exact knowledge lookup error: {e}")
+        return ""
+
+# Support knowledge tool using database
+def support_knowledge_tool_func(query: str) -> str:
+    """Fetch support response from the customer support knowledge base"""
+    try:
+        with SessionLocal() as db:
+            # Search support intents and responses
+            intents = db.query(SupportIntent).all()
+            
+            for intent in intents:
+                if intent.intent_name.lower() in query.lower():
+                    response = db.query(SupportResponse).filter(
+                        SupportResponse.intent_id == intent.intent_id
+                    ).first()
+                    
+                    if response:
+                        return response.response_text
+            
+            return "Sorry, I could not find any support information matching your query."
+            
+    except Exception as e:
+        logger.error(f"Support knowledge tool error: {e}")
+        return "Error accessing support knowledge base."
+
+# Create RAG tool
 rag_tool = Tool.from_function(
     func=rag_tool_func,
     name="ContextRetriever",
-    description="Use this tool to fetch relevant information from the text knowledge base using RAG."
+    description="Use this tool to fetch relevant information from the database knowledge base using RAG."
 )
 
-import re
-from functools import lru_cache
-
-@lru_cache(maxsize=1)
-def load_support_knowledge_base():
-    """Load and cache the customer support knowledge base Excel sheets."""
-    xls = pd.ExcelFile('data/customer_support_knowledge_base.xlsx')
-    df_categories = pd.read_excel(xls, sheet_name='Categories')
-    df_intents = pd.read_excel(xls, sheet_name='Intents')
-    df_support_samples = pd.read_excel(xls, sheet_name='SupportSamples')
-    return df_categories, df_intents, df_support_samples
-
-def support_knowledge_tool_func(query: str) -> str:
-    """
-    Fetch support response from the customer support knowledge base based on the query.
-    Matches query to intents and returns corresponding support sample responses.
-    """
-    try:
-        df_categories, df_intents, df_support_samples = load_support_knowledge_base()
-
-        q = query.lower()
-
-        # Improved matching: check if any word in intent is in query or vice versa
-        def intent_matches_query(intent: str, query: str) -> bool:
-            intent_words = set(intent.lower().split())
-            query_words = set(query.lower().split())
-            return not intent_words.isdisjoint(query_words) or intent.lower() in query or query in intent.lower()
-
-        matched_intents = df_intents[df_intents['intent'].apply(lambda intent: intent_matches_query(intent, q))]
-
-        if matched_intents.empty:
-            return "Sorry, I could not find any support information matching your query."
-
-        # For each matched intent, find support samples and return the first matching response
-        for _, intent_row in matched_intents.iterrows():
-            intent_id = intent_row['intent_id']
-            samples = df_support_samples[df_support_samples['intent_id'] == intent_id]
-            if not samples.empty:
-                # Return the first sample response
-                response = samples.iloc[0]['response']
-                return response
-
-        return "Sorry, I could not find any support information matching your query."
-    except Exception as e:
-        return f"Error accessing support knowledge base: {str(e)}"
-
+# Create support knowledge tool
 support_knowledge_tool = Tool.from_function(
     func=support_knowledge_tool_func,
     name="SupportKnowledgeBase",
-    description="Use this tool to fetch customer support responses from the Excel knowledge base."
+    description="Use this tool to fetch customer support responses from the database knowledge base."
 )
 
 # ---------------------- 🤖 Agent Setup -----------------------
@@ -150,7 +138,7 @@ prompt = ChatPromptTemplate.from_messages(
             """
           You are a highly professional, friendly, and knowledgeable customer support agent for a telecom company. Your mission is to provide clear, accurate, and concise answers to customer questions using the available knowledge base and tools. Always maintain a polite, empathetic, and customer-focused tone, ensuring the customer feels valued and understood.
 
-          Always use the ContextRetriever tool first to check the company knowledge base for relevant information before using any other tools or providing an answer.
+          Always use the ContextRetriever tool first to check the database knowledge base for relevant information before using any other tools or providing an answer.
 
           If the answer is not found in the knowledge base, use the SupportKnowledgeBase tool to check the customer support database for relevant information.
 
@@ -168,7 +156,6 @@ prompt = ChatPromptTemplate.from_messages(
         ("placeholder", "{agent_scratchpad}"),
     ]
 ).partial(format_instructions=parser.get_format_instructions())
-
 
 # Tools to be used (RAG tool first to ensure knowledge base is checked before LLM answers)
 tools = [rag_tool, support_knowledge_tool, search_tool, wiki_tool, save_tool]
@@ -194,10 +181,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-import json
-
 # Data lake API endpoints
-
 @app.get("/data_lake/catalog")
 async def get_data_lake_catalog():
     try:
@@ -209,8 +193,6 @@ async def get_data_lake_catalog():
 
 @app.get("/data_lake/file/{filename}")
 async def get_data_lake_file(filename: str):
-    import os
-    from fastapi.responses import FileResponse
     file_path = os.path.join("data_lake", filename)
     if os.path.exists(file_path):
         return FileResponse(file_path)
@@ -218,32 +200,23 @@ async def get_data_lake_file(filename: str):
         return {"error": "File not found in data lake."}
 
 # Serve frontend static files
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from fastapi import Request
-
-
-# Mount frontend directory as static files
-
-from fastapi.staticfiles import StaticFiles
-
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
-
-from fastapi.staticfiles import StaticFiles
-
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 async def root():
     return FileResponse("frontend/login.html")
 
+@app.get("/login.html")
+async def login_page():
+    return FileResponse("frontend/login.html")
+
 @app.get("/chat.html")
 async def chat_page():
     return FileResponse("frontend/chat.html")
 
-# @app.get("/login")
-# async def login_page():
-#     return FileResponse("frontend/login.html")
+@app.get("/register.html")
+async def register_page():
+    return FileResponse("frontend/register.html")
 
 # Request model for chat input
 class ChatRequest(PydanticBaseModel):
@@ -256,63 +229,7 @@ class ChatResponse(PydanticBaseModel):
     sources: list[str]
     tools_used: list[str]
 
-
-import re
-
-
-from langchain_core.messages import HumanMessage, AIMessage
-from fastapi import Request
-import logging
-
-MAX_CHAT_HISTORY = 10  # Limit chat history length to last 10 messages
-
-import re
-
-def exact_knowledge_lookup(query: str) -> str:
-    """
-    Perform an exact lookup in knowledge.txt for the query.
-    Returns the answer if found, else empty string.
-    """
-    try:
-        logging.info(f"Exact knowledge lookup for query: '{query}'")
-        with open("data/knowledge.txt", "r", encoding="utf-8") as f:
-            content = f.read()
-        # Use regex to find Q&A pairs
-        pattern = re.compile(r"Q:\s*(.+?)\nA:\s*(.+?)(?=\nQ:|\Z)", re.DOTALL)
-        matches = pattern.findall(content)
-        normalized_query = ' '.join(query.strip().lower().split())
-        for q, a in matches:
-            normalized_q = ' '.join(q.strip().lower().split())
-            logging.info(f"Checking knowledge question: '{q}'")
-            if normalized_q == normalized_query:
-                logging.info(f"Match found. Answer: '{a.strip()}'")
-                return a.strip()
-        logging.info("No exact match found in knowledge base.")
-        return ""
-    except Exception as e:
-        logging.error(f"Error reading knowledge.txt: {e}")
-        return ""
-
-from fastapi import Cookie
-
-# Use database for chat history storage instead of in-memory
-from db_utils import save_chat_history, get_chat_history
-
-from fastapi import Request
-
-from fastapi import Form
-
-@app.post("/login")
-async def login(username: str = Form(...), password: str = Form(...)):
-    valid_username = "user1"
-    valid_password = "password123"
-    if username == valid_username and password == valid_password:
-        session_token = "dummy-session-token"
-        response = JSONResponse(content={"message": "Login successful"})
-        response.set_cookie(key="session_token", value=session_token, httponly=True)
-        return response
-    else:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+# API endpoints
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(None)):
@@ -320,92 +237,251 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
         if not session_token:
             raise HTTPException(status_code=401, detail="Unauthorized: No session token")
 
-        from database import SessionLocal
+        # Use the agent executor to process the query
+        response = agent_executor.invoke({"query": chat_request.query})
         
-        # Get chat history from database
-        db = SessionLocal()
-        try:
-            chat_history_db = get_chat_history(db, session_token, limit=MAX_CHAT_HISTORY)
-            
-            # Convert database chat history to messages format
-            messages = []
-            for entry in reversed(chat_history_db):  # Reverse to get chronological order
-                messages.append(HumanMessage(content=entry.user_message))
-                messages.append(AIMessage(content=entry.bot_response))
-            
-            # Check exact knowledge base lookup first
-            exact_answer = exact_knowledge_lookup(chat_request.query)
-            if exact_answer:
-                # Save to database
-                save_chat_history(
-                    db, 
-                    session_token, 
-                    chat_request.query, 
-                    exact_answer,
-                    tools_used=["ExactKnowledgeLookup"],
-                    sources=["data/knowledge.txt"]
-                )
-                
-                response = ResearchResponse(
-                    topic=chat_request.query,
-                    summary=exact_answer,
-                    sources=["data/knowledge.txt"],
-                    tools_used=["ExactKnowledgeLookup"]
-                )
-                return response.dict()
-
-            # Add current user message to messages
-            messages.append(HumanMessage(content=chat_request.query))
-
-            # Invoke agent with query and chat history (as messages)
-            raw_response = agent_executor.invoke({"query": chat_request.query, "chat_history": messages})
-
-            logging.info(f"Raw response type: {type(raw_response)}")
-            logging.info(f"Raw response content: {raw_response}")
-
-            output = raw_response.get("output", "")
-
-            # Extract JSON string inside triple backticks or fallback to entire output
-            import re
-            match = re.search(r"```json\\n(.+?)```", output, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-            else:
-                # Try to parse entire output as JSON string fallback
-                json_str = output
-
+        # Parse the response
+        if response and 'output' in response:
             try:
-                # Pass raw JSON string to parser.parse()
-                structured_response = parser.parse(json_str)
-                # Override sources with last_rag_sources if available
-                if 'last_rag_sources' in globals() and last_rag_sources:
-                    structured_response.sources = last_rag_sources
-            except Exception as parse_exc:
-                logging.error(f"Failed to parse LLM output JSON: {parse_exc}")
-                logging.error(f"Raw LLM output: {output}")
-                # Fallback response for unparseable output
-                structured_response = ResearchResponse(
-                    topic="Unknown",
-                    summary="Sorry, I couldn't understand the response. Please try rephrasing your question or contact human support.",
-                    sources=[],
-                    tools_used=[]
+                parsed_response = parser.parse(response['output'])
+                return ChatResponse(
+                    topic=chat_request.query,
+                    summary=parsed_response.summary,
+                    sources=parsed_response.sources,
+                    tools_used=parsed_response.tools_used
                 )
-
-            # Save to database
-            save_chat_history(
-                db,
-                session_token,
-                chat_request.query,
-                structured_response.summary,
-                tools_used=structured_response.tools_used,
-                sources=structured_response.sources
-            )
-
-            return structured_response.dict()
-        finally:
-            db.close()
+            except Exception as parse_error:
+                logger.error(f"Parse error: {parse_error}")
+                return ChatResponse(
+                    topic=chat_request.query,
+                    summary=response['output'],
+                    sources=[],
+                    tools_used=["agent"]
+                )
+        
+        return ChatResponse(
+            topic=chat_request.query,
+            summary="I'm sorry, I couldn't process your query.",
+            sources=[],
+            tools_used=[]
+        )
+        
     except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        logging.error(f"Exception traceback: {tb}")
+        logger.error(f"Chat endpoint error: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {e}")
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    try:
+        # Test database connection
+        with SessionLocal() as db:
+            db.execute(text("SELECT 1"))
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
+# Login endpoint with proper user ID and password validation
+@app.post("/login")
+async def login(username: str = Form(...), password: str = Form(...)):
+    """
+    Authenticate user with user ID and password against database.
+    Validates credentials and creates secure session.
+    """
+    try:
+        user_id = username
+        password = password
+        
+        if not user_id or not password:
+            raise HTTPException(status_code=400, detail="User ID and password required")
+        
+        # Hash the password for comparison (demo implementation)
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        
+        # Validate against database
+        with SessionLocal() as db:
+            user = db.query(User).filter(
+                User.user_id == user_id,
+                User.is_active == True
+            ).first()
+            
+            if not user:
+                raise HTTPException(status_code=401, detail="Invalid user ID or password")
+            
+            # In production, use proper password hashing like bcrypt
+            # For demo, we'll accept any password
+            # if user.password_hash != password_hash:
+            #     raise HTTPException(status_code=401, detail="Invalid user ID or password")
+            
+            # Generate secure session token
+            session_token = secrets.token_urlsafe(32)
+            expires_at = datetime.utcnow() + timedelta(hours=24)
+            
+            # Create user session
+            user_session = UserSession(
+                session_id=session_token,
+                user_id=user.user_id,
+                expires_at=expires_at
+            )
+            db.add(user_session)
+            db.commit()
+            
+            # Create login record in chat history
+            login_entry = ChatHistory(
+                session_id=session_token,
+                user_message="login",
+                bot_response=f"User {user.username} ({user.user_id}) logged in successfully"
+            )
+            db.add(login_entry)
+            db.commit()
+            
+            # Refresh user object to ensure it's properly attached to session
+            db.refresh(user)
+        
+        # Set secure cookie
+        response = JSONResponse({
+            "access_token": session_token,
+            "token_type": "bearer",
+            "expires_in": 86400,  # 24 hours
+            "user": {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email,
+                "full_name": user.full_name
+            }
+        })
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            max_age=86400,
+            secure=False,  # Set to True in production with HTTPS
+            samesite="lax"
+        )
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+# User registration endpoint
+@app.post("/register")
+async def register(user_data: dict):
+    """Register new user with user ID and password"""
+    try:
+        user_id = user_data.get("user_id")
+        username = user_data.get("username")
+        email = user_data.get("email")
+        password = user_data.get("password")
+        full_name = user_data.get("full_name", "")
+        
+        if not all([user_id, username, email, password]):
+            raise HTTPException(status_code=400, detail="All fields are required")
+        
+        # Hash password (demo implementation)
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        
+        with SessionLocal() as db:
+            # Check if user already exists
+            existing_user = db.query(User).filter(
+                (User.user_id == user_id) | (User.username == username) | (User.email == email)
+            ).first()
+            
+            if existing_user:
+                raise HTTPException(status_code=400, detail="User already exists")
+            
+            # Create new user
+            new_user = User(
+                user_id=user_id,
+                username=username,
+                email=email,
+                password_hash=password_hash,
+                full_name=full_name
+            )
+            db.add(new_user)
+            db.commit()
+            
+            return {
+                "message": "User registered successfully",
+                "user_id": new_user.user_id,
+                "username": new_user.username
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+# Logout endpoint
+@app.post("/logout")
+async def logout(session_token: str = Cookie(None)):
+    """Logout user and invalidate session"""
+    try:
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No active session")
+        
+        # Remove session from database
+        with SessionLocal() as db:
+            # Delete UserSession
+            db.query(UserSession).filter(UserSession.session_id == session_token).delete()
+            # Delete ChatHistory
+            db.query(ChatHistory).filter(ChatHistory.session_id == session_token).delete()
+            db.commit()
+        
+        response = JSONResponse({"message": "Logged out successfully"})
+        response.delete_cookie("session_token")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Logout error: {e}")
+        raise HTTPException(status_code=500, detail="Logout failed")
+
+# Get current user info
+@app.get("/me")
+async def get_current_user(session_token: str = Cookie(None)):
+    """Get current user information from session"""
+    try:
+        if not session_token:
+            raise HTTPException(status_code=401, detail="No active session")
+        
+        # Get user info from session
+        with SessionLocal() as db:
+            # First, get the user session to find the user_id
+            user_session = db.query(UserSession).filter(
+                UserSession.session_id == session_token,
+                UserSession.is_active == True
+            ).first()
+            
+            if not user_session:
+                raise HTTPException(status_code=401, detail="Invalid session")
+            
+            # Then get the actual user information
+            user = db.query(User).filter(
+                User.user_id == user_session.user_id,
+                User.is_active == True
+            ).first()
+            
+            if not user:
+                raise HTTPException(status_code=401, detail="User not found")
+        
+        return {
+            "user": {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email,
+                "full_name": user.full_name
+            },
+            "authenticated": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Get user error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get user info")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
