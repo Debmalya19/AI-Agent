@@ -4,6 +4,34 @@ from database import Base
 from datetime import datetime
 import enum
 
+# Import memory layer models
+from memory_models import (
+    EnhancedChatHistory,
+    MemoryContextCache,
+    ToolUsageMetrics,
+    ConversationSummary,
+    MemoryConfiguration,
+    MemoryHealthMetrics,
+    ConversationEntry,
+    ContextEntry,
+    ToolRecommendation,
+    ConversationEntryDTO,
+    ContextEntryDTO,
+    ToolRecommendationDTO,
+    create_enhanced_chat_entry,
+    create_context_cache_entry,
+    create_tool_usage_metric,
+    generate_query_hash,
+    validate_json_serializable,
+    sanitize_for_storage,
+    create_conversation_summary,
+    batch_create_entries,
+    ValidationError,
+    validate_conversation_data,
+    validate_context_data,
+    validate_tool_recommendation_data
+)
+
 class TicketStatus(enum.Enum):
     OPEN = "open"
     IN_PROGRESS = "in_progress"
@@ -168,8 +196,10 @@ class UserSession(Base):
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(255), unique=True, index=True, nullable=False)
     user_id = Column(String(50), ForeignKey("users.user_id"), nullable=False)
+    token_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
+    last_accessed = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     
     user = relationship("User", back_populates="sessions")

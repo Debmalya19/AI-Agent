@@ -6,8 +6,8 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
-from ticking_system import Ticket, TicketComment, TicketActivity, TicketStatus, TicketPriority, TicketCategory
-from database import get_db_session
+from models import Ticket, TicketComment, TicketActivity, TicketStatus, TicketPriority, TicketCategory
+from database import get_db
 
 class TickingService:
     """Service class for managing tickets with database context retrieval"""
@@ -15,7 +15,7 @@ class TickingService:
     def __init__(self, db_session: Session = None):
         self.db = db_session or next(get_db())
     
-    def create_ticket(self, title: str, description: str, customer_id: int = None, 
+    def create_ticket(self, title: str, description: str, user_id: int = None, 
                      priority: TicketPriority = TicketPriority.MEDIUM, 
                      category: TicketCategory = TicketCategory.GENERAL,
                      tags: List[str] = None, ticket_metadata: Dict[str, Any] = None) -> Ticket:
@@ -24,7 +24,7 @@ class TickingService:
         ticket = Ticket(
             title=title,
             description=description,
-            customer_id=customer_id,
+            customer_id=user_id,  # Using customer_id field in DB but passing user_id
             priority=priority,
             category=category,
             tags=",".join(tags) if tags else None,
@@ -44,7 +44,7 @@ class TickingService:
         """Retrieve a ticket by ID with all related data"""
         return self.db.query(Ticket).filter(Ticket.id == ticket_id).first()
     
-    def get_tickets(self, status: TicketStatus = None, customer_id: int = None,
+    def get_tickets(self, status: TicketStatus = None, user_id: int = None,
                    priority: TicketPriority = None, category: TicketCategory = None,
                    limit: int = 100, offset: int = 0) -> List[Ticket]:
         """Retrieve tickets with filters"""
@@ -53,8 +53,8 @@ class TickingService:
         
         if status:
             query = query.filter(Ticket.status == status)
-        if customer_id:
-            query = query.filter(Ticket.customer_id == customer_id)
+        if user_id:
+            query = query.filter(Ticket.customer_id == user_id)  # Using customer_id field in DB but passing user_id
         if priority:
             query = query.filter(Ticket.priority == priority)
         if category:
@@ -174,14 +174,14 @@ class TicketContextRetriever:
     """Context retrieval service using database for ticket system"""
     
     def __init__(self, db_session: Session = None):
-        self.db = db_session or next(get_db_session())
+        self.db = db_session or next(get_db())
     
-    def get_customer_context(self, customer_id: int) -> Dict[str, Any]:
+    def get_customer_context(self, user_id: int) -> Dict[str, Any]:
         """Get customer context for ticket creation"""
         
         from models import Customer, Order
         
-        customer = self.db.query(Customer).filter(Customer.id == customer_id).first()
+        customer = self.db.query(Customer).filter(Customer.id == user_id).first()
         if not customer:
             return {}
         
@@ -232,11 +232,11 @@ class TicketContextRetriever:
             for ticket in tickets
         ]
     
-    def get_ticket_history(self, customer_id: int) -> List[Dict[str, Any]]:
-        """Get ticket history for a customer"""
+    def get_ticket_history(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get ticket history for a user"""
         
         tickets = self.db.query(Ticket).filter(
-            Ticket.customer_id == customer_id
+            Ticket.customer_id == user_id  # Using customer_id field in DB but passing user_id
         ).order_by(Ticket.created_at.desc()).all()
         
         return [

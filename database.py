@@ -13,16 +13,27 @@ DATABASE_URL = os.getenv(
 )
 
 # Create engine with connection pooling
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-    echo=True  # Set to False in production
-)
+try:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+        echo=True,  # Set to False in production
+        connect_args={"connect_timeout": 5}  # 5 second timeout
+    )
+except Exception as e:
+    print(f"Warning: Failed to create database engine: {e}")
+    print("Database functionality will be limited")
+    engine = None
 
 # Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+if engine:
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+else:
+    # Create a dummy session factory that raises an error when used
+    def SessionLocal():
+        raise RuntimeError("Database not available")
 
 # Create base class for models
 Base = declarative_base()

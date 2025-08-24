@@ -1,0 +1,69 @@
+{
+  "retention": {
+    "conversation_retention_days": 90,
+    "context_cache_retention_hours": 24,
+    "tool_metrics_retention_days": 365,
+    "summary_retention_days": 730,
+    "cleanup_interval_hours": 6,
+    "auto_cleanup_enabled": true,
+    "emergency_cleanup_threshold": 0.95,
+    "storage_limits": {
+      "max_conversations_per_user": 10000,
+      "max_context_cache_entries": 50000,
+      "max_tool_metrics_entries": 100000,
+      "max_total_storage_mb": 1024,
+      "max_conversation_length": 50000,
+      "max_context_size_kb": 100
+    },
+    "cleanup_policy": {
+      "strategy": "oldest_first",
+      "trigger_threshold": 0.8,
+      "target_threshold": 0.6,
+      "batch_size": 100,
+      "max_cleanup_time_seconds": 300,
+      "preserve_recent_days": 7,
+      "preserve_high_quality": true
+    }
+  },
+  "performance": {
+    "max_context_entries": 50,
+    "max_conversation_history": 100,
+    "cache_size_mb": 256,
+    "query_timeout_seconds": 30,
+    "batch_size": 100,
+    "enable_caching": true,
+    "connection_pool_size": 10,
+    "max_concurrent_operations": 50,
+    "cache_ttl_seconds": 3600,
+    "enable_query_optimization": true,
+    "enable_background_cleanup": true,
+    "cleanup_worker_threads": 2,
+    "memory_usage_check_interval": 300
+  },
+  "security": {
+    "encrypt_sensitive_data": true,
+    "enable_data_anonymization": true,
+    "require_user_consent": true,
+    "audit_data_access": true,
+    "max_failed_attempts": 3
+  },
+  "quality": {
+    "min_relevance_score": 0.3,
+    "context_similarity_threshold": 0.7,
+    "tool_success_threshold": 0.8,
+    "response_quality_weights": {
+      "relevance": 0.4,
+      "completeness": 0.3,
+      "accuracy": 0.3
+    }
+  },
+  "enable_database_storage": true,
+  "enable_cache_storage": true,
+  "enable_context_retrieval": true,
+  "enable_tool_analytics": true,
+  "enable_conversation_summaries": true,
+  "enable_health_monitoring": true,
+  "log_level": "INFO",
+  "log_memory_operations": true,
+  "log_performance_metrics": true
+}

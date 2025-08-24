@@ -7,3 +7,8 @@ python-dotenv
 pydantic
 duckduckgo-search
 python-multipart
+uvicorn
+fastapi
+pandas
+sqlalchemy
+psycopg2-binary

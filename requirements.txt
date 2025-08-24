@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+langchain-google-genai
+langchain-core
+langchain
+langchain-community
+sqlalchemy
+pandas
+python-multipart
+httpx
+bcrypt
+pytest
+google-generativeai
+jinja2
+psycopg2-binary

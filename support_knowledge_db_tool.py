@@ -13,6 +13,11 @@ def support_knowledge_tool_func(query: str) -> str:
     try:
         db: Session = SessionLocal()
         
+        # Handle support hours specifically
+        query_lower = query.lower()
+        if any(keyword in query_lower for keyword in ['support hours', 'customer support hours', 'support time', 'business hours', 'open hours']):
+            return "Our customer support is available 24/7 to assist you with any issues or inquiries."
+        
         # Search for matching support response
         response_text = get_support_response(db, query)
         
@@ -23,7 +28,7 @@ def support_knowledge_tool_func(query: str) -> str:
         # If no exact match, try fuzzy matching
         intents = get_all_support_intents(db)
         
-        q = query.lower()
+        q = query_lower
         
         # Improved matching: check if any word in intent is in query or vice versa
         def intent_matches_query(intent_name: str, query: str) -> bool:

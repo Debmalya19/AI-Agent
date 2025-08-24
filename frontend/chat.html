@@ -112,6 +112,12 @@
       text-align: left;
     }
 
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+
     #input-form {
       display: flex;
       padding: 0.5rem 0;
@@ -170,7 +176,10 @@
         <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
       </svg>
     </div>
-    <div id="chat-header">Customer Support Chat</div>
+    <div id="chat-header">
+      Customer Support Chat
+      <button id="logout-btn" onclick="logout()" style="float: right; padding: 5px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white; border-radius: 15px; cursor: pointer;">Logout</button>
+    </div>
     <div id="recommended-questions">
       <button class="recommended-question-btn">How do I reset my password?</button>
       <button class="recommended-question-btn">What are your support hours?</button>
@@ -193,15 +202,92 @@
     const recommendedQuestions = document.querySelectorAll('.recommended-question-btn');
     const chatContainer = document.getElementById('chat-container');
 
+    // Check session on page load
+    async function checkSession() {
+      try {
+        const response = await fetch('/me', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          window.location.href = '/login.html';
+          return;
+        }
+        
+        const data = await response.json();
+        if (!data.authenticated) {
+          window.location.href = '/login.html';
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
+        window.location.href = '/login.html';
+      }
+    }
+    
+    // Run session check immediately
+    checkSession();
+
     let hasAskedQuestion = false;
 
-    function appendMessage(sender, message) {
+    function appendMessage(sender, message, isError = false) {
       const entry = document.createElement('div');
       entry.classList.add('chat-entry');
       entry.classList.add(sender);
-      entry.textContent = message;
+      if (isError) entry.classList.add('error');
+      
+      // Check if this is a ticket creation message
+      const isTicketMessage = message.includes('🎫 Support Ticket Created Successfully!');
+      if (isTicketMessage) {
+        entry.classList.add('ticket-message');
+        
+        // Extract ticket ID for special formatting
+        const ticketIdMatch = message.match(/Ticket ID: #(\d+)/);
+        if (ticketIdMatch) {
+          const ticketId = ticketIdMatch[1];
+          // Add special styling for ticket messages
+          entry.style.background = 'linear-gradient(135deg, #2c003e, #4a148c)';
+          entry.style.border = '1px solid #6a11cb';
+          entry.style.boxShadow = '0 2px 10px rgba(106, 17, 203, 0.2)';
+        }
+      }
+      
+      // Handle multi-line messages
+      const lines = message.split('\n');
+      lines.forEach((line, index) => {
+        if (index > 0) {
+          entry.appendChild(document.createElement('br'));
+        }
+        // Check if the line contains ticket ID and highlight it
+        if (line.includes('Ticket ID: #')) {
+          const idPart = document.createElement('span');
+          idPart.style.fontWeight = 'bold';
+          idPart.style.color = isTicketMessage ? '#fff' : '#000';
+          idPart.textContent = line;
+          entry.appendChild(idPart);
+        } else {
+          entry.appendChild(document.createTextNode(line));
+        }
+      });
+      
       chatLog.appendChild(entry);
       chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    async function logout() {
+      try {
+        const response = await fetch('/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          window.location.href = '/login.html';
+        } else {
+          console.error('Logout failed');
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
     }
 
     async function sendQuery(query) {
@@ -219,20 +305,27 @@
           headers: {
             'Content-Type': 'application/json'
           },
+          credentials: 'include', // Add this to send cookies
           body: JSON.stringify({ query })
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            // Redirect to login if unauthorized
+            window.location.href = '/login.html';
+            return;
+          }
           appendMessage('bot', 'Error: ' + response.statusText);
         } else {
           const data = await response.json();
-          let botMessage = data.summary || "Sorry, I couldn't find an answer to your question.";
+          const botMessage = data.summary || data.message || "Sorry, I couldn't find an answer to your question.";
           appendMessage('bot', botMessage);
         }
       } catch (error) {
-        appendMessage('bot', 'Error: ' + error.message);
+        appendMessage('bot', 'Error: ' + error.message, true);
       } finally {
         sendButton.disabled = false;
+        queryInput.focus();
       }
     }
 
