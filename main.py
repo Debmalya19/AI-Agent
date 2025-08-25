@@ -6,12 +6,12 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.tools import Tool
-from tools import (
+from backend.tools import (
     search_tool, wiki_tool, save_tool, bt_website_tool, 
     bt_support_hours_tool_instance, bt_plans_tool, multi_tool_tool,
     intelligent_orchestrator_tool, context_memory, create_ticket_tool_instance
 )
-from customer_db_tool import get_customer_orders
+from backend.customer_db_tool import get_customer_orders
 import os
 import json
 from fastapi import FastAPI, HTTPException, Request, Response, status, Cookie, Form, BackgroundTasks
@@ -23,10 +23,10 @@ import secrets
 import pandas as pd
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
-from database import SessionLocal, get_db
-from models import KnowledgeEntry, ChatHistory, SupportIntent, SupportResponse, User, UserSession
-from db_utils import search_knowledge_entries, get_knowledge_entries, save_chat_history, get_chat_history
-from enhanced_rag_orchestrator import search_with_priority
+from backend.database import SessionLocal, get_db
+from backend.models import KnowledgeEntry, ChatHistory, SupportIntent, SupportResponse, User, UserSession
+from backend.db_utils import search_knowledge_entries, get_knowledge_entries, save_chat_history, get_chat_history
+from backend.enhanced_rag_orchestrator import search_with_priority
 import logging
 from sqlalchemy import text
 from datetime import datetime, timedelta
@@ -35,16 +35,16 @@ import asyncio
 import time
 
 # Memory layer imports
-from memory_layer_manager import MemoryLayerManager, MemoryStats, CleanupResult
-from memory_config import MemoryConfig, load_config
-from memory_models import ConversationEntry, ContextEntry, ToolRecommendation
+from backend.memory_layer_manager import MemoryLayerManager, MemoryStats, CleanupResult
+from backend.memory_config import MemoryConfig, load_config
+from backend.memory_models import ConversationEntry, ContextEntry, ToolRecommendation
 
 # Intelligent chat UI imports
-from intelligent_chat.chat_manager import ChatManager
-from intelligent_chat.tool_orchestrator import ToolOrchestrator
-from intelligent_chat.context_retriever import ContextRetriever
-from intelligent_chat.response_renderer import ResponseRenderer
-from intelligent_chat.models import ChatResponse as IntelligentChatResponse, UIState
+from backend.intelligent_chat.chat_manager import ChatManager
+from backend.intelligent_chat.tool_orchestrator import ToolOrchestrator
+from backend.intelligent_chat.context_retriever import ContextRetriever
+from backend.intelligent_chat.response_renderer import ResponseRenderer
+from backend.intelligent_chat.models import ChatResponse as IntelligentChatResponse, UIState
 
 load_dotenv()
 
@@ -468,23 +468,7 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"Shutdown error: {e}")
 
-# Data lake API endpoints
-@app.get("/data_lake/catalog")
-async def get_data_lake_catalog():
-    try:
-        with open("data_lake/catalog.json", "r", encoding="utf-8") as f:
-            catalog = json.load(f)
-        return {"catalog": catalog}
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/data_lake/file/{filename}")
-async def get_data_lake_file(filename: str):
-    file_path = os.path.join("data_lake", filename)
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    else:
-        return {"error": "File not found in data lake."}
+# Data lake endpoints removed - data_lake folder was deleted as it was unused
 
 # Serve frontend static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -766,16 +750,25 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
             ]):
                 try:
                     # Create a support ticket for the customer
-                    ticket_result = create_ticket_tool_instance.func(chat_request.query, user_id)
+                    logger.info(f"Creating support ticket for customer {user_id} with query: {chat_request.query}")
+                    
+                    # Convert user_id to int if it's a string (for compatibility with ticket system)
+                    customer_id = int(user_id) if isinstance(user_id, str) and user_id.isdigit() else user_id
+                    
+                    ticket_result = create_ticket_tool_instance.func(chat_request.query, customer_id)
                     if ticket_result and len(ticket_result) > 20:
                         tools_used.append("CreateSupportTicket")
                         tool_performance["CreateSupportTicket"] = 1.0
-                        logger.info("Manually triggered CreateSupportTicket tool")
+                        logger.info(f"Successfully created support ticket for customer {customer_id}")
                         
                         # Update the summary with the ticket creation result
                         summary = ticket_result
+                    else:
+                        logger.warning("Ticket creation returned empty or short result")
                 except Exception as manual_error:
-                    logger.warning(f"Manual ticket creation error: {manual_error}")
+                    logger.error(f"Manual ticket creation error for customer {user_id}: {manual_error}")
+                    # Provide fallback response if ticket creation fails
+                    summary = "I understand you need assistance. While I'm having trouble creating a support ticket right now, please contact our customer service team directly at 0330 123 4150 for immediate help with your issue."
             
             elif any(keyword in query_lower for keyword in ['upgrade', 'plan', 'change plan']):
                 try:
