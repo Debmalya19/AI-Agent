@@ -317,7 +317,7 @@ def intelligent_tool_orchestrator(query: str) -> str:
         
         # Step 1: Check database knowledge base first (always)
         try:
-            from enhanced_rag_orchestrator import search_with_priority
+            from backend.enhanced_rag_orchestrator import search_with_priority
             rag_results = search_with_priority(query, max_results=2)
             if rag_results:
                 comprehensive_answer.append("📚 **From our knowledge base:**")

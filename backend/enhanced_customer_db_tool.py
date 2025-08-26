@@ -1,8 +1,8 @@
 from typing import Optional, List, Dict
 import logging
 from sqlalchemy.orm import Session
-from .database import SessionLocal
-from .models import Customer, Order
+from backend.database import SessionLocal
+from backend.models import Customer, Order
 from datetime import datetime
 
 def get_customer_by_id(customer_id: int) -> Optional[Dict]:

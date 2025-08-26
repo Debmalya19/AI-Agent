@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from .models import KnowledgeEntry, Customer, Order, SupportIntent, SupportResponse, ChatHistory
+from backend.models import KnowledgeEntry, Customer, Order, SupportIntent, SupportResponse, ChatHistory
 from typing import List, Optional
 import json
 

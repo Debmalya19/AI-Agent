@@ -39,18 +39,19 @@ class EnhancedChatHistory(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
-    context_cache_entries = relationship("MemoryContextCache", 
-                                       primaryjoin="and_(EnhancedChatHistory.user_id == MemoryContextCache.user_id, "
-                                                  "EnhancedChatHistory.session_id == MemoryContextCache.cache_key)",
-                                       foreign_keys="MemoryContextCache.user_id",
-                                       viewonly=True)
+    # Relationships - commented out to avoid circular reference issues
+    # context_cache_entries = relationship("MemoryContextCache", 
+    #                                    primaryjoin="and_(EnhancedChatHistory.user_id == MemoryContextCache.user_id, "
+    #                                               "EnhancedChatHistory.session_id == MemoryContextCache.cache_key)",
+    #                                    foreign_keys="MemoryContextCache.user_id",
+    #                                    viewonly=True)
     
     # Indexes for performance
     __table_args__ = (
         Index('idx_enhanced_chat_user_session', 'user_id', 'session_id'),
         Index('idx_enhanced_chat_created', 'created_at'),
         Index('idx_enhanced_chat_quality', 'response_quality_score'),
+        {'extend_existing': True}
     )
     
     def to_conversation_entry(self) -> 'ConversationEntry':
@@ -89,6 +90,7 @@ class MemoryContextCache(Base):
         Index('idx_context_cache_user_type', 'user_id', 'context_type'),
         Index('idx_context_cache_expires', 'expires_at'),
         Index('idx_context_cache_relevance', 'relevance_score'),
+        {'extend_existing': True}
     )
     
     def to_context_entry(self) -> 'ContextEntry':
@@ -127,6 +129,7 @@ class ToolUsageMetrics(Base):
         Index('idx_tool_metrics_success', 'success_rate'),
         Index('idx_tool_metrics_quality', 'response_quality_score'),
         Index('idx_tool_metrics_usage', 'usage_count'),
+        {'extend_existing': True}
     )
     
     def to_tool_recommendation(self, reason: str = "Based on historical performance") -> 'ToolRecommendation':
@@ -179,11 +182,13 @@ class ConversationSummary(Base):
     __table_args__ = (
         Index('idx_conversation_summary_user', 'user_id'),
         Index('idx_conversation_summary_date_range', 'date_range_start', 'date_range_end'),
+        {'extend_existing': True}
     )
 
 class MemoryConfiguration(Base):
     """Configuration settings for memory layer behavior"""
     __tablename__ = "memory_configuration"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     config_key = Column(String(100), unique=True, nullable=False, index=True)
@@ -209,6 +214,7 @@ class MemoryHealthMetrics(Base):
     __table_args__ = (
         Index('idx_health_metrics_name_time', 'metric_name', 'recorded_at'),
         Index('idx_health_metrics_category', 'metric_category'),
+        {'extend_existing': True}
     )
 
 class EnhancedUserSession(Base):
@@ -232,6 +238,7 @@ class EnhancedUserSession(Base):
         Index('idx_enhanced_user_sessions_user_active', 'user_id', 'is_active'),
         Index('idx_enhanced_user_sessions_expires', 'expires_at'),
         Index('idx_enhanced_user_sessions_activity', 'last_activity'),
+        {'extend_existing': True}
     )
 
 class DataProcessingConsent(Base):
@@ -255,6 +262,7 @@ class DataProcessingConsent(Base):
         Index('idx_consent_user_purpose', 'user_id', 'purpose'),
         Index('idx_consent_given', 'consent_given'),
         Index('idx_consent_timestamp', 'consent_timestamp'),
+        {'extend_existing': True}
     )
 
 class DataSubjectRights(Base):
@@ -278,6 +286,7 @@ class DataSubjectRights(Base):
         Index('idx_dsr_user_type', 'user_id', 'request_type'),
         Index('idx_dsr_status', 'status'),
         Index('idx_dsr_requested', 'requested_at'),
+        {'extend_existing': True}
     )
 
 # Data Transfer Objects (DTOs) for type safety and validation

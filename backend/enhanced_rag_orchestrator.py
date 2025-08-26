@@ -5,13 +5,13 @@ Integrates with the memory layer for context-aware search and tool optimization
 
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from .database import SessionLocal
-from .models import KnowledgeEntry, SupportIntent, SupportResponse
-from .tools import context_memory, analyze_query_type
-from .memory_layer_manager import MemoryLayerManager
-from .context_retrieval_engine import ContextRetrievalEngine
-from .tool_usage_analytics import ToolUsageAnalytics
-from .memory_models import ConversationEntryDTO
+from backend.database import SessionLocal
+from backend.models import KnowledgeEntry, SupportIntent, SupportResponse
+from backend.tools import context_memory, analyze_query_type
+from backend.memory_layer_manager import MemoryLayerManager
+from backend.context_retrieval_engine import ContextRetrievalEngine
+from backend.tool_usage_analytics import ToolUsageAnalytics
+from backend.memory_models import ConversationEntryDTO
 import logging
 from datetime import datetime, timedelta
 import time

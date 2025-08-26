@@ -13,8 +13,8 @@ import logging
 import hashlib
 import json
 
-from .models import ChatHistory, User
-from .memory_models import (
+from backend.models import ChatHistory, User
+from backend.memory_models import (
     EnhancedChatHistory, 
     ConversationSummary,
     ConversationEntryDTO,

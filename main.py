@@ -468,6 +468,109 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"Shutdown error: {e}")
 
+# Learning and insights endpoints
+@app.get("/learning/insights")
+async def get_learning_insights(session_token: str = Cookie(None)):
+    """Get learning insights for the current user"""
+    try:
+        if not session_token:
+            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
+
+        # Get user ID from session
+        with SessionLocal() as db:
+            user_session = db.query(UserSession).filter(
+                UserSession.session_id == session_token,
+                UserSession.is_active == True
+            ).first()
+            
+            if not user_session:
+                raise HTTPException(status_code=401, detail="Invalid session")
+            
+            user_id = user_session.user_id
+
+        # Get learning insights from intelligent chat manager
+        if intelligent_chat_manager:
+            insights = intelligent_chat_manager.get_learning_insights(user_id)
+            return JSONResponse(content=insights)
+        else:
+            return JSONResponse(content={"error": "Learning system not available"})
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting learning insights: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get learning insights")
+
+@app.get("/learning/conversation-patterns")
+async def get_conversation_patterns(session_token: str = Cookie(None)):
+    """Get conversation patterns and recommendations for the current user"""
+    try:
+        if not session_token:
+            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
+
+        # Get user ID from session
+        with SessionLocal() as db:
+            user_session = db.query(UserSession).filter(
+                UserSession.session_id == session_token,
+                UserSession.is_active == True
+            ).first()
+            
+            if not user_session:
+                raise HTTPException(status_code=401, detail="Invalid session")
+            
+            user_id = user_session.user_id
+
+        # Get conversation patterns from memory manager
+        if memory_manager:
+            user_history = memory_manager.get_user_conversation_history(user_id, limit=30)
+            
+            patterns = {
+                "total_conversations": len(user_history),
+                "recent_topics": [],
+                "successful_interactions": [],
+                "tool_usage_patterns": []
+            }
+            
+            # Analyze recent topics
+            recent_topics = {}
+            for conv in user_history[:10]:  # Last 10 conversations
+                if hasattr(conv, 'user_message') and conv.user_message:
+                    words = conv.user_message.lower().split()
+                    for word in words:
+                        if len(word) > 4:  # Only meaningful words
+                            recent_topics[word] = recent_topics.get(word, 0) + 1
+            
+            # Get top topics
+            patterns["recent_topics"] = sorted(recent_topics.items(), 
+                                             key=lambda x: x[1], reverse=True)[:5]
+            
+            # Find successful interactions
+            successful = [conv for conv in user_history 
+                         if hasattr(conv, 'response_quality_score') and 
+                         conv.response_quality_score and conv.response_quality_score > 0.8]
+            
+            patterns["successful_interactions"] = len(successful)
+            
+            # Analyze tool usage
+            tool_usage = {}
+            for conv in user_history:
+                if hasattr(conv, 'tools_used') and conv.tools_used:
+                    for tool in conv.tools_used:
+                        tool_usage[tool] = tool_usage.get(tool, 0) + 1
+            
+            patterns["tool_usage_patterns"] = sorted(tool_usage.items(), 
+                                                   key=lambda x: x[1], reverse=True)
+            
+            return JSONResponse(content=patterns)
+        else:
+            return JSONResponse(content={"error": "Memory manager not available"})
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting conversation patterns: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get conversation patterns")
+
 # Data lake endpoints removed - data_lake folder was deleted as it was unused
 
 # Serve frontend static files
@@ -581,28 +684,54 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
         if not agent_executor:
             raise HTTPException(status_code=500, detail="Agent executor not available")
 
-        # Retrieve conversation context from memory layer
+        # Retrieve conversation context from memory layer with session awareness
         context_entries = memory_manager.retrieve_context(
             query=chat_request.query,
             user_id=user_id,
-            limit=10
+            limit=15  # Get more context for better understanding
         )
         
-        # Build context for the agent
+        # Build context for the agent with proper conversation flow
         chat_history = []
         context_used = []
         
-        logger.info(f"Retrieved {len(context_entries)} context entries")
+        logger.info(f"Retrieved {len(context_entries)} context entries for user {user_id}")
         
-        for i, context in enumerate(context_entries):
+        # Sort context entries by timestamp to maintain conversation order
+        sorted_contexts = sorted(context_entries, key=lambda x: x.timestamp if x.timestamp else datetime.min)
+        
+        # Group consecutive user/bot messages to maintain conversation flow
+        conversation_pairs = []
+        current_pair = {"user": None, "bot": None}
+        
+        for context in sorted_contexts:
             if context.context_type == "user_message":
-                chat_history.append(HumanMessage(content=context.content))
-                context_used.append(f"user_msg_{context.source}")
-                logger.info(f"Added user message context {i}: {context.content[:50]}...")
+                # If we have a complete pair, save it and start new one
+                if current_pair["user"] is not None:
+                    conversation_pairs.append(current_pair)
+                    current_pair = {"user": None, "bot": None}
+                current_pair["user"] = context
             elif context.context_type == "bot_response":
-                chat_history.append(AIMessage(content=context.content))
-                context_used.append(f"bot_response_{context.source}")
-                logger.info(f"Added bot response context {i}: {context.content[:50]}...")
+                current_pair["bot"] = context
+                # Complete pair - add to list
+                conversation_pairs.append(current_pair)
+                current_pair = {"user": None, "bot": None}
+        
+        # Add any remaining incomplete pair
+        if current_pair["user"] is not None:
+            conversation_pairs.append(current_pair)
+        
+        # Build chat history from conversation pairs (most recent first for context)
+        for pair in conversation_pairs[-5:]:  # Last 5 conversation exchanges
+            if pair["user"]:
+                chat_history.append(HumanMessage(content=pair["user"].content))
+                context_used.append(f"user_msg_{pair['user'].source}")
+                logger.info(f"Added user message: {pair['user'].content[:50]}...")
+            
+            if pair["bot"]:
+                chat_history.append(AIMessage(content=pair["bot"].content))
+                context_used.append(f"bot_response_{pair['bot'].source}")
+                logger.info(f"Added bot response: {pair['bot'].content[:50]}...")
         
         # If no context from memory, add some default context
         if not context_used:
@@ -882,6 +1011,27 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
         success = memory_manager.store_conversation(conversation_entry)
         if not success:
             logger.warning("Failed to store conversation in memory layer")
+        else:
+            logger.info(f"Stored conversation for user {user_id} with {len(tools_used)} tools")
+            
+        # Also save to database for immediate availability in next request
+        try:
+            with SessionLocal() as db:
+                chat_history = ChatHistory(
+                    user_id=user_id,
+                    session_id=session_token,
+                    user_message=chat_request.query,
+                    bot_response=summary,
+                    tools_used=json.dumps(tools_used),
+                    context_used=json.dumps(context_used),
+                    response_quality_score=response_quality_score,
+                    timestamp=datetime.now()
+                )
+                db.add(chat_history)
+                db.commit()
+                logger.info(f"Saved chat history to database for immediate context availability")
+        except Exception as db_error:
+            logger.error(f"Failed to save chat history to database: {db_error}")
         
         # Record performance metrics
         response_time = time.time() - start_time

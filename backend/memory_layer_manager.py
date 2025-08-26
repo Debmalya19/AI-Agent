@@ -242,12 +242,13 @@ class MemoryLayerManager:
                     content=conv.user_message,
                     source=f"conversation_{conv.id}",
                     relevance_score=self._calculate_relevance_score(query, conv.user_message),
-                    context_type="user_message",
+                    context_type="conversation",  # Use valid context type
                     timestamp=conv.created_at,
                     metadata={
                         'session_id': conv.session_id,
                         'tools_used': conv.tools_used or [],
-                        'response_quality': conv.response_quality_score
+                        'response_quality': conv.response_quality_score,
+                        'message_type': 'user_message'
                     }
                 ))
                 
@@ -256,12 +257,13 @@ class MemoryLayerManager:
                     content=conv.bot_response,
                     source=f"conversation_{conv.id}",
                     relevance_score=self._calculate_relevance_score(query, conv.bot_response),
-                    context_type="bot_response",
+                    context_type="conversation",  # Use valid context type
                     timestamp=conv.created_at,
                     metadata={
                         'session_id': conv.session_id,
                         'tools_used': conv.tools_used or [],
-                        'response_quality': conv.response_quality_score
+                        'response_quality': conv.response_quality_score,
+                        'message_type': 'bot_response'
                     }
                 ))
             

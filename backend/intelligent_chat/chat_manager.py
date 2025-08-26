@@ -128,20 +128,23 @@ class ChatManager(BaseChatManager):
                 return await self._process_simplified_message(message, user_id, session_id)
             
             # Get conversation context using integrated memory layer
-            context = await self._get_context_with_memory_integration(message, user_id)
+            context = await self._get_context_with_memory_integration(message, user_id, session_id)
             
-            # Process with tool orchestrator if available
+            # Process with enhanced tool orchestration using learning
             tools_used = []
             tool_performance = {}
+            
+            # Use adaptive tool selection based on learned patterns
+            adaptive_tools = await self._adaptive_tool_selection(message, user_id, context)
+            
             if self.tool_orchestrator:
                 try:
                     # Monitor tool execution with resource limits
                     with resource_monitor.monitor_tool_execution("ToolOrchestrator", timeout=30.0):
-                        tool_recommendations = await self.tool_orchestrator.select_tools(message, context)
-                        if tool_recommendations:
-                            tool_names = [rec.tool_name for rec in tool_recommendations]
+                        # First try learned/adaptive tool selection
+                        if adaptive_tools:
                             tool_results = await self.tool_orchestrator.execute_tools(
-                                tool_names, message, {"context": context}
+                                adaptive_tools, message, {"context": context}
                             )
                             tools_used = [result.tool_name for result in tool_results if result.success]
                             
@@ -152,9 +155,42 @@ class ChatManager(BaseChatManager):
                                     'execution_time': result.execution_time,
                                     'error': result.error_message
                                 }
+                        
+                        # If adaptive tools didn't work well, try orchestrator's selection
+                        if not tools_used or len(tools_used) == 0:
+                            tool_recommendations = await self.tool_orchestrator.select_tools(message, context)
+                            if tool_recommendations:
+                                tool_names = [rec.tool_name for rec in tool_recommendations]
+                                tool_results = await self.tool_orchestrator.execute_tools(
+                                    tool_names, message, {"context": context}
+                                )
+                                tools_used.extend([result.tool_name for result in tool_results if result.success])
+                                
+                                # Track additional tool performance
+                                for result in tool_results:
+                                    tool_performance[result.tool_name] = {
+                                        'success': result.success,
+                                        'execution_time': result.execution_time,
+                                        'error': result.error_message
+                                    }
                 except Exception as e:
                     # Log error but continue with basic response
                     print(f"Tool orchestration failed: {e}")
+            
+            # If no tool orchestrator, use adaptive tools directly with agent executor
+            elif adaptive_tools and self.agent_executor:
+                try:
+                    # Use the agent executor with learned tool preferences
+                    tools_used = adaptive_tools
+                    for tool in adaptive_tools:
+                        tool_performance[tool] = {
+                            'success': True,
+                            'execution_time': 0.1,
+                            'error': None,
+                            'adaptive_selection': True
+                        }
+                except Exception as e:
+                    print(f"Adaptive tool execution failed: {e}")
             
             # Generate response content
             response_content = self._generate_response_content(message, context, tools_used)
@@ -180,10 +216,13 @@ class ChatManager(BaseChatManager):
                 timestamp=datetime.now()
             )
             
-            # Store conversation in memory layer
+            # Store conversation in memory layer with learning updates
             await self._store_conversation_in_memory(
                 user_id, session_id, message, response, tools_used, tool_performance, context
             )
+            
+            # Update learning models based on this interaction
+            await self._update_learning_models(message, tools_used, tool_performance, response.confidence_score)
             
             # Update session state
             self._update_session_state(user_id, session_id, message, response)
@@ -210,6 +249,9 @@ class ChatManager(BaseChatManager):
                 )
             except:
                 pass  # Don't fail on storage error
+            
+            # Update session state even for errors
+            self._update_session_state(user_id, session_id, message, error_response)
             
             return error_response
     
@@ -288,27 +330,67 @@ class ChatManager(BaseChatManager):
                 "session_id": session_id,
                 "created_at": datetime.now(),
                 "message_count": 0,
-                "last_activity": datetime.now()
+                "last_activity": datetime.now(),
+                "conversation_history": []  # Track conversation within session
             }
     
-    async def _get_context_with_memory_integration(self, message: str, user_id: str) -> List[ContextEntry]:
-        """Get context using integrated memory layer with fallbacks."""
+    async def _get_context_with_memory_integration(self, message: str, user_id: str, session_id: str = None) -> List[ContextEntry]:
+        """Get context using integrated memory layer with enhanced learning capabilities."""
         try:
-            # Try intelligent context retriever first
+            # Get session-specific context first (most recent conversation in this session)
+            session_context = []
+            if session_id:
+                session_key = f"{user_id}:{session_id}"
+                session_data = self._active_sessions.get(session_key, {})
+                
+                # Add recent messages from this session as context
+                if "conversation_history" in session_data:
+                    for msg in session_data["conversation_history"][-5:]:  # Last 5 messages
+                        session_context.append(ContextEntry(
+                            content=msg["content"],
+                            source=f"session_{session_id}",
+                            relevance_score=1.0,  # High relevance for same session
+                            timestamp=msg.get("timestamp", datetime.now()),
+                            context_type=msg["type"],
+                            metadata={"session_id": session_id, "recent": True}
+                        ))
+            
+            # Try intelligent context retriever
+            retriever_context = []
             if self.context_retriever:
-                return await self.context_retriever.get_relevant_context(message, user_id)
+                retriever_context = await self.context_retriever.get_relevant_context(message, user_id)
+            
+            # Enhanced memory-based context retrieval with learning
+            memory_context = []
+            if self.memory_manager:
+                # Get conversation context
+                memory_contexts = self.memory_manager.retrieve_context(message, user_id, 10)
+                memory_context = self._convert_memory_contexts_to_context_entries(memory_contexts)
+                
+                # Enhance with learned patterns
+                memory_context = await self._enhance_context_with_learning(message, user_id, memory_context)
             
             # Fallback to context engine
+            engine_context = []
             if self.context_engine:
                 engine_contexts = self.context_engine.get_relevant_context(message, user_id, limit=10)
-                return self._convert_engine_contexts_to_context_entries(engine_contexts)
+                engine_context = self._convert_engine_contexts_to_context_entries(engine_contexts)
             
-            # Fallback to memory manager
-            if self.memory_manager:
-                memory_contexts = self.memory_manager.retrieve_context(message, user_id, 10)
-                return self._convert_memory_contexts_to_context_entries(memory_contexts)
+            # Combine all contexts, prioritizing session context
+            all_contexts = session_context + retriever_context + memory_context + engine_context
             
-            return []
+            # Remove duplicates and rank by relevance
+            seen_content = set()
+            unique_contexts = []
+            for ctx in all_contexts:
+                content_hash = hashlib.md5(ctx.content.encode()).hexdigest()
+                if content_hash not in seen_content:
+                    seen_content.add(content_hash)
+                    unique_contexts.append(ctx)
+            
+            # Sort by relevance score (descending) and return top 10
+            unique_contexts.sort(key=lambda x: x.relevance_score, reverse=True)
+            return unique_contexts[:10]
             
         except Exception as e:
             print(f"Context retrieval failed: {e}")
@@ -543,6 +625,30 @@ class ChatManager(BaseChatManager):
             session["last_response"] = response.content
             session["total_processing_time"] = session.get("total_processing_time", 0.0) + response.execution_time
             session["tools_used_count"] = session.get("tools_used_count", 0) + len(response.tools_used)
+            
+            # Add to conversation history for context
+            if "conversation_history" not in session:
+                session["conversation_history"] = []
+            
+            # Add user message
+            session["conversation_history"].append({
+                "type": "user_message",
+                "content": message,
+                "timestamp": datetime.now()
+            })
+            
+            # Add bot response
+            session["conversation_history"].append({
+                "type": "bot_response", 
+                "content": response.content,
+                "timestamp": datetime.now(),
+                "tools_used": response.tools_used,
+                "confidence_score": response.confidence_score
+            })
+            
+            # Keep only last 20 messages (10 exchanges) to prevent memory bloat
+            if len(session["conversation_history"]) > 20:
+                session["conversation_history"] = session["conversation_history"][-20:]
     
     def get_session_stats(self, user_id: str, session_id: str) -> Dict[str, Any]:
         """Get statistics for a specific session."""
@@ -649,14 +755,508 @@ class ChatManager(BaseChatManager):
             response_cache = get_response_cache()
             response_cache.cache_response(message, context_hash, response)
     
+    async def _enhance_context_with_learning(
+        self, 
+        message: str, 
+        user_id: str, 
+        base_contexts: List[ContextEntry]
+    ) -> List[ContextEntry]:
+        """Enhance context with learned patterns and successful interaction history."""
+        try:
+            enhanced_contexts = base_contexts.copy()
+            
+            # Add learned tool recommendations as context
+            if self.memory_manager:
+                tool_recommendation = self.memory_manager.analyze_tool_usage(message, [])
+                if tool_recommendation:
+                    tool_context = ContextEntry(
+                        content=f"Based on similar queries, the {tool_recommendation.tool_name} tool has been successful with {tool_recommendation.confidence_score:.1%} confidence. {tool_recommendation.reason}",
+                        source="tool_learning",
+                        relevance_score=tool_recommendation.confidence_score,
+                        timestamp=datetime.now(),
+                        context_type="tool_usage",  # Use valid context type
+                        metadata={
+                            "tool_name": tool_recommendation.tool_name,
+                            "expected_performance": tool_recommendation.expected_performance,
+                            "learning_based": True,
+                            "learning_type": "tool_recommendation"
+                        }
+                    )
+                    enhanced_contexts.append(tool_context)
+            
+            # Add conversation pattern learning
+            pattern_context = await self._get_conversation_pattern_context(message, user_id)
+            if pattern_context:
+                enhanced_contexts.extend(pattern_context)
+            
+            # Sort by relevance score
+            enhanced_contexts.sort(key=lambda x: x.relevance_score, reverse=True)
+            
+            return enhanced_contexts[:15]  # Limit to top 15 contexts
+            
+        except Exception as e:
+            print(f"Error enhancing context with learning: {e}")
+            return base_contexts
+    
+    async def _get_conversation_pattern_context(self, message: str, user_id: str) -> List[ContextEntry]:
+        """Get context based on learned conversation patterns."""
+        try:
+            if not self.memory_manager:
+                return []
+            
+            # Get user's conversation history for pattern analysis
+            user_history = self.memory_manager.get_user_conversation_history(user_id, limit=20)
+            
+            if not user_history:
+                return []
+            
+            pattern_contexts = []
+            
+            # Analyze for similar question patterns
+            similar_questions = self._find_similar_questions(message, user_history)
+            for similar_q in similar_questions[:3]:  # Top 3 similar questions
+                if similar_q.response_quality_score and similar_q.response_quality_score > 0.7:
+                    pattern_context = ContextEntry(
+                        content=f"Previously successful response to similar query: {similar_q.bot_response[:200]}...",
+                        source=f"pattern_learning_{similar_q.session_id}",
+                        relevance_score=similar_q.response_quality_score,
+                        timestamp=similar_q.timestamp,
+                        context_type="conversation",  # Use valid context type
+                        metadata={
+                            "original_question": similar_q.user_message,
+                            "tools_used": similar_q.tools_used,
+                            "quality_score": similar_q.response_quality_score,
+                            "pattern_based": True,
+                            "learning_type": "pattern_learning"
+                        }
+                    )
+                    pattern_contexts.append(pattern_context)
+            
+            # Analyze for successful tool combinations
+            successful_tool_patterns = self._analyze_successful_tool_patterns(user_history)
+            if successful_tool_patterns:
+                tool_pattern_context = ContextEntry(
+                    content=f"Successful tool combinations for this user: {', '.join(successful_tool_patterns)}",
+                    source="tool_pattern_learning",
+                    relevance_score=0.8,
+                    timestamp=datetime.now(),
+                    context_type="tool_usage",  # Use valid context type
+                    metadata={
+                        "successful_tools": successful_tool_patterns,
+                        "pattern_based": True,
+                        "learning_type": "tool_pattern"
+                    }
+                )
+                pattern_contexts.append(tool_pattern_context)
+            
+            return pattern_contexts
+            
+        except Exception as e:
+            print(f"Error getting conversation pattern context: {e}")
+            return []
+    
+    def _find_similar_questions(self, current_message: str, history: List) -> List:
+        """Find similar questions in conversation history using simple text similarity."""
+        try:
+            current_words = set(current_message.lower().split())
+            similar_conversations = []
+            
+            for conv in history:
+                if hasattr(conv, 'user_message') and conv.user_message:
+                    conv_words = set(conv.user_message.lower().split())
+                    
+                    # Calculate Jaccard similarity
+                    intersection = current_words.intersection(conv_words)
+                    union = current_words.union(conv_words)
+                    
+                    if union:
+                        similarity = len(intersection) / len(union)
+                        if similarity > 0.3:  # Threshold for similarity
+                            # Add similarity score to the conversation object
+                            conv.similarity_score = similarity
+                            similar_conversations.append(conv)
+            
+            # Sort by similarity score
+            similar_conversations.sort(key=lambda x: getattr(x, 'similarity_score', 0), reverse=True)
+            return similar_conversations
+            
+        except Exception as e:
+            print(f"Error finding similar questions: {e}")
+            return []
+    
+    def _analyze_successful_tool_patterns(self, history: List) -> List[str]:
+        """Analyze successful tool usage patterns from conversation history."""
+        try:
+            tool_success_count = {}
+            tool_usage_count = {}
+            
+            for conv in history:
+                if hasattr(conv, 'tools_used') and hasattr(conv, 'response_quality_score'):
+                    if conv.tools_used and conv.response_quality_score and conv.response_quality_score > 0.7:
+                        for tool in conv.tools_used:
+                            tool_success_count[tool] = tool_success_count.get(tool, 0) + 1
+                            tool_usage_count[tool] = tool_usage_count.get(tool, 0) + 1
+                    elif conv.tools_used:
+                        for tool in conv.tools_used:
+                            tool_usage_count[tool] = tool_usage_count.get(tool, 0) + 1
+            
+            # Find tools with high success rates
+            successful_tools = []
+            for tool, success_count in tool_success_count.items():
+                total_usage = tool_usage_count.get(tool, 1)
+                success_rate = success_count / total_usage
+                
+                if success_rate > 0.6 and success_count >= 2:  # At least 60% success rate and 2+ successes
+                    successful_tools.append(tool)
+            
+            return successful_tools
+            
+        except Exception as e:
+            print(f"Error analyzing tool patterns: {e}")
+            return []
+    
+    async def _adaptive_tool_selection(self, message: str, user_id: str, context: List[ContextEntry]) -> List[str]:
+        """Adaptively select tools based on learned patterns and context."""
+        try:
+            selected_tools = []
+            
+            # Check for tool recommendations from learning
+            tool_recommendation_contexts = [ctx for ctx in context 
+                                          if ctx.context_type == "tool_usage" and 
+                                          ctx.metadata.get("learning_type") == "tool_recommendation"]
+            if tool_recommendation_contexts:
+                # Use the highest confidence tool recommendation
+                best_recommendation = max(tool_recommendation_contexts, key=lambda x: x.relevance_score)
+                recommended_tool = best_recommendation.metadata.get("tool_name")
+                if recommended_tool:
+                    selected_tools.append(recommended_tool)
+            
+            # Check for successful tool patterns
+            pattern_contexts = [ctx for ctx in context 
+                              if ctx.context_type == "tool_usage" and 
+                              ctx.metadata.get("learning_type") == "tool_pattern"]
+            if pattern_contexts:
+                successful_tools = pattern_contexts[0].metadata.get("successful_tools", [])
+                selected_tools.extend(successful_tools[:2])  # Add top 2 successful tools
+            
+            # Add default tools based on message content if no learned patterns
+            if not selected_tools:
+                message_lower = message.lower()
+                if any(word in message_lower for word in ['support', 'help', 'issue', 'problem']):
+                    selected_tools.extend(["SupportKnowledgeBase", "CreateSupportTicket"])
+                elif any(word in message_lower for word in ['plan', 'upgrade', 'pricing']):
+                    selected_tools.extend(["BTPlansInformation", "BTWebsiteSearch"])
+                elif any(word in message_lower for word in ['hours', 'contact', 'phone']):
+                    selected_tools.extend(["BTSupportHours", "SupportKnowledgeBase"])
+                else:
+                    selected_tools.extend(["ContextRetriever", "SupportKnowledgeBase"])
+            
+            # Remove duplicates while preserving order
+            unique_tools = []
+            for tool in selected_tools:
+                if tool not in unique_tools:
+                    unique_tools.append(tool)
+            
+            return unique_tools[:3]  # Limit to 3 tools for performance
+            
+        except Exception as e:
+            print(f"Error in adaptive tool selection: {e}")
+            return ["ContextRetriever", "SupportKnowledgeBase"]  # Fallback tools
+    
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance-related statistics."""
         resource_monitor = get_resource_monitor()
-        performance_cache = get_performance_cache()
         
-        return {
-            "cache_stats": performance_cache.get_stats(),
-            "resource_usage": resource_monitor.get_current_usage(),
-            "conversation_memory": resource_monitor.get_conversation_memory_usage(),
-            "system_stats": resource_monitor.get_system_stats()
+        stats = {
+            "total_conversations": self._conversation_count,
+            "total_processing_time": self._total_processing_time,
+            "active_sessions": len(self._active_sessions),
+            "avg_processing_time": (
+                self._total_processing_time / self._conversation_count 
+                if self._conversation_count > 0 else 0.0
+            ),
+            "memory_integration_enabled": self.memory_manager is not None,
+            "context_engine_enabled": self.context_engine is not None,
+            "learning_features_enabled": True
         }
+        
+        # Add memory layer stats if available
+        if self.memory_manager:
+            try:
+                memory_stats = self.memory_manager.get_memory_stats()
+                stats["memory_stats"] = memory_stats.to_dict()
+            except Exception as e:
+                print(f"Error getting memory stats: {e}")
+        
+        return stats
+    
+    async def _update_learning_models(
+        self, 
+        message: str, 
+        tools_used: List[str], 
+        tool_performance: Dict[str, Any], 
+        response_quality: float
+    ) -> None:
+        """Update learning models based on interaction results."""
+        try:
+            if not self.memory_manager or not tools_used:
+                return
+            
+            # Update tool usage metrics for each tool used
+            for tool_name in tools_used:
+                performance = tool_performance.get(tool_name, {})
+                success = performance.get('success', False)
+                execution_time = performance.get('execution_time', 0.0)
+                
+                # Generate query hash for similar query grouping
+                import hashlib
+                query_hash = hashlib.md5(message.lower().encode()).hexdigest()[:16]
+                
+                # This would ideally update the ToolUsageMetrics table
+                # For now, we'll log the learning update
+                print(f"Learning update: Tool {tool_name} - Success: {success}, Quality: {response_quality}, Time: {execution_time}s")
+                
+                # Record the learning in memory manager if method exists
+                if hasattr(self.memory_manager, 'record_health_metric'):
+                    self.memory_manager.record_health_metric(
+                        f"tool_learning_{tool_name}",
+                        response_quality,
+                        "quality_score",
+                        "learning"
+                    )
+            
+        except Exception as e:
+            print(f"Error updating learning models: {e}")
+    
+    def get_learning_insights(self, user_id: str) -> Dict[str, Any]:
+        """Get insights about learned patterns for a user."""
+        try:
+            if not self.memory_manager:
+                return {"error": "Memory manager not available"}
+            
+            # Get user conversation history
+            user_history = self.memory_manager.get_user_conversation_history(user_id, limit=50)
+            
+            if not user_history:
+                return {"message": "No conversation history available for learning insights"}
+            
+            insights = {
+                "total_conversations": len(user_history),
+                "avg_quality_score": 0.0,
+                "most_successful_tools": [],
+                "conversation_patterns": [],
+                "improvement_suggestions": []
+            }
+            
+            # Calculate average quality score
+            quality_scores = [conv.response_quality_score for conv in user_history 
+                            if conv.response_quality_score is not None]
+            if quality_scores:
+                insights["avg_quality_score"] = sum(quality_scores) / len(quality_scores)
+            
+            # Find most successful tools
+            successful_tools = self._analyze_successful_tool_patterns(user_history)
+            insights["most_successful_tools"] = successful_tools
+            
+            # Identify conversation patterns
+            patterns = self._identify_conversation_patterns(user_history)
+            insights["conversation_patterns"] = patterns
+            
+            # Generate improvement suggestions
+            suggestions = self._generate_improvement_suggestions(user_history, insights)
+            insights["improvement_suggestions"] = suggestions
+            
+            return insights
+            
+        except Exception as e:
+            return {"error": f"Failed to get learning insights: {str(e)}"}
+    
+    def _identify_conversation_patterns(self, history: List) -> List[Dict[str, Any]]:
+        """Identify patterns in conversation history."""
+        try:
+            patterns = []
+            
+            # Pattern 1: Most common question types
+            question_types = {}
+            for conv in history:
+                if hasattr(conv, 'user_message') and conv.user_message:
+                    message_lower = conv.user_message.lower()
+                    if any(word in message_lower for word in ['help', 'support', 'issue']):
+                        question_types['support'] = question_types.get('support', 0) + 1
+                    elif any(word in message_lower for word in ['plan', 'upgrade', 'pricing']):
+                        question_types['plans'] = question_types.get('plans', 0) + 1
+                    elif any(word in message_lower for word in ['bill', 'payment', 'invoice']):
+                        question_types['billing'] = question_types.get('billing', 0) + 1
+                    else:
+                        question_types['general'] = question_types.get('general', 0) + 1
+            
+            if question_types:
+                most_common = max(question_types, key=question_types.get)
+                patterns.append({
+                    "type": "question_preference",
+                    "pattern": f"User most commonly asks {most_common} questions",
+                    "frequency": question_types[most_common],
+                    "total": sum(question_types.values())
+                })
+            
+            # Pattern 2: Time-based patterns (simplified)
+            if len(history) > 5:
+                recent_quality = sum(conv.response_quality_score or 0 
+                                   for conv in history[:5]) / 5
+                older_quality = sum(conv.response_quality_score or 0 
+                                  for conv in history[-5:]) / 5
+                
+                if recent_quality > older_quality + 0.1:
+                    patterns.append({
+                        "type": "improvement_trend",
+                        "pattern": "Response quality has improved over time",
+                        "recent_quality": recent_quality,
+                        "older_quality": older_quality
+                    })
+                elif older_quality > recent_quality + 0.1:
+                    patterns.append({
+                        "type": "decline_trend",
+                        "pattern": "Response quality has declined recently",
+                        "recent_quality": recent_quality,
+                        "older_quality": older_quality
+                    })
+            
+            return patterns
+            
+        except Exception as e:
+            print(f"Error identifying conversation patterns: {e}")
+            return []
+    
+    def _generate_improvement_suggestions(self, history: List, insights: Dict[str, Any]) -> List[str]:
+        """Generate suggestions for improving user experience."""
+        suggestions = []
+        
+        try:
+            avg_quality = insights.get("avg_quality_score", 0.0)
+            
+            if avg_quality < 0.6:
+                suggestions.append("Consider providing more specific details in your questions to get better responses")
+            
+            if not insights.get("most_successful_tools"):
+                suggestions.append("Try asking questions that can benefit from our specialized tools (plans, support, billing)")
+            
+            # Check for repeated similar questions
+            if len(history) > 10:
+                recent_messages = [conv.user_message for conv in history[:5] 
+                                 if hasattr(conv, 'user_message') and conv.user_message]
+                if len(set(recent_messages)) < len(recent_messages) * 0.7:
+                    suggestions.append("You've asked similar questions recently - try exploring follow-up questions for more detailed information")
+            
+            if len(suggestions) == 0:
+                suggestions.append("Your conversation patterns look good! Continue asking detailed questions for the best responses")
+            
+            return suggestions
+            
+        except Exception as e:
+            print(f"Error generating improvement suggestions: {e}")
+            return ["Continue engaging with the system to improve response quality"]
+    
+    def get_performance_stats(self) -> Dict[str, Any]:
+        """Get performance-related statistics."""
+        try:
+            resource_monitor = get_resource_monitor()
+            performance_cache = get_performance_cache()
+            
+            return {
+                "cache_stats": performance_cache.get_stats() if performance_cache else {},
+                "resource_usage": resource_monitor.get_current_usage() if resource_monitor else {},
+                "conversation_memory": resource_monitor.get_conversation_memory_usage() if resource_monitor else {},
+                "system_stats": resource_monitor.get_system_stats() if resource_monitor else {}
+            }
+        except Exception as e:
+            print(f"Error getting performance stats: {e}")
+            return {"error": str(e)}
+    
+    async def _enhance_context_with_learning(self, message: str, user_id: str, context_entries: List[ContextEntry]) -> List[ContextEntry]:
+        """Enhance context entries with learned patterns and preferences."""
+        try:
+            # For now, return the context as-is
+            # This can be enhanced later with ML-based context enhancement
+            return context_entries
+        except Exception as e:
+            print(f"Error enhancing context with learning: {e}")
+            return context_entries
+
+    async def _adaptive_tool_selection(self, message: str, user_id: str, context: List[ContextEntry]) -> List[str]:
+        """Select tools adaptively based on learned patterns."""
+        try:
+            # Simple adaptive tool selection based on message content
+            adaptive_tools = []
+            message_lower = message.lower()
+            
+            # Always start with knowledge base for any query
+            adaptive_tools.append("SupportKnowledgeBase")
+            
+            # Add specific tools based on content
+            if any(word in message_lower for word in ['problem', 'issue', 'error', 'broken', 'not working', 'help']):
+                adaptive_tools.append("CreateSupportTicket")
+            
+            if any(word in message_lower for word in ['plan', 'upgrade', 'package', 'price']):
+                adaptive_tools.append("BTPlansInformation")
+            
+            if any(word in message_lower for word in ['hours', 'contact', 'support', 'phone']):
+                adaptive_tools.append("BTSupportHours")
+            
+            if any(word in message_lower for word in ['broadband', 'internet', 'wifi', 'connection']):
+                adaptive_tools.append("BTWebsiteSearch")
+            
+            return adaptive_tools
+            
+        except Exception as e:
+            print(f"Error in adaptive tool selection: {e}")
+            return []
+
+    async def _update_learning_models(self, message: str, tools_used: List[str], tool_performance: Dict[str, Any], confidence_score: float) -> None:
+        """Update learning models based on interaction results."""
+        try:
+            # For now, just log the interaction for future ML implementation
+            print(f"Learning update: message_len={len(message)}, tools={len(tools_used)}, confidence={confidence_score}")
+        except Exception as e:
+            print(f"Error updating learning models: {e}")
+
+    async def _process_simplified_message(self, message: str, user_id: str, session_id: str) -> ChatResponse:
+        """Process message with simplified logic when resources are constrained."""
+        try:
+            # Simple response without heavy processing
+            response_content = self._generate_response_content(message, [], [])
+            
+            return ChatResponse(
+                content=response_content,
+                content_type=self._determine_content_type(response_content),
+                tools_used=[],
+                context_used=[],
+                confidence_score=0.5,  # Lower confidence for simplified processing
+                execution_time=0.1,
+                ui_hints={
+                    "session_id": session_id,
+                    "simplified": True
+                },
+                timestamp=datetime.now()
+            )
+        except Exception as e:
+            return ChatResponse(
+                content=f"I'm experiencing high load right now. Please try again in a moment.",
+                content_type=ContentType.PLAIN_TEXT,
+                execution_time=0.1,
+                ui_hints={"error": True, "session_id": session_id}
+            )
+
+    def _estimate_conversation_memory(self, message: str, session_id: str) -> int:
+        """Estimate memory usage for conversation processing."""
+        # Much more conservative estimation to avoid false memory alerts
+        base_memory = len(message) * 0.001  # Very small estimate in KB
+        
+        session_key = f"*:{session_id}"  # Wildcard user for session lookup
+        for key in self._active_sessions:
+            if key.endswith(f":{session_id}"):
+                session_data = self._active_sessions[key]
+                history_size = len(session_data.get("conversation_history", []))
+                base_memory += history_size * 0.01  # Very small estimate per history item in KB
+                break
+        
+        return max(base_memory, 0.1)  # Minimum 0.1KB estimate

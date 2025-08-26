@@ -13,9 +13,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 import logging
 
-from .memory_models import EnhancedChatHistory, UserSession, MemoryContextCache
-from .security_manager import SecurityManager
-from .privacy_utils import PrivacyUtils
+from backend.memory_models import EnhancedChatHistory, UserSession, MemoryContextCache
+from backend.security_manager import SecurityManager
+from backend.privacy_utils import PrivacyUtils
 
 logger = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ try:
         pool_size=10,
         max_overflow=20,
         pool_pre_ping=True,
-        echo=True,  # Set to False in production
+        echo=False,  # Set to False in production
         connect_args={"connect_timeout": 5}  # 5 second timeout
     )
 except Exception as e:

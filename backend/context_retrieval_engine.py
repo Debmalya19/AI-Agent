@@ -15,9 +15,9 @@ import json
 import re
 from collections import defaultdict
 
-from .database import SessionLocal
-from .memory_config import MemoryConfig, load_config
-from .memory_models import (
+from backend.database import SessionLocal
+from backend.memory_config import MemoryConfig, load_config
+from backend.memory_models import (
     EnhancedChatHistory,
     MemoryContextCache,
     ToolUsageMetrics,
@@ -25,20 +25,21 @@ from .memory_models import (
     ContextEntryDTO,
     create_context_cache_entry
 )
-from .tools import ContextMemory
+from backend.tools import ContextMemory
 
 
 class SemanticFeatures:
     """Container for semantic features extracted from text"""
     
     def __init__(self, text: str):
-        self.original_text = text
-        self.word_count = len(text.split())
-        self.keywords = self._extract_keywords(text)
-        self.entities = self._extract_entities(text)
-        self.topics = self._extract_topics(text)
-        self.sentiment_indicators = self._extract_sentiment_indicators(text)
-        self.technical_terms = self._extract_technical_terms(text)
+        self.original_text = text or ""
+        text = str(text or "").strip()
+        self.word_count = len(text.split()) if text else 0
+        self.keywords = self._extract_keywords(text) if text else []
+        self.entities = self._extract_entities(text) if text else []
+        self.topics = self._extract_topics(text) if text else []
+        self.sentiment_indicators = self._extract_sentiment_indicators(text) if text else {'positive': 0, 'negative': 0, 'neutral': 1}
+        self.technical_terms = self._extract_technical_terms(text) if text else []
     
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from text"""
@@ -304,6 +305,12 @@ class ContextRetrievalEngine:
             
             return result
             
+        except ValueError as e:
+            if "content must be a non-empty string" in str(e):
+                self.logger.error(f"Error creating context entry - empty content detected: {e}")
+            else:
+                self.logger.error(f"Validation error in context retrieval: {e}")
+            return []
         except Exception as e:
             self.logger.error(f"Error retrieving context: {e}")
             return []
@@ -352,35 +359,39 @@ class ContextRetrievalEngine:
             
             # Convert to context entries
             for conv in conversations:
-                # Add user message as context
-                contexts.append(ContextEntryDTO(
-                    content=conv.user_message,
-                    source=f"db_conversation_{conv.id}",
-                    relevance_score=self.calculate_context_similarity(query, conv.user_message),
-                    context_type="user_message",
-                    timestamp=conv.created_at,
-                    metadata={
-                        'session_id': conv.session_id,
-                        'tools_used': conv.tools_used or [],
-                        'response_quality': conv.response_quality_score,
-                        'conversation_id': conv.id
-                    }
-                ))
+                # Add user message as context (only if not empty)
+                if conv.user_message and conv.user_message.strip():
+                    contexts.append(ContextEntryDTO(
+                        content=conv.user_message.strip(),
+                        source=f"db_conversation_{conv.id}",
+                        relevance_score=self.calculate_context_similarity(query, conv.user_message),
+                        context_type="conversation",
+                        timestamp=conv.created_at,
+                        metadata={
+                            'session_id': conv.session_id,
+                            'tools_used': conv.tools_used or [],
+                            'response_quality': conv.response_quality_score,
+                            'conversation_id': conv.id,
+                            'message_type': 'user_message'
+                        }
+                    ))
                 
-                # Add bot response as context
-                contexts.append(ContextEntryDTO(
-                    content=conv.bot_response,
-                    source=f"db_conversation_{conv.id}",
-                    relevance_score=self.calculate_context_similarity(query, conv.bot_response),
-                    context_type="bot_response",
-                    timestamp=conv.created_at,
-                    metadata={
-                        'session_id': conv.session_id,
-                        'tools_used': conv.tools_used or [],
-                        'response_quality': conv.response_quality_score,
-                        'conversation_id': conv.id
-                    }
-                ))
+                # Add bot response as context (only if not empty)
+                if conv.bot_response and conv.bot_response.strip():
+                    contexts.append(ContextEntryDTO(
+                        content=conv.bot_response.strip(),
+                        source=f"db_conversation_{conv.id}",
+                        relevance_score=self.calculate_context_similarity(query, conv.bot_response),
+                        context_type="conversation",
+                        timestamp=conv.created_at,
+                        metadata={
+                            'session_id': conv.session_id,
+                            'tools_used': conv.tools_used or [],
+                            'response_quality': conv.response_quality_score,
+                            'conversation_id': conv.id,
+                            'message_type': 'bot_response'
+                        }
+                    ))
             
             # Query cached context entries
             cached_contexts = session.query(MemoryContextCache).filter(
@@ -391,14 +402,20 @@ class ContextRetrievalEngine:
             ).order_by(desc(MemoryContextCache.relevance_score)).limit(limit).all()
             
             for cached in cached_contexts:
-                contexts.append(ContextEntryDTO(
-                    content=str(cached.context_data.get('content', '')),
-                    source=f"cache_{cached.id}",
-                    relevance_score=cached.relevance_score or 0.0,
-                    context_type=cached.context_type,
-                    timestamp=cached.created_at,
-                    metadata=cached.context_data
-                ))
+                # Only add cached context if content is not empty
+                content = cached.context_data.get('content', '') if cached.context_data else ''
+                if content and str(content).strip():
+                    # Ensure context_type is valid
+                    context_type = cached.context_type if cached.context_type in ['conversation', 'tool_usage', 'document', 'summary', 'user_preference'] else 'conversation'
+                    
+                    contexts.append(ContextEntryDTO(
+                        content=str(content).strip(),
+                        source=f"cache_{cached.id}",
+                        relevance_score=cached.relevance_score or 0.0,
+                        context_type=context_type,
+                        timestamp=cached.created_at,
+                        metadata=cached.context_data or {}
+                    ))
             
             return contexts
             
@@ -480,11 +497,23 @@ class ContextRetrievalEngine:
         
         # Boost recent contexts
         if context.timestamp:
-            age_hours = (datetime.now(timezone.utc) - context.timestamp).total_seconds() / 3600
-            if age_hours < 24:  # Recent context
-                boosted_score *= 1.2
-            elif age_hours < 168:  # Within a week
-                boosted_score *= 1.1
+            try:
+                # Handle both timezone-aware and naive datetimes
+                now = datetime.now(timezone.utc)
+                context_time = context.timestamp
+                
+                # If context timestamp is naive, assume it's UTC
+                if context_time.tzinfo is None:
+                    context_time = context_time.replace(tzinfo=timezone.utc)
+                
+                age_hours = (now - context_time).total_seconds() / 3600
+                if age_hours < 24:  # Recent context
+                    boosted_score *= 1.2
+                elif age_hours < 168:  # Within a week
+                    boosted_score *= 1.1
+            except Exception as e:
+                # If there's any datetime issue, just skip the boost
+                pass
         
         # Boost high-quality responses
         if context.metadata.get('response_quality', 0) > 0.8:
@@ -522,7 +551,9 @@ class ContextRetrievalEngine:
             SemanticFeatures object with extracted features
         """
         try:
-            return SemanticFeatures(text)
+            if not text or not str(text).strip():
+                return SemanticFeatures("")  # Return empty features for empty text
+            return SemanticFeatures(str(text).strip())
         except Exception as e:
             self.logger.error(f"Error extracting semantic features: {e}")
             return SemanticFeatures("")  # Return empty features
@@ -538,7 +569,7 @@ class ContextRetrievalEngine:
         Returns:
             Similarity score between 0.0 and 1.0
         """
-        if not query or not context:
+        if not query or not context or not str(query).strip() or not str(context).strip():
             return 0.0
         
         try:
