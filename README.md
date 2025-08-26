@@ -1,122 +1,187 @@
-# Database-Backed RAG System with Customer Support Intents
+# AI Agent Customer Support System
 
 ## Overview
-This is a comprehensive RAG (Retrieval-Augmented Generation) system designed for customer support in a telecom company. It features database-backed knowledge retrieval, customer order lookup, secure session management, and multi-tool support.
+A comprehensive AI-powered customer support system built with FastAPI, featuring intelligent chat capabilities, memory layer management, multi-tool orchestration, and database-backed knowledge retrieval. The system provides contextual, personalized responses using advanced RAG (Retrieval-Augmented Generation) technology and intelligent tool selection.
 
-## Features
+## 🚀 Key Features
 
-### ✅ Database-Backed RAG System
-- **PostgreSQL Database**: Full PostgreSQL integration with proper schema
-- **Knowledge Base**: Database-driven knowledge entries with search capabilities
-- **Vector Embeddings**: Support for vector search and embeddings
-- **ContextRetriever**: Enhanced RAG tool for knowledge base queries
+### 🧠 Intelligent Chat UI
+- **Dynamic Response Adaptation**: UI adapts based on conversation context and response type
+- **Real-time Tool Orchestration**: Automatic selection and execution of relevant tools
+- **Context-Aware Conversations**: Maintains conversation history for natural follow-up interactions
+- **Visual Feedback System**: Loading indicators and progress tracking during tool execution
+- **Error Recovery**: Graceful error handling with user-friendly messages
 
-### ✅ Customer Order Lookup
-- **Database Integration**: Replaced Excel-based lookup with PostgreSQL queries
-- **Multiple Search Methods**: Search by customer ID, email, or name
-- **Real-time Data**: Live database queries for accurate customer information
-- **Comprehensive Results**: Detailed order information with customer details
+### 💾 Advanced Memory Layer
+- **Persistent Conversation Storage**: Chat history maintained across sessions
+- **Context Retrieval Engine**: Intelligent context extraction from conversation history
+- **Tool Usage Analytics**: Learning from previous tool usage patterns
+- **Memory Configuration**: Configurable retention policies and cleanup strategies
+- **Performance Optimization**: Efficient memory management with caching
 
-### ✅ Session Management
-- **Secure Authentication**: JWT-like session tokens with proper hashing
-- **Session Expiration**: Configurable session timeouts
-- **User Registration**: Complete user management system
-- **Password Security**: SHA-256 hashing (upgrade to bcrypt in production)
+### 🛠️ Multi-Tool Orchestration System
+- **Intelligent Tool Selection**: Algorithm-based tool selection for optimal responses
+- **Parallel Tool Execution**: Concurrent tool execution for faster responses
+- **Tool Performance Monitoring**: Analytics and optimization of tool usage
+- **Context-Aware Tool Recommendations**: Historical data influences tool selection
+- **Comprehensive Answer Generation**: Multi-source information synthesis
 
-### ✅ Enhanced Multi-Tool System
-- **ContextRetriever**: Database knowledge base search (primary tool)
-- **SupportKnowledgeBase**: Customer support intent matching
-- **ComprehensiveAnswerGenerator**: Multi-tool orchestrator for complex queries
-- **BTWebsiteSearch**: BT.com specific information retrieval
-- **BTSupportHours**: Current BT support hours and contact info
-- **BTPlansInformation**: Current BT mobile plans and pricing
-- **CustomerOrderLookup**: Customer and order information retrieval
-- **Search Tool**: Web search capabilities for additional context
-- **Wiki Tool**: Wikipedia integration for background information
-- **Save Tool**: File saving functionality for research notes
+### 🔐 Security & Privacy
+- **Secure Session Management**: Hashed session tokens with configurable expiration
+- **User Authentication**: Complete registration and login system
+- **GDPR Compliance**: Privacy-focused data handling and retention policies
+- **Security Integration**: Comprehensive security monitoring and threat detection
+- **Data Encryption**: Sensitive information protection
 
-## Architecture
+### 📊 Database Integration
+- **PostgreSQL Backend**: Full PostgreSQL integration with optimized schema
+- **Knowledge Base Management**: Searchable knowledge entries with RAG capabilities
+- **Customer Data Management**: Comprehensive customer and order tracking
+- **Support Ticket System**: Automated ticket creation and management
+- **Analytics Storage**: Tool usage and performance metrics
 
-### Database Schema
-- **users**: User accounts with authentication
-- **user_sessions**: Secure session management
-- **customers**: Customer information
-- **orders**: Customer order details
-- **knowledge_entries**: Knowledge base content
-- **support_intents**: Support intent definitions
-- **support_responses**: Automated support responses
-- **chat_history**: Conversation history
+## 🏗️ System Architecture
+
+### Core Components
+
+#### Backend Architecture
+```
+backend/
+├── intelligent_chat/          # Intelligent chat UI components
+│   ├── chat_manager.py        # Central chat coordinator
+│   ├── tool_orchestrator.py   # Tool selection and execution
+│   ├── context_retriever.py   # Context retrieval engine
+│   ├── response_renderer.py   # Dynamic response formatting
+│   └── models.py             # Data models and types
+├── memory_layer_manager.py    # Memory management system
+├── tools.py                   # Multi-tool system implementation
+├── models.py                  # Database models
+├── database.py               # Database configuration
+└── security_manager.py       # Security and privacy management
+```
+
+#### Database Schema
+- **Enhanced Chat History**: Conversation storage with context
+- **Memory Context Cache**: Intelligent context caching
+- **Tool Usage Metrics**: Performance analytics and optimization
+- **Conversation Summaries**: Automated conversation summarization
+- **Memory Health Metrics**: System performance monitoring
+- **Users & Sessions**: Secure authentication system
+- **Knowledge Entries**: RAG knowledge base
+- **Support System**: Ticket management and responses
 
 ### API Endpoints
 
-#### Authentication
-- `POST /register` - User registration
-- `POST /login` - User login with session creation
-- `POST /logout` - Session termination
-- `GET /me` - Current user information
+#### Core Chat API
+- `POST /chat` - Intelligent chat processing with multi-tool orchestration
+- `GET /memory/stats` - Memory layer statistics and health metrics
+- `POST /memory/cleanup` - Manual memory cleanup operations
 
-#### RAG System
-- `POST /chat` - Process customer queries with RAG
-- `GET /health` - System health check
+#### Authentication & Session Management
+- `POST /register` - User registration with security validation
+- `POST /login` - Secure login with session token generation
+- `POST /logout` - Session termination and cleanup
+- `GET /me` - Current user profile and session information
 
-#### Static Files
-- `GET /` - Login page
-- `GET /chat.html` - Chat interface
-- `GET /register.html` - Registration page
+#### System Management
+- `GET /health` - Comprehensive system health check
+- `GET /tools/status` - Tool availability and performance metrics
+- `POST /tools/analytics` - Tool usage analytics and recommendations
 
-## Setup Instructions
+#### Frontend Routes
+- `GET /` - Login interface
+- `GET /chat.html` - Intelligent chat interface
+- `GET /register.html` - User registration interface
 
-### 1. Database Setup
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.8+
+- PostgreSQL 12+
+- Google Gemini API Key
+
+### 1. Environment Setup
 ```bash
-# Install PostgreSQL (if not already installed)
-# Create database: knowledge_base
-# Update DATABASE_URL in .env file
+# Clone the repository
+git clone <repository-url>
+cd ai-agent
 
-# Run database migration
-python migrate_postgres_schema.py
-```
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-### 2. Environment Configuration
-Create `.env` file:
-```bash
-DATABASE_URL=postgresql://postgres:password@localhost:5432/knowledge_base
-GOOGLE_API_KEY=your_google_api_key_here
-```
-
-### 3. Install Dependencies
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 4. Initialize Database
+### 2. Database Configuration
 ```bash
-python migrate_postgres_schema.py
+# Install PostgreSQL and create database
+createdb knowledge_base
+
+# Update .env file
+DATABASE_URL=postgresql://postgres:password@localhost:5432/knowledge_base
+GOOGLE_API_KEY=your_google_gemini_api_key_here
+DEBUG=True
+HOST=0.0.0.0
+PORT=8000
 ```
 
-### 5. Run the Application
+### 3. Database Initialization
 ```bash
+# Run database migrations
+python scripts/migrate_postgres_schema.py
+
+# Initialize with sample data (optional)
+python scripts/database_init.py
+
+# Verify memory layer setup
+python scripts/verify_memory_schema.py
+```
+
+### 4. Launch Application
+```bash
+# Start the FastAPI server
 python main.py
+
+# Or use uvicorn directly
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-## Usage Examples
+### 5. Access the System
+- **Web Interface**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
 
-### Customer Order Lookup
+## 💡 Usage Examples
+
+### Intelligent Chat Interactions
 ```python
-# Query examples:
-"Show me orders for John Doe"
-"What are my orders?" (when logged in)
-"Customer 1001 order history"
+# Complex multi-tool queries
+"What are the current BT mobile plans and how do I upgrade my existing plan?"
+
+# Context-aware follow-ups
+"What about the pricing for unlimited data?"
+"Can you create a support ticket for my billing issue?"
+
+# Customer service queries
+"What are your support hours and how can I contact customer service?"
+"I'm having trouble with my voicemail setup"
 ```
 
-### Support Queries
-```python
-# Query examples:
-"What are your support hours?"
-"How do I set up voicemail?"
-"Tell me about data usage monitoring"
+### API Usage Examples
+
+#### Chat with Context
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -H "Cookie: session_token=your_session_token" \
+  -d '{
+    "query": "What are the current mobile plans available?"
+  }'
 ```
 
-### Registration
+#### User Registration
 ```bash
 curl -X POST http://localhost:8000/register \
   -H "Content-Type: application/json" \
@@ -129,177 +194,377 @@ curl -X POST http://localhost:8000/register \
   }'
 ```
 
-### Login
+#### Memory Statistics
 ```bash
-curl -X POST http://localhost:8000/login \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=user123&password=securepassword"
+curl -X GET http://localhost:8000/memory/stats \
+  -H "Cookie: session_token=your_session_token"
 ```
 
-## Enhanced Multi-Tool System
-
-The Enhanced Multi-Tool System provides comprehensive customer support by combining multiple information sources and tools with intelligent context understanding and real-time web scraping.
-
-### Key Features
-
-- **🕷️ Real-time BT.com Web Scraping**: Automatically scrapes current information from BT.com when needed
-- **🧠 Context Memory**: Maintains conversation history and uses it for personalized responses
-- **🤖 Intelligent Tool Orchestration**: Automatically selects and combines the best tools for each query
-- **📚 Enhanced RAG**: Context-aware knowledge retrieval with semantic matching
-- **⚡ Performance Optimization**: Intelligent caching and tool selection for faster responses
-
-### Available Tools
-
-- **ContextRetriever**: Database knowledge base search (primary tool)
-- **SupportKnowledgeBase**: Customer support intent matching
-- **IntelligentToolOrchestrator**: Smart tool orchestrator with context memory
-- **ComprehensiveAnswerGenerator**: Multi-tool orchestrator for complex queries
-- **BTWebsiteSearch**: BT.com specific information with real-time scraping
-- **BTSupportHours**: Current BT support hours with live data scraping
-- **BTPlansInformation**: Current BT mobile plans with real-time pricing
-- **Search Tool**: Web search capabilities for additional context
-- **Wiki Tool**: Wikipedia integration for background information
-- **Save Tool**: File saving functionality for research notes
-
-### Quick Demo
-```bash
-python demo_multi_tool.py
-```
-
-### Enhanced System Testing
-```bash
-python test_enhanced_system.py
-```
-
-### Basic System Testing
-```bash
-python test_multi_tool_system.py
-```
-
-### Individual Tool Testing
+### Python SDK Usage
 ```python
-from tools import bt_website_search, multi_tool_orchestrator, intelligent_tool_orchestrator
+from backend.intelligent_chat import ChatManager
+from backend.memory_layer_manager import MemoryLayerManager
 
-# Test BT website search with scraping
-result = bt_website_search("mobile plans")
+# Initialize components
+memory_manager = MemoryLayerManager()
+chat_manager = ChatManager(memory_manager=memory_manager)
 
-# Test multi-tool orchestrator
-result = multi_tool_orchestrator("How do I upgrade my plan?")
+# Process message with context
+response = await chat_manager.process_message(
+    message="What are your support hours?",
+    user_id="user123",
+    session_id="session456"
+)
 
-# Test intelligent orchestrator with context memory
-result = intelligent_tool_orchestrator("What are your current support hours?")
-
-# Test context memory
-from tools import context_memory
-context = context_memory.get_recent_context("support hours")
+print(f"Response: {response.content}")
+print(f"Tools used: {response.tools_used}")
+print(f"Confidence: {response.confidence_score}")
 ```
 
-For detailed information, see [MULTI_TOOL_SYSTEM_GUIDE.md](MULTI_TOOL_SYSTEM_GUIDE.md)
+## 🛠️ Available Tools & Capabilities
 
-## Testing
+### Intelligent Tool Orchestration
+The system features 9+ specialized tools that work together to provide comprehensive responses:
 
-### Run Comprehensive Tests
+| Tool                            | Purpose                        | Use Case                                   |
+|---------------------------------|--------------------------------|--------------------------------------------|
+| **ContextRetriever**            | Database knowledge base search | Primary information source                 |
+| **SupportKnowledgeBase**        | Customer support responses     | Common support queries                     |
+| **IntelligentToolOrchestrator** | Smart multi-tool coordination  | Complex queries requiring multiple sources |
+| **CreateSupportTicket**         | Automated ticket creation      | Customer issues and escalations            |
+| **BTWebsiteSearch**             | Real-time BT.com scraping      | Current BT services and information        |
+| **BTSupportHours**              | Live support hours data        | Contact information and availability       |
+| **BTPlansInformation**          | Current plan pricing           | Mobile plans and pricing details           |
+| **Search Tool**                 | Web search capabilities        | Additional context and information         |
+| **Wiki Tool**                   | Wikipedia integration          | Background and educational content         |
+
+### Memory Layer Features
+- **Conversation Persistence**: Chat history maintained across sessions
+- **Context-Aware Responses**: Previous conversations inform current responses
+- **Tool Usage Learning**: System learns from successful tool combinations
+- **Performance Analytics**: Continuous optimization based on usage patterns
+- **Configurable Retention**: Customizable data retention policies
+
+### Intelligent Chat UI Features
+- **Dynamic Response Rendering**: Adapts UI based on response content type
+- **Real-time Tool Execution Feedback**: Visual indicators during tool processing
+- **Error Recovery**: Graceful handling of tool failures with fallback strategies
+- **Context Window Management**: Efficient handling of long conversations
+- **Multi-format Support**: Text, code, JSON, tables, and structured data
+
+### Testing & Demos
 ```bash
-python test_comprehensive.py
+# Run comprehensive system tests
+python tests/test_comprehensive.py
+
+# Demo intelligent chat capabilities
+python examples/demo_multi_tool.py
+
+# Test memory layer functionality
+python examples/example_memory_usage.py
+
+# Performance optimization demo
+python examples/performance_optimization_demo.py
 ```
 
-### Individual Component Tests
+For detailed documentation:
+- [Multi-Tool System Guide](docs/MULTI_TOOL_SYSTEM_GUIDE.md)
+- [Intelligent Chat API Documentation](docs/INTELLIGENT_CHAT_API_DOCUMENTATION.md)
+- [Memory Layer Configuration](docs/MEMORY_CONFIG_GUIDE.md)
+
+## 🧪 Testing & Validation
+
+### Comprehensive Test Suite
 ```bash
-# Test database connection
-python test_login_db.py
+# Run all system tests
+python tests/test_comprehensive.py
 
-# Test customer database integration
-python -c "from enhanced_customer_db_tool import get_customer_orders; print(get_customer_orders('John Doe', 'name'))"
+# Test intelligent chat components
+python tests/test_intelligent_chat.py
+
+# Test memory layer functionality
+python tests/test_memory_layer.py
+
+# Test security and privacy features
+python tests/test_security.py
 ```
 
-## Security Features
+### Component-Specific Testing
+```bash
+# Database connectivity
+python scripts/database_init.py
 
-- **Session Tokens**: Secure, hashed session tokens
-- **HTTPS Ready**: Configured for HTTPS in production
-- **Input Validation**: Comprehensive input sanitization
-- **SQL Injection Protection**: Parameterized queries
-- **CORS Configuration**: Configurable CORS settings
+# Memory layer validation
+python scripts/verify_memory_schema.py
 
-## Performance Optimizations
+# Tool orchestration testing
+python examples/demo_multi_tool.py
 
-- **Database Indexes**: Optimized indexes for fast queries
-- **Connection Pooling**: Efficient database connection management
-- **Caching**: Prepared for Redis caching implementation
-- **Query Optimization**: Efficient SQL queries
+# Performance benchmarking
+python examples/performance_optimization_demo.py
+```
 
-## Troubleshooting
+### Integration Testing
+```bash
+# End-to-end chat flow
+python tests/test_chat_integration.py
 
-### Common Issues
+# Multi-tool orchestration
+python tests/test_tool_orchestration.py
 
-1. **Database Connection Failed**
-   - Check PostgreSQL is running
-   - Verify DATABASE_URL in .env
-   - Ensure database exists
+# Context retrieval and memory
+python tests/test_context_memory.py
+```
 
-2. **Session Issues**
-   - Check user_sessions table schema
-   - Verify token hashing
-   - Check session expiration
+## 🔒 Security & Privacy
 
-3. **Customer Lookup Not Working**
-   - Ensure sample data is loaded
-   - Check customer and order tables
-   - Verify database connection
+### Security Features
+- **Secure Session Management**: Hashed session tokens with configurable expiration
+- **Input Validation & Sanitization**: Comprehensive protection against injection attacks
+- **GDPR Compliance**: Privacy-focused data handling with retention policies
+- **Security Monitoring**: Real-time threat detection and logging
+- **Data Encryption**: Sensitive information protection at rest and in transit
 
-### Debug Mode
-Enable debug logging:
+### Privacy Protection
+- **Data Anonymization**: PII protection in logs and analytics
+- **Configurable Retention**: Automatic data cleanup based on policies
+- **User Consent Management**: Granular privacy controls
+- **Audit Logging**: Comprehensive activity tracking for compliance
+
+## ⚡ Performance & Optimization
+
+### Performance Features
+- **Intelligent Caching**: Multi-layer caching for faster responses
+- **Parallel Tool Execution**: Concurrent processing for complex queries
+- **Database Optimization**: Indexed queries and connection pooling
+- **Memory Management**: Efficient context window and cleanup strategies
+- **Response Streaming**: Real-time response delivery for better UX
+
+### Monitoring & Analytics
+- **Tool Performance Metrics**: Usage analytics and optimization recommendations
+- **Memory Health Monitoring**: System performance tracking and alerts
+- **Response Time Analytics**: Continuous performance optimization
+- **Resource Usage Tracking**: CPU, memory, and database performance monitoring
+
+## 🔧 Troubleshooting
+
+### Common Issues & Solutions
+
+#### Database Issues
+```bash
+# Check PostgreSQL connection
+python -c "from backend.database import engine; print(engine.execute('SELECT 1').scalar())"
+
+# Verify schema
+python scripts/verify_memory_schema.py
+
+# Reset database (if needed)
+python scripts/migrate_postgres_schema.py
+```
+
+#### Memory Layer Issues
+```bash
+# Check memory layer health
+python -c "from backend.memory_layer_manager import MemoryLayerManager; print(MemoryLayerManager().get_memory_stats())"
+
+# Manual cleanup
+python scripts/run_memory_migration.py
+```
+
+#### Tool Orchestration Issues
+```bash
+# Test individual tools
+python examples/demo_multi_tool.py
+
+# Check tool availability
+python -c "from backend.tools import tools; print([tool.name for tool in tools])"
+```
+
+#### Session & Authentication Issues
+```bash
+# Verify user sessions table
+python scripts/fix_user_sessions_schema.py
+
+# Test authentication flow
+python tests/test_login_db.py
+```
+
+### Debug Configuration
 ```python
+# Enable comprehensive logging
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Enable memory layer debugging
+from backend.memory_config import load_config
+config = load_config()
+config.debug_mode = True
 ```
 
-## Production Deployment
-
-### Environment Variables
+### Health Monitoring
 ```bash
-# Production settings
-DATABASE_URL=postgresql://user:pass@prod-server:5432/knowledge_base
-GOOGLE_API_KEY=your_production_key
-SECRET_KEY=your_secret_key
+# System health check
+curl http://localhost:8000/health
+
+# Memory statistics
+curl http://localhost:8000/memory/stats
+
+# Tool status
+curl http://localhost:8000/tools/status
 ```
 
-### Security Enhancements
-- Use bcrypt for password hashing
-- Implement rate limiting
-- Add HTTPS certificates
-- Configure proper CORS origins
-- Set up monitoring and logging
+## 🚀 Production Deployment
 
-## API Documentation
+### Environment Configuration
+```bash
+# Production environment variables
+DATABASE_URL=postgresql://user:pass@prod-server:5432/knowledge_base
+GOOGLE_API_KEY=your_production_gemini_key
+DEBUG=False
+HOST=0.0.0.0
+PORT=8000
 
-### Chat Endpoint
+# Security settings
+SECRET_KEY=your_secure_secret_key
+SESSION_TIMEOUT=3600
+CORS_ORIGINS=["https://yourdomain.com"]
+
+# Memory layer configuration
+MEMORY_RETENTION_DAYS=30
+MEMORY_CLEANUP_INTERVAL_HOURS=24
+MEMORY_MAX_CONVERSATIONS=10000
+```
+
+### Production Checklist
+- [ ] Configure HTTPS with SSL certificates
+- [ ] Set up database connection pooling
+- [ ] Implement rate limiting and request throttling
+- [ ] Configure monitoring and alerting
+- [ ] Set up log aggregation and analysis
+- [ ] Enable security headers and CORS policies
+- [ ] Configure backup and disaster recovery
+- [ ] Set up health checks and load balancing
+
+### Docker Deployment
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+## 📚 API Documentation
+
+### Enhanced Chat API
 ```http
 POST /chat
 Content-Type: application/json
 Cookie: session_token=your_session_token
 
 {
-  "query": "Your customer support question"
+  "query": "What are the current mobile plans and pricing?"
 }
 ```
 
-### Response Format
+#### Enhanced Response Format
 ```json
 {
-  "topic": "Original query",
-  "summary": "AI response",
-  "sources": ["source1", "source2"],
-  "tools_used": ["ContextRetriever", "CustomerOrderLookup"]
+  "topic": "Mobile plans inquiry",
+  "summary": "Comprehensive response with current plans...",
+  "sources": ["knowledge_base", "bt_website", "support_db"],
+  "tools_used": ["ContextRetriever", "BTPlansInformation", "SupportKnowledgeBase"],
+  "confidence_score": 0.95,
+  "execution_time": 2.3,
+  "content_type": "structured_data",
+  "ui_state": {
+    "loading_indicators": [],
+    "error_states": []
+  }
 }
 ```
 
-## Support
+### Memory Management API
+```http
+GET /memory/stats
+Cookie: session_token=your_session_token
 
-For issues or questions:
-1. Check the troubleshooting section
-2. Review the logs for error messages
-3. Ensure all dependencies are installed
-4. Verify database connectivity
+# Response
+{
+  "total_conversations": 1250,
+  "active_sessions": 45,
+  "memory_usage_mb": 128.5,
+  "cleanup_last_run": "2024-01-15T10:30:00Z"
+}
+```
 
-## License
-MIT License - See LICENSE file for details
+For complete API documentation, visit: http://localhost:8000/docs
+
+## 📖 Documentation
+
+### Core Documentation
+- [Multi-Tool System Guide](docs/MULTI_TOOL_SYSTEM_GUIDE.md) - Comprehensive tool usage guide
+- [Intelligent Chat API](docs/INTELLIGENT_CHAT_API_DOCUMENTATION.md) - Chat system documentation
+- [Memory Layer Guide](docs/MEMORY_CONFIG_GUIDE.md) - Memory management configuration
+- [Security & Privacy Guide](docs/SECURITY_PRIVACY_GUIDE.md) - Security implementation details
+- [Database Setup Guide](docs/DATABASE_SETUP_GUIDE.md) - Database configuration and setup
+
+### Implementation Guides
+- [Context Retriever Implementation](docs/CONTEXT_RETRIEVER_IMPLEMENTATION.md)
+- [Visual Feedback System](docs/VISUAL_FEEDBACK_SYSTEM.md)
+- [Performance Optimization](docs/PERFORMANCE_OPTIMIZATION_SUMMARY.md)
+- [Comprehensive Testing](docs/COMPREHENSIVE_TESTING_COMPLETE.md)
+
+## 🤝 Contributing
+
+### Development Setup
+```bash
+# Install development dependencies
+pip install -r requirements.txt
+pip install pytest black flake8 mypy
+
+# Run code formatting
+black .
+
+# Run linting
+flake8 .
+
+# Run type checking
+mypy .
+
+# Run tests
+pytest tests/
+```
+
+### Code Standards
+- Follow PEP 8 style guidelines
+- Add type hints for all functions
+- Write comprehensive docstrings
+- Include unit tests for new features
+- Update documentation for API changes
+
+## 📞 Support
+
+### Getting Help
+1. **Documentation**: Check the comprehensive docs in the `/docs` folder
+2. **Troubleshooting**: Follow the troubleshooting guide above
+3. **Health Checks**: Use `/health` endpoint for system diagnostics
+4. **Logs**: Enable debug logging for detailed error information
+
+### Reporting Issues
+- Include system information and error logs
+- Provide steps to reproduce the issue
+- Check existing documentation first
+- Test with the latest version
+
+---
+
+**Built with ❤️ using FastAPI, LangChain, PostgreSQL, and Google Gemini AI**

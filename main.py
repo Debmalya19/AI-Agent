@@ -740,13 +740,98 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
             logger.info("No tools detected, attempting manual tool selection based on query")
             query_lower = chat_request.query.lower()
             
-            # Manual tool selection based on query keywords
+            # Manual tool selection based on query keywords - CHECK OTHER TOOLS FIRST
             
-            # Check for ticket creation requests first (highest priority)
-            if any(keyword in query_lower for keyword in [
-                'create ticket', 'support ticket', 'ticket', 'complaint', 'issue', 
-                'problem', 'help', 'assistance', 'not working', 'broken', 'error',
-                'bug', 'billing issue', 'technical problem', 'escalate', 'human support'
+            # 1. Check for specific plan/upgrade queries first
+            if any(keyword in query_lower for keyword in ['upgrade', 'plan', 'change plan', 'pricing', 'subscription']):
+                try:
+                    # Use the support knowledge tool for plan upgrades
+                    support_result = support_knowledge_tool_func(chat_request.query)
+                    if support_result and len(support_result) > 20:
+                        tools_used.append("SupportKnowledgeBase")
+                        tool_performance["SupportKnowledgeBase"] = 1.0
+                        summary = support_result
+                        logger.info("Manually triggered SupportKnowledgeBase tool")
+                        
+                        # Also try BT plans tool for additional info
+                        try:
+                            bt_plans_result = bt_plans_tool.func(chat_request.query)
+                            if bt_plans_result and len(bt_plans_result) > 20:
+                                tools_used.append("BTPlansInformation")
+                                tool_performance["BTPlansInformation"] = 1.0
+                                logger.info("Manually triggered BTPlansInformation tool")
+                        except Exception as bt_error:
+                            logger.warning(f"BT plans tool error: {bt_error}")
+                except Exception as manual_error:
+                    logger.warning(f"Manual plan tool trigger error: {manual_error}")
+            
+            # 2. Check for support hours/contact queries
+            elif any(keyword in query_lower for keyword in ['support hours', 'contact', 'phone number', 'opening hours', 'customer service']):
+                try:
+                    # Use support hours tool
+                    support_hours_result = bt_support_hours_tool_instance.func(chat_request.query)
+                    if support_hours_result and len(support_hours_result) > 10:
+                        tools_used.append("BTSupportHours")
+                        tool_performance["BTSupportHours"] = 1.0
+                        summary = support_hours_result
+                        logger.info("Manually triggered BTSupportHours tool")
+                except Exception as manual_error:
+                    logger.warning(f"Manual support hours tool error: {manual_error}")
+            
+            # 3. Check for password/account queries
+            elif any(keyword in query_lower for keyword in ['password', 'reset', 'account', 'login', 'username', 'forgot']):
+                try:
+                    # Use knowledge base for password/account issues
+                    rag_result = rag_tool_func(chat_request.query)
+                    if rag_result and len(rag_result) > 20:
+                        tools_used.append("ContextRetriever")
+                        tool_performance["ContextRetriever"] = 1.0
+                        summary = rag_result
+                        logger.info("Manually triggered ContextRetriever tool")
+                except Exception as manual_error:
+                    logger.warning(f"Manual RAG tool error: {manual_error}")
+            
+            # 4. Try support knowledge base for general queries
+            if not tools_used:
+                try:
+                    support_result = support_knowledge_tool_func(chat_request.query)
+                    if support_result and len(support_result) > 20:
+                        tools_used.append("SupportKnowledgeBase")
+                        tool_performance["SupportKnowledgeBase"] = 1.0
+                        summary = support_result
+                        logger.info("Manually triggered SupportKnowledgeBase tool for general query")
+                except Exception as manual_error:
+                    logger.warning(f"Manual support knowledge tool error: {manual_error}")
+            
+            # 5. Try RAG/context retriever for general knowledge
+            if not tools_used:
+                try:
+                    rag_result = rag_tool_func(chat_request.query)
+                    if rag_result and len(rag_result) > 20:
+                        tools_used.append("ContextRetriever")
+                        tool_performance["ContextRetriever"] = 1.0
+                        summary = rag_result
+                        logger.info("Manually triggered ContextRetriever tool for general query")
+                except Exception as manual_error:
+                    logger.warning(f"Manual RAG tool error: {manual_error}")
+            
+            # 6. Try the intelligent orchestrator
+            if not tools_used:
+                try:
+                    orchestrator_result = intelligent_orchestrator_tool.func(chat_request.query)
+                    if orchestrator_result and len(orchestrator_result) > 20:
+                        tools_used.append("IntelligentToolOrchestrator")
+                        tool_performance["IntelligentToolOrchestrator"] = 1.0
+                        summary = orchestrator_result
+                        logger.info("Manually triggered IntelligentToolOrchestrator tool")
+                except Exception as manual_error:
+                    logger.warning(f"Manual orchestrator tool error: {manual_error}")
+            
+            # 7. ONLY create ticket if other tools failed AND it's clearly a problem/complaint
+            if not tools_used and any(keyword in query_lower for keyword in [
+                'create ticket', 'support ticket', 'complaint', 'escalate', 'human support',
+                'not working', 'broken', 'error', 'bug', 'billing issue', 'technical problem',
+                'urgent', 'emergency', 'outage', 'service down'
             ]):
                 try:
                     # Create a support ticket for the customer
@@ -759,67 +844,14 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
                     if ticket_result and len(ticket_result) > 20:
                         tools_used.append("CreateSupportTicket")
                         tool_performance["CreateSupportTicket"] = 1.0
-                        logger.info(f"Successfully created support ticket for customer {customer_id}")
-                        
-                        # Update the summary with the ticket creation result
                         summary = ticket_result
+                        logger.info(f"Successfully created support ticket for customer {customer_id}")
                     else:
                         logger.warning("Ticket creation returned empty or short result")
                 except Exception as manual_error:
                     logger.error(f"Manual ticket creation error for customer {user_id}: {manual_error}")
                     # Provide fallback response if ticket creation fails
                     summary = "I understand you need assistance. While I'm having trouble creating a support ticket right now, please contact our customer service team directly at 0330 123 4150 for immediate help with your issue."
-            
-            elif any(keyword in query_lower for keyword in ['upgrade', 'plan', 'change plan']):
-                try:
-                    # Use the support knowledge tool for plan upgrades
-                    support_result = support_knowledge_tool_func(chat_request.query)
-                    if support_result and len(support_result) > 20:
-                        tools_used.append("SupportKnowledgeBase")
-                        tool_performance["SupportKnowledgeBase"] = 1.0
-                        logger.info("Manually triggered SupportKnowledgeBase tool")
-                        
-                        # Also try BT plans tool
-                        bt_plans_result = bt_plans_tool.func(chat_request.query)
-                        if bt_plans_result and len(bt_plans_result) > 20:
-                            tools_used.append("BTPlansInformation")
-                            tool_performance["BTPlansInformation"] = 1.0
-                            logger.info("Manually triggered BTPlansInformation tool")
-                except Exception as manual_error:
-                    logger.warning(f"Manual tool trigger error: {manual_error}")
-            
-            elif any(keyword in query_lower for keyword in ['support', 'hours', 'contact']):
-                try:
-                    # Use support hours tool
-                    support_hours_result = bt_support_hours_tool_instance.func(chat_request.query)
-                    if support_hours_result and len(support_hours_result) > 10:
-                        tools_used.append("BTSupportHours")
-                        tool_performance["BTSupportHours"] = 1.0
-                        logger.info("Manually triggered BTSupportHours tool")
-                except Exception as manual_error:
-                    logger.warning(f"Manual support hours tool error: {manual_error}")
-            
-            elif any(keyword in query_lower for keyword in ['password', 'reset', 'account']):
-                try:
-                    # Use knowledge base for password/account issues
-                    rag_result = rag_tool_func(chat_request.query)
-                    if rag_result and len(rag_result) > 20:
-                        tools_used.append("ContextRetriever")
-                        tool_performance["ContextRetriever"] = 1.0
-                        logger.info("Manually triggered ContextRetriever tool")
-                except Exception as manual_error:
-                    logger.warning(f"Manual RAG tool error: {manual_error}")
-            
-            # Always try the intelligent orchestrator as a fallback
-            if not tools_used:
-                try:
-                    orchestrator_result = intelligent_orchestrator_tool.func(chat_request.query)
-                    if orchestrator_result and len(orchestrator_result) > 20:
-                        tools_used.append("IntelligentToolOrchestrator")
-                        tool_performance["IntelligentToolOrchestrator"] = 1.0
-                        logger.info("Manually triggered IntelligentToolOrchestrator tool")
-                except Exception as manual_error:
-                    logger.warning(f"Manual orchestrator tool error: {manual_error}")
             
             if tools_used:
                 logger.info(f"Manually triggered tools: {tools_used}")
