@@ -1,5 +1,7 @@
 # AI Agent Customer Support System
 
+**© 2025 Debmalya Koner. All rights reserved.**
+
 ## Overview
 A comprehensive AI-powered customer support system built with FastAPI, featuring intelligent chat capabilities, memory layer management, multi-tool orchestration, and database-backed knowledge retrieval. The system provides contextual, personalized responses using advanced RAG (Retrieval-Augmented Generation) technology and intelligent tool selection.
 
@@ -568,3 +570,7 @@ pytest tests/
 ---
 
 **Built with ❤️ using FastAPI, LangChain, PostgreSQL, and Google Gemini AI**
+
+---
+
+**© 2025 Debmalya Koner. All rights reserved.**
