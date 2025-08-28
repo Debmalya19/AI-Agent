@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice UI Demo</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #2c003e, #4a148c, #12005e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .demo-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+        }
+
+        .demo-header p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .demo-section h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.3rem;
+            color: #6a11cb;
+        }
+
+        .demo-section p {
+            margin: 0 0 15px 0;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .voice-ui-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .test-button {
+            padding: 8px 16px;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+            transform: translateY(-1px);
+        }
+
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            min-height: 100px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 2px 0;
+        }
+
+        .log-entry.info {
+            color: #51cf66;
+        }
+
+        .log-entry.warning {
+            color: #ffd43b;
+        }
+
+        .log-entry.error {
+            color: #ff6b6b;
+        }
+
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .capability-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .capability-status {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .capability-status.supported {
+            color: #51cf66;
+        }
+
+        .capability-status.not-supported {
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            .demo-container {
+                padding: 20px;
+            }
+
+            .test-controls {
+                flex-direction: column;
+            }
+
+            .test-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🎤 Voice UI Demo</h1>
+            <p>Interactive demonstration of voice user interface components</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>Browser Capabilities</h2>
+            <p>Check what voice features are supported in your browser:</p>
+            <div class="capabilities-grid" id="capabilities-grid">
+                <!-- Capabilities will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Voice Controls</h2>
+            <p>The voice UI components will appear below. Try clicking the microphone button or using keyboard shortcuts (Ctrl+Shift+V):</p>
+            <div class="voice-ui-container" id="voice-ui-container">
+                <!-- Voice UI will be inserted here -->
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Test Controls</h2>
+            <p>Use these buttons to simulate various voice events and test the UI responses:</p>
+            <div class="test-controls">
+                <button class="test-button" onclick="simulateRecordingStart()">Start Recording</button>
+                <button class="test-button" onclick="simulateRecordingStop()">Stop Recording</button>
+                <button class="test-button" onclick="simulateSpeechDetected()">Speech Detected</button>
+                <button class="test-button" onclick="simulateInterimResult()">Interim Result</button>
+                <button class="test-button" onclick="simulateFinalResult()">Final Result</button>
+                <button class="test-button" onclick="simulateSpeechStart()">Start Speech</button>
+                <button class="test-button" onclick="simulateSpeechEnd()">End Speech</button>
+                <button class="test-button" onclick="simulateError()">Simulate Error</button>
+                <button class="test-button" onclick="runTests()">Run Tests</button>
+                <button class="test-button" onclick="clearLog()">Clear Log</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Event Log</h2>
+            <p>Real-time log of voice events and UI interactions:</p>
+            <div class="status-display" id="status-display">
+                <div class="log-entry info">Voice UI Demo initialized. Ready for testing.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="/static/voice-capabilities.js"></script>
+    <script src="/static/voice-settings.js"></script>
+    <script src="/static/voice-controller.js"></script>
+    <script src="/static/voice-ui.js"></script>
+    <script src="/static/tests/voice-ui.test.js"></script>
+
+    <script>
+        // Global variables
+        let voiceController;
+        let voiceUI;
+        let logContainer;
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            logContainer = document.getElementById('status-display');
+            
+            try {
+                // Check capabilities first
+                displayCapabilities();
+                
+                // Create mock voice controller for demo
+                voiceController = new MockVoiceController();
+                
+                // Create voice UI
+                const container = document.getElementById('voice-ui-container');
+                voiceUI = new VoiceUI(container, voiceController, {
+                    debugMode: true,
+                    enableKeyboardShortcuts: true
+                });
+                
+                // Set up event logging
+                setupEventLogging();
+                
+                log('Voice UI initialized successfully', 'info');
+                
+            } catch (error) {
+                log(`Initialization error: ${error.message}`, 'error');
+            }
+        });
+
+        // Display browser capabilities
+        function displayCapabilities() {
+            const grid = document.getElementById('capabilities-grid');
+            const capabilities = new VoiceCapabilities();
+            const report = capabilities.getCapabilityReport();
+            
+            const capabilityItems = [
+                { name: 'Speech Recognition', supported: report.speechRecognition },
+                { name: 'Speech Synthesis', supported: report.speechSynthesis },
+                { name: 'Media Devices', supported: report.mediaDevices },
+                { name: 'Audio Context', supported: report.audioContext }
+            ];
+            
+            capabilityItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'capability-item';
+                div.innerHTML = `
+                    <div class="capability-status ${item.supported ? 'supported' : 'not-supported'}">
+                        ${item.supported ? '✅' : '❌'}
+                    </div>
+                    <div>${item.name}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // Set up event logging
+        function setupEventLogging() {
+            const events = [
+                'recording_started', 'recording_stopped', 'speech_detected', 'speech_ended',
+                'interim_result', 'final_result', 'speech_started', 'speech_ended',
+                'speech_paused', 'speech_resumed', 'error', 'settings_changed'
+            ];
+            
+            events.forEach(event => {
+                voiceController.addEventListener(event, (data) => {
+                    log(`Event: ${event} ${data ? JSON.stringify(data) : ''}`, 'info');
+                });
+            });
+        }
+
+        // Simulation functions
+        function simulateRecordingStart() {
+            voiceController.emit('recording_started');
+            log('Simulated recording start', 'info');
+        }
+
+        function simulateRecordingStop() {
+            voiceController.emit('recording_stopped');
+            log('Simulated recording stop', 'info');
+        }
+
+        function simulateSpeechDetected() {
+            voiceController.emit('speech_detected');
+            log('Simulated speech detected', 'info');
+        }
+
+        function simulateInterimResult() {
+            const transcript = 'Hello world...';
+            voiceController.emit('interim_result', { transcript });
+            log(`Simulated interim result: ${transcript}`, 'info');
+        }
+
+        function simulateFinalResult() {
+            const transcript = 'Hello world!';
+            const confidence = 0.95;
+            voiceController.emit('final_result', { transcript, confidence });
+            log(`Simulated final result: ${transcript} (confidence: ${confidence})`, 'info');
+        }
+
+        function simulateSpeechStart() {
+            const text = 'This is a test response from the AI assistant.';
+            voiceController.emit('speech_started', { text });
+            log(`Simulated speech start: ${text}`, 'info');
+        }
+
+        function simulateSpeechEnd() {
+            const text = 'Speech completed.';
+            voiceController.emit('speech_ended', { text });
+            log(`Simulated speech end: ${text}`, 'info');
+        }
+
+        function simulateError() {
+            const error = {
+                type: 'speech_recognition',
+                message: 'Microphone access denied'
+            };
+            voiceController.emit('error', error);
+            log(`Simulated error: ${error.message}`, 'error');
+        }
+
+        function runTests() {
+            try {
+                log('Running Voice UI tests...', 'info');
+                runVoiceUITests();
+                log('All tests passed! ✅', 'info');
+            } catch (error) {
+                log(`Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLog() {
+            logContainer.innerHTML = '<div class="log-entry info">Log cleared.</div>';
+        }
+
+        // Logging function
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Keyboard shortcut info
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey) {
+                switch(e.key) {
+                    case 'V':
+                        log('Keyboard shortcut: Ctrl+Shift+V (Toggle Recording)', 'info');
+                        break;
+                    case 'P':
+                        log('Keyboard shortcut: Ctrl+Shift+P (Toggle Playback)', 'info');
+                        break;
+                    case 'S':
+                        log('Keyboard shortcut: Ctrl+Shift+S (Stop All)', 'info');
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

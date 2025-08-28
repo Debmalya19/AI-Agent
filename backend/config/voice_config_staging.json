@@ -1,0 +1,200 @@
+{
+  "environment": "staging",
+  "rate_limits": {
+    "requests_per_minute": 60,
+    "requests_per_hour": 1000,
+    "requests_per_day": 10000,
+    "burst_limit": 10,
+    "enabled": true
+  },
+  "performance": {
+    "max_recording_duration": 30000,
+    "max_tts_text_length": 5000,
+    "max_concurrent_sessions": 100,
+    "memory_limit_mb": 50,
+    "cache_ttl_seconds": 3600,
+    "enable_compression": true
+  },
+  "feature_toggles": {
+    "voice_input": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_output": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_settings": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_analytics": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "error_handling": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "performance_tracking": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "lazy_loading": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "resource_monitoring": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "rate_limiting": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "ab_testing": {
+      "enabled": true,
+      "rollout_percentage": 50.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "advanced_tts": {
+      "enabled": true,
+      "rollout_percentage": 25.0,
+      "user_groups": ["beta_testers", "internal_users"],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "noise_cancellation": {
+      "enabled": true,
+      "rollout_percentage": 50.0,
+      "user_groups": ["premium_users", "beta_testers"],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_shortcuts": {
+      "enabled": true,
+      "rollout_percentage": 10.0,
+      "user_groups": ["internal_users"],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "multi_language": {
+      "enabled": true,
+      "rollout_percentage": 30.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    }
+  },
+  "ab_tests": {
+    "voice_ui_layout": {
+      "variants": ["compact", "expanded"],
+      "percentage": 50,
+      "conditions": {
+        "browsers": ["chrome", "firefox", "safari"],
+        "platforms": ["desktop"]
+      },
+      "metadata": {
+        "description": "Test different voice UI layouts",
+        "owner": "product_team",
+        "start_date": "2024-01-01",
+        "end_date": "2024-03-01"
+      }
+    },
+    "tts_voice_selection": {
+      "variants": ["neural", "standard"],
+      "percentage": 25,
+      "conditions": {
+        "context": {
+          "user_type": "premium"
+        }
+      },
+      "metadata": {
+        "description": "Test neural vs standard TTS voices",
+        "owner": "engineering_team"
+      }
+    },
+    "voice_input_sensitivity": {
+      "variants": ["high", "medium", "low"],
+      "percentage": 30,
+      "conditions": {},
+      "metadata": {
+        "description": "Test different microphone sensitivity levels",
+        "owner": "engineering_team"
+      }
+    }
+  },
+  "debug_mode": true,
+  "analytics_enabled": true,
+  "error_reporting_enabled": true,
+  "fallback_mode_threshold": 3,
+  "circuit_breaker": {
+    "enabled": true,
+    "failure_threshold": 3,
+    "recovery_timeout": 30
+  },
+  "monitoring": {
+    "enable_performance_tracking": true,
+    "enable_resource_monitoring": true,
+    "reporting_interval": 30000,
+    "metrics_retention_hours": 48
+  },
+  "security": {
+    "enable_rate_limiting": true,
+    "enable_input_validation": true,
+    "max_audio_duration": 60,
+    "allowed_audio_formats": ["webm", "ogg", "mp4", "wav"],
+    "enable_content_filtering": false
+  },
+  "optimization": {
+    "enable_lazy_loading": true,
+    "enable_module_caching": true,
+    "enable_compression": true,
+    "preload_critical_modules": true,
+    "cache_ttl_minutes": 30,
+    "max_cache_size_mb": 20
+  }
+}

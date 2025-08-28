@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Test - Fixed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c003e, #4a148c, #12005e);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        #textInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+        
+        #textInput::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .whatsapp-voice-button {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+            margin-left: 8px;
+        }
+        
+        .whatsapp-voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+        }
+        
+        .whatsapp-voice-button.recording {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            animation: pulse-record 1.5s infinite;
+            box-shadow: 0 4px 16px rgba(255, 68, 68, 0.5);
+        }
+        
+        .whatsapp-voice-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+        
+        @keyframes pulse-record {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .voice-status-indicator {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            margin-bottom: 8px;
+        }
+        
+        .voice-status-indicator.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        
+        .voice-status-indicator.recording {
+            background: rgba(255, 68, 68, 0.9);
+        }
+        
+        .voice-status-indicator.processing {
+            background: rgba(37, 117, 252, 0.9);
+        }
+        
+        .voice-status-indicator.ready {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        
+        .voice-status-indicator.error {
+            background: rgba(244, 67, 54, 0.9);
+        }
+        
+        .send-button {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .send-button:hover {
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+        }
+        
+        .messages {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            clear: both;
+        }
+        
+        .message.user {
+            background: #6a11cb;
+            color: white;
+            float: right;
+            text-align: right;
+            max-width: 80%;
+        }
+        
+        .message.system {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            float: left;
+            max-width: 80%;
+        }
+        
+        .info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Test - Fixed Version</h1>
+        <div class="info">
+            <strong>✅ Improvements:</strong><br>
+            • No red dot indicator<br>
+            • Better permission handling<br>
+            • Only requests microphone when needed<br>
+            • Clear error messages<br>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="textInput" placeholder="Type or speak your message...">
+            
+            <button id="voiceBtn" class="whatsapp-voice-button" title="Hold or click to record voice message">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+            
+            <button id="sendBtn" class="send-button">SEND</button>
+            
+            <div id="voice-status-indicator" class="voice-status-indicator">
+                <span id="voice-status-text">Ready to record</span>
+            </div>
+        </div>
+        
+        <div id="messages" class="messages">
+            <div class="message system">Voice test interface loaded. Try the microphone button!</div>
+        </div>
+    </div>
+
+    <script>
+        // Voice functionality
+        let isRecording = false;
+        let recognition = null;
+        let recordingTimeout = null;
+        
+        const voiceBtn = document.getElementById('voiceBtn');
+        const textInput = document.getElementById('textInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusIndicator = document.getElementById('voice-status-indicator');
+        const statusText = document.getElementById('voice-status-text');
+        const messages = document.getElementById('messages');
+        
+        // Check for speech recognition support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            showStatus('Speech recognition not supported in this browser', 'error');
+            voiceBtn.style.display = 'none';
+            addMessage('system', '❌ Voice not supported. Try Chrome, Edge, or Safari.');
+        } else {
+            initializeVoice();
+        }
+        
+        function initializeVoice() {
+            // Test microphone availability without requesting permission
+            testMicrophoneAvailability();
+            
+            // Mouse/touch events for hold-to-record functionality
+            let isHolding = false;
+            let holdTimer = null;
+
+            // Mouse events
+            voiceBtn.addEventListener('mousedown', startHolding);
+            voiceBtn.addEventListener('mouseup', stopHolding);
+            voiceBtn.addEventListener('mouseleave', stopHolding);
+
+            // Touch events for mobile
+            voiceBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startHolding();
+            });
+            voiceBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopHolding();
+            });
+
+            function startHolding() {
+                if (isHolding || isRecording) return;
+                
+                isHolding = true;
+                
+                // Start recording after short delay to prevent accidental triggers
+                holdTimer = setTimeout(() => {
+                    if (isHolding) {
+                        startRecording();
+                    }
+                }, 200);
+
+                // Visual feedback
+                voiceBtn.style.transform = 'scale(0.95)';
+                showStatus('Hold to record...', 'ready');
+            }
+
+            function stopHolding() {
+                isHolding = false;
+                
+                if (holdTimer) {
+                    clearTimeout(holdTimer);
+                    holdTimer = null;
+                }
+
+                // Visual feedback
+                voiceBtn.style.transform = 'scale(1)';
+                
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    hideStatus();
+                }
+            }
+
+            // Click for toggle recording (alternative to hold)
+            voiceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!isHolding) { // Only if not using hold functionality
+                    if (isRecording) {
+                        stopRecording();
+                    } else {
+                        startRecording();
+                    }
+                }
+            });
+        }
+        
+        async function testMicrophoneAvailability() {
+            try {
+                // Check if microphone devices are available without requesting permission
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                
+                if (audioInputs.length === 0) {
+                    console.warn('No microphone devices found');
+                    voiceBtn.title = 'No microphone found';
+                    showStatus('❌ No microphone detected', 'error');
+                    addMessage('system', '❌ No microphone detected. Please connect a microphone.');
+                    setTimeout(() => hideStatus(), 4000);
+                    return;
+                }
+                
+                console.log(`Found ${audioInputs.length} microphone device(s)`);
+                voiceBtn.title = 'Click or hold to record voice message';
+                showStatus('🎤 Voice ready - click to record', 'ready');
+                addMessage('system', `✅ Found ${audioInputs.length} microphone(s). Voice ready!`);
+                setTimeout(() => hideStatus(), 3000);
+                
+            } catch (error) {
+                console.warn('Microphone detection failed:', error);
+                voiceBtn.title = 'Click to test microphone access';
+                showStatus('🎤 Click to test voice', 'ready');
+                addMessage('system', '⚠️ Microphone detection failed. Click voice button to test.');
+                setTimeout(() => hideStatus(), 4000);
+            }
+        }
+        
+        async function startRecording() {
+            if (isRecording) return;
+
+            // Check for microphone permissions when user actually tries to record
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Stop the stream immediately as we just needed to check permission
+                stream.getTracks().forEach(track => track.stop());
+                console.log('Microphone permission granted');
+            } catch (permissionError) {
+                console.error('Microphone permission error:', permissionError);
+                
+                let errorMessage = 'Microphone access required';
+                switch (permissionError.name) {
+                    case 'NotAllowedError':
+                        errorMessage = '🔒 Please allow microphone access and try again';
+                        break;
+                    case 'NotFoundError':
+                        errorMessage = '❌ No microphone found. Please connect a microphone';
+                        break;
+                    case 'NotReadableError':
+                        errorMessage = '⚠️ Microphone is busy. Close other apps using microphone';
+                        break;
+                    default:
+                        errorMessage = `❌ Microphone error: ${permissionError.message}`;
+                }
+                
+                showStatus(errorMessage, 'error');
+                addMessage('system', errorMessage);
+                setTimeout(() => hideStatus(), 5000);
+                return;
+            }
+
+            try {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    voiceBtn.classList.add('recording');
+                    showStatus('🎤 Listening... Speak now!', 'recording');
+                    addMessage('system', '🎤 Voice recording started - speak now!');
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    let isFinal = false;
+                    let confidence = 0;
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const result = event.results[i];
+                        transcript += result[0].transcript;
+                        confidence = result[0].confidence || 0.8;
+                        if (result.isFinal) {
+                            isFinal = true;
+                        }
+                    }
+
+                    if (transcript.trim()) {
+                        textInput.value = transcript.trim();
+                        if (isFinal) {
+                            showStatus(`✅ Sending: "${transcript.trim()}"`, 'processing');
+                            addMessage('system', `✅ Recognized: "${transcript.trim()}" (${Math.round(confidence * 100)}% confidence)`);
+                            
+                            // Auto-send the voice message after a short delay
+                            setTimeout(() => {
+                                if (transcript.trim()) {
+                                    // Simulate sending the message
+                                    addMessage('user', transcript.trim());
+                                    addMessage('system', `📤 Auto-sent: "${transcript.trim()}"`);
+                                    textInput.value = ''; // Clear the input after sending
+                                    hideStatus();
+                                }
+                            }, 1000); // 1 second delay to let user see the transcript
+                        } else {
+                            showStatus(`🎤 "${transcript.trim()}"`, 'recording');
+                        }
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    let errorMessage = 'Voice recognition error';
+                    
+                    switch (event.error) {
+                        case 'not-allowed':
+                            errorMessage = '🔒 Microphone access denied. Please allow microphone access.';
+                            break;
+                        case 'no-speech':
+                            errorMessage = '🔇 No speech detected. Please try again.';
+                            break;
+                        case 'audio-capture':
+                            errorMessage = '❌ No microphone found. Please check your microphone.';
+                            break;
+                        case 'network':
+                            errorMessage = '🌐 Network error. Please check your connection.';
+                            break;
+                        case 'service-not-allowed':
+                            errorMessage = '⚠️ Speech service not allowed. Please try again.';
+                            break;
+                        default:
+                            errorMessage = `❌ Voice error: ${event.error}`;
+                    }
+                    
+                    showStatus(errorMessage, 'error');
+                    addMessage('system', errorMessage);
+                    setTimeout(() => hideStatus(), 4000);
+                    stopRecording();
+                };
+
+                recognition.onend = () => {
+                    console.log('Speech recognition ended');
+                    stopRecording();
+                };
+
+                // Start recognition
+                recognition.start();
+                console.log('Starting speech recognition...');
+
+                // Auto-stop after 30 seconds
+                recordingTimeout = setTimeout(() => {
+                    if (isRecording) {
+                        console.log('Auto-stopping recording after 30 seconds');
+                        stopRecording();
+                        showStatus('Recording stopped automatically', 'processing');
+                        addMessage('system', '⏰ Recording stopped automatically after 30 seconds');
+                        setTimeout(() => hideStatus(), 2000);
+                    }
+                }, 30000);
+
+            } catch (error) {
+                console.error('Failed to start voice recognition:', error);
+                showStatus('Voice recognition not available in this browser', 'error');
+                addMessage('system', `❌ Voice recognition failed: ${error.message}`);
+                setTimeout(() => hideStatus(), 3000);
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+
+            isRecording = false;
+            voiceBtn.classList.remove('recording');
+
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+            }
+
+            if (recordingTimeout) {
+                clearTimeout(recordingTimeout);
+                recordingTimeout = null;
+            }
+
+            addMessage('system', '⏹️ Voice recording stopped');
+        }
+
+        function showStatus(text, type = 'ready') {
+            if (statusText && statusIndicator) {
+                statusText.textContent = text;
+                statusIndicator.className = `voice-status-indicator visible ${type}`;
+            }
+        }
+
+        function hideStatus() {
+            if (statusIndicator) {
+                statusIndicator.className = 'voice-status-indicator';
+            }
+        }
+        
+        function addMessage(sender, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        // Send button functionality
+        sendBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (text) {
+                addMessage('user', text);
+                addMessage('system', `Echo: ${text}`);
+                textInput.value = '';
+            }
+        });
+        
+        // Enter key to send
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+        
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isRecording) {
+                stopRecording();
+                addMessage('system', '⏸️ Recording stopped - tab hidden');
+            }
+        });
+        
+        console.log('Voice test interface initialized - Fixed version');
+    </script>
+</body>
+</html>

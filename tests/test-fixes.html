@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Voice and Logout Fixes</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; }
+        .voice-controls { display: flex; gap: 10px; align-items: center; }
+        .voice-mic-button { 
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .voice-mic-button.recording { background: #ff4444; }
+        .voice-mic-button svg { width: 20px; height: 20px; fill: white; }
+    </style>
+</head>
+<body>
+    <h1>Voice Assistant and Logout Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Voice Assistant Test</h2>
+        <p>Click the microphone button to test voice input:</p>
+        <div class="voice-controls">
+            <button id="simple-voice-btn" class="voice-mic-button" onclick="toggleVoiceRecording()" title="Click to speak">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+            <input type="text" id="voice-input" placeholder="Voice input will appear here..." style="flex: 1; padding: 10px;">
+        </div>
+        <div id="voice-status" style="margin-top: 10px; color: #666;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Logout Test</h2>
+        <p>Test the logout functionality:</p>
+        <button onclick="testLogout()">Test Logout</button>
+        <div id="logout-status" style="margin-top: 10px; color: #666;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Session Check Test</h2>
+        <p>Check if session validation works:</p>
+        <button onclick="checkSession()">Check Session</button>
+        <div id="session-status" style="margin-top: 10px; color: #666;"></div>
+    </div>
+
+    <script>
+        let recognition = null;
+        let isRecording = false;
+
+        function toggleVoiceRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                document.getElementById('voice-status').textContent = 'Speech recognition not supported in this browser';
+                return;
+            }
+
+            try {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    const btn = document.getElementById('simple-voice-btn');
+                    btn.classList.add('recording');
+                    btn.title = 'Recording... Click to stop';
+                    document.getElementById('voice-status').textContent = 'Listening...';
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('voice-input').value = transcript;
+                    document.getElementById('voice-status').textContent = `Voice input: "${transcript}"`;
+                };
+
+                recognition.onerror = (event) => {
+                    document.getElementById('voice-status').textContent = `Voice error: ${event.error}`;
+                    stopRecording();
+                };
+
+                recognition.onend = () => {
+                    stopRecording();
+                };
+
+                recognition.start();
+            } catch (error) {
+                document.getElementById('voice-status').textContent = `Failed to start voice recognition: ${error.message}`;
+            }
+        }
+
+        function stopRecording() {
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+            }
+            
+            isRecording = false;
+            const btn = document.getElementById('simple-voice-btn');
+            btn.classList.remove('recording');
+            btn.title = 'Click to speak';
+            
+            if (document.getElementById('voice-status').textContent === 'Listening...') {
+                document.getElementById('voice-status').textContent = 'Voice recording stopped';
+            }
+        }
+
+        async function testLogout() {
+            try {
+                document.getElementById('logout-status').textContent = 'Testing logout...';
+                
+                const response = await fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('logout-status').textContent = `✅ Logout successful: ${data.message}`;
+                } else {
+                    document.getElementById('logout-status').textContent = `❌ Logout failed: ${response.status}`;
+                }
+            } catch (error) {
+                document.getElementById('logout-status').textContent = `❌ Logout error: ${error.message}`;
+            }
+        }
+
+        async function checkSession() {
+            try {
+                document.getElementById('session-status').textContent = 'Checking session...';
+                
+                const response = await fetch('/me', {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.authenticated) {
+                    document.getElementById('session-status').textContent = `✅ Session valid: User ${data.username} (ID: ${data.user_id})`;
+                } else {
+                    document.getElementById('session-status').textContent = `❌ Session invalid: ${data.message}`;
+                }
+            } catch (error) {
+                document.getElementById('session-status').textContent = `❌ Session check error: ${error.message}`;
+            }
+        }
+
+        // Test voice support on page load
+        window.onload = function() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                document.getElementById('voice-status').textContent = '✅ Voice recognition supported';
+            } else {
+                document.getElementById('voice-status').textContent = '❌ Voice recognition not supported';
+            }
+        };
+    </script>
+</body>
+</html>

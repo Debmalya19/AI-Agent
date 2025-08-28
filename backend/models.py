@@ -179,6 +179,46 @@ class UserSession(Base):
     
     user = relationship("User", back_populates="sessions")
 
+class VoiceSettings(Base):
+    """Voice assistant settings for users"""
+    __tablename__ = "voice_settings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(50), ForeignKey("users.user_id"), nullable=False, unique=True, index=True)
+    auto_play_enabled = Column(Boolean, default=False, nullable=False)
+    voice_name = Column(String(100), default="default", nullable=False)
+    speech_rate = Column(Float, default=1.0, nullable=False)
+    speech_pitch = Column(Float, default=1.0, nullable=False)
+    speech_volume = Column(Float, default=1.0, nullable=False)
+    language = Column(String(10), default="en-US", nullable=False)
+    microphone_sensitivity = Column(Float, default=0.5, nullable=False)
+    noise_cancellation = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationship
+    user = relationship("User", back_populates="voice_settings")
+
+
+class VoiceAnalytics(Base):
+    """Voice assistant usage analytics"""
+    __tablename__ = "voice_analytics"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(50), ForeignKey("users.user_id"), nullable=False, index=True)
+    session_id = Column(String(255), index=True)
+    action_type = Column(String(50), nullable=False, index=True)  # stt_start, stt_complete, tts_start, etc.
+    duration_ms = Column(Integer)
+    text_length = Column(Integer)
+    accuracy_score = Column(Float)
+    error_message = Column(Text)
+    analytics_metadata = Column(JSON)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    
+    # Relationship
+    user = relationship("User", back_populates="voice_analytics")
+
+
 # Add relationships
 Customer.orders = relationship("Order", back_populates="customer")
 Customer.tickets = relationship("Ticket", foreign_keys="Ticket.customer_id", back_populates="customer")
@@ -187,3 +227,5 @@ SupportIntent.responses = relationship("SupportResponse", back_populates="intent
 Ticket.comments = relationship("TicketComment", back_populates="ticket", cascade="all, delete-orphan")
 Ticket.activities = relationship("TicketActivity", back_populates="ticket", cascade="all, delete-orphan")
 User.sessions = relationship("UserSession", back_populates="user")
+User.voice_settings = relationship("VoiceSettings", back_populates="user", uselist=False)
+User.voice_analytics = relationship("VoiceAnalytics", back_populates="user")

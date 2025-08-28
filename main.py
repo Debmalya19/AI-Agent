@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
+from fastapi.staticfiles import StaticFiles
 import secrets
 import pandas as pd
 from langchain_core.messages import HumanMessage, AIMessage
@@ -29,7 +30,7 @@ from backend.db_utils import search_knowledge_entries, get_knowledge_entries, sa
 from backend.enhanced_rag_orchestrator import search_with_priority
 import logging
 from sqlalchemy import text
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import asyncio
 import time
@@ -45,6 +46,9 @@ from backend.intelligent_chat.tool_orchestrator import ToolOrchestrator
 from backend.intelligent_chat.context_retriever import ContextRetriever
 from backend.intelligent_chat.response_renderer import ResponseRenderer
 from backend.intelligent_chat.models import ChatResponse as IntelligentChatResponse, UIState
+
+# Voice assistant imports
+from backend.voice_api import voice_router
 
 load_dotenv()
 
@@ -394,6 +398,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include voice assistant router
+app.include_router(voice_router)
+
 # Background task for memory cleanup
 async def cleanup_memory_task():
     """Background task to periodically clean up expired memory data"""
@@ -591,6 +598,95 @@ async def chat_page():
 @app.get("/register.html")
 async def register_page():
     return FileResponse("frontend/register.html")
+
+@app.get("/test-fixes.html")
+async def test_fixes_page():
+    return FileResponse("test-fixes.html")
+
+# Authentication endpoints
+@app.post("/logout")
+async def logout(response: Response, session_token: str = Cookie(None)):
+    """Logout endpoint to invalidate user session"""
+    try:
+        if session_token:
+            # Invalidate the session in the database
+            with SessionLocal() as db:
+                user_session = db.query(UserSession).filter(
+                    UserSession.session_id == session_token
+                ).first()
+                
+                if user_session:
+                    user_session.is_active = False
+                    user_session.logout_time = datetime.now(timezone.utc)
+                    db.commit()
+                    logger.info(f"User session {session_token} logged out successfully")
+        
+        # Clear the session cookie
+        response.delete_cookie("session_token")
+        
+        return JSONResponse(
+            content={"message": "Logged out successfully"},
+            status_code=200
+        )
+        
+    except Exception as e:
+        logger.error(f"Logout error: {e}")
+        # Still clear the cookie even if database update fails
+        response.delete_cookie("session_token")
+        return JSONResponse(
+            content={"message": "Logged out successfully"},
+            status_code=200
+        )
+
+@app.get("/me")
+async def get_current_user(session_token: str = Cookie(None)):
+    """Get current user information from session"""
+    try:
+        if not session_token:
+            return JSONResponse(
+                content={"authenticated": False, "message": "No session token"},
+                status_code=401
+            )
+        
+        # Check if session is valid
+        with SessionLocal() as db:
+            user_session = db.query(UserSession).filter(
+                UserSession.session_id == session_token,
+                UserSession.is_active == True
+            ).first()
+            
+            if not user_session:
+                return JSONResponse(
+                    content={"authenticated": False, "message": "Invalid session"},
+                    status_code=401
+                )
+            
+            # Get user information
+            user = db.query(User).filter(User.user_id == user_session.user_id).first()
+            
+            if not user:
+                return JSONResponse(
+                    content={"authenticated": False, "message": "User not found"},
+                    status_code=401
+                )
+            
+            return JSONResponse(
+                content={
+                    "authenticated": True,
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "email": user.email,
+                    "session_id": session_token
+                },
+                status_code=200
+            )
+            
+    except Exception as e:
+        logger.error(f"Get current user error: {e}")
+        return JSONResponse(
+            content={"authenticated": False, "message": "Session check failed"},
+            status_code=500
+        )
 
 # Request model for chat input
 class ChatRequest(PydanticBaseModel):
@@ -1125,7 +1221,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
             # 🔑 Generate secure session token
             session_token = secrets.token_urlsafe(32)
-            expires_at = datetime.utcnow() + timedelta(hours=24)
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
 
             # 🔑 Store token hash for validation
             token_hash = hashlib.sha256(session_token.encode()).hexdigest()
@@ -1135,9 +1231,9 @@ async def login(username: str = Form(...), password: str = Form(...)):
                 session_id=session_token,   # raw token stored
                 token_hash=token_hash,      # hashed token stored
                 user_id=user.user_id,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 expires_at=expires_at,
-                last_accessed=datetime.utcnow(),
+                last_accessed=datetime.now(timezone.utc),
                 is_active=True
             )
             db.add(user_session)
@@ -1456,7 +1552,7 @@ async def get_memory_health():
             "average_response_time": stats.average_response_time,
             "last_cleanup": stats.last_cleanup.isoformat() if stats.last_cleanup else None,
             "issues": issues,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -1464,7 +1560,7 @@ async def get_memory_health():
         return {
             "status": "unhealthy",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
 # Intelligent Chat UI specific endpoints
@@ -1494,7 +1590,7 @@ async def get_chat_status(session_token: str = Cookie(None)):
             "intelligent_chat_enabled": intelligent_chat_manager is not None,
             "legacy_agent_enabled": agent_executor is not None,
             "memory_layer_enabled": memory_manager is not None,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         # Add intelligent chat manager stats if available
@@ -1609,7 +1705,7 @@ async def get_conversation_context(
             "context_entries": context_entries,
             "limit": limit,
             "include_metadata": include_metadata,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except HTTPException:
@@ -1668,7 +1764,7 @@ async def get_available_tools(session_token: str = Cookie(None)):
                 tool_performance = {
                     "total_tools": len(available_tools),
                     "performance_data_available": True,
-                    "last_updated": datetime.utcnow().isoformat()
+                    "last_updated": datetime.now(timezone.utc).isoformat()
                 }
             except Exception as e:
                 logger.warning(f"Failed to get tool performance data: {e}")
@@ -1712,7 +1808,7 @@ async def get_available_tools(session_token: str = Cookie(None)):
                 "search": len([t for t in available_tools if t["category"] == "search"]),
                 "general": len([t for t in available_tools if t["category"] == "general"])
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except HTTPException:
@@ -1750,7 +1846,7 @@ async def get_ui_state(session_id: str, session_token: str = Cookie(None)):
             "error_states": [],
             "content_sections": [],
             "interactive_elements": [],
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
         
         if intelligent_chat_manager:

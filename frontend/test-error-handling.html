@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Error Handling Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .test-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .test-button.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .test-button.primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .test-button.danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .test-button.danger:hover {
+            background-color: #c82333;
+        }
+        
+        .test-button.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .test-button.warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .test-results {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .voice-container {
+            min-height: 100px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fafafa;
+        }
+        
+        .status-display {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status-display.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-display.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-display.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-display.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .compatibility-report {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .compatibility-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .compatibility-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-indicator {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-indicator.supported {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-indicator.not-supported {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .error-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voice Assistant Error Handling Test Suite</h1>
+    
+    <div class="test-container">
+        <h2>Voice Controller Integration</h2>
+        <div class="voice-container" id="voiceContainer">
+            Voice controls will appear here
+        </div>
+        <div class="status-display" id="statusDisplay">
+            Initializing voice controller...
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-section">
+            <h3>1. Browser Compatibility Detection</h3>
+            <p>Test browser compatibility detection and fallback mechanisms.</p>
+            <div class="test-buttons">
+                <button class="test-button primary" onclick="testBrowserCompatibility()">Check Compatibility</button>
+                <button class="test-button warning" onclick="simulateIncompatibleBrowser()">Simulate Incompatible Browser</button>
+            </div>
+            <div class="compatibility-report" id="compatibilityReport"></div>
+            <div class="test-results" id="compatibilityResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Microphone Permission Handling</h3>
+            <p>Test microphone permission detection and user-friendly error messages.</p>
+            <div class="test-buttons">
+                <button class="test-button primary" onclick="testMicrophoneAccess()">Test Microphone Access</button>
+                <button class="test-button danger" onclick="simulatePermissionDenied()">Simulate Permission Denied</button>
+                <button class="test-button warning" onclick="simulateMicrophoneUnavailable()">Simulate No Microphone</button>
+            </div>
+            <div class="test-results" id="microphoneResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Network Error Recovery</h3>
+            <p>Test network error handling and retry mechanisms.</p>
+            <div class="test-buttons">
+                <button class="test-button primary" onclick="testNetworkStatus()">Check Network Status</button>
+                <button class="test-button danger" onclick="simulateNetworkError()">Simulate Network Error</button>
+                <button class="test-button warning" onclick="simulateSlowNetwork()">Simulate Slow Network</button>
+                <button class="test-button primary" onclick="testNetworkRecovery()">Test Recovery</button>
+            </div>
+            <div class="test-results" id="networkResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Audio Quality Detection</h3>
+            <p>Test audio quality assessment and retry mechanisms.</p>
+            <div class="test-buttons">
+                <button class="test-button primary" onclick="simulateGoodAudio()">Simulate Good Audio</button>
+                <button class="test-button warning" onclick="simulatePoorAudio()">Simulate Poor Audio</button>
+                <button class="test-button danger" onclick="simulateNoSpeech()">Simulate No Speech</button>
+                <button class="test-button warning" onclick="simulateLowConfidence()">Simulate Low Confidence</button>
+            </div>
+            <div class="test-results" id="audioQualityResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Visual Error Indicators</h3>
+            <p>Test visual error indicators and recovery suggestions.</p>
+            <div class="test-buttons">
+                <button class="test-button danger" onclick="showCriticalError()">Show Critical Error</button>
+                <button class="test-button warning" onclick="showWarningError()">Show Warning</button>
+                <button class="test-button primary" onclick="showInfoMessage()">Show Info Message</button>
+                <button class="test-button primary" onclick="showRecoverySuccess()">Show Recovery Success</button>
+                <button class="test-button danger" onclick="hideAllErrors()">Hide All Errors</button>
+            </div>
+            <div class="test-results" id="visualErrorResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. Graceful Degradation</h3>
+            <p>Test fallback to text-only mode and graceful degradation.</p>
+            <div class="test-buttons">
+                <button class="test-button warning" onclick="activateFallbackMode()">Activate Fallback Mode</button>
+                <button class="test-button primary" onclick="attemptVoiceRestore()">Attempt Voice Restore</button>
+                <button class="test-button danger" onclick="forceVoiceDisable()">Force Voice Disable</button>
+                <button class="test-button primary" onclick="resetVoiceState()">Reset Voice State</button>
+            </div>
+            <div class="test-results" id="fallbackResults"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Error Statistics</h2>
+        <div class="error-stats" id="errorStats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalErrors">0</div>
+                <div class="stat-label">Total Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="recentErrors">0</div>
+                <div class="stat-label">Recent Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="consecutiveErrors">0</div>
+                <div class="stat-label">Consecutive Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fallbackMode">No</div>
+                <div class="stat-label">Fallback Mode</div>
+            </div>
+        </div>
+        <button class="test-button primary" onclick="updateErrorStats()">Update Statistics</button>
+        <button class="test-button warning" onclick="clearErrorHistory()">Clear Error History</button>
+    </div>
+
+    <!-- Include voice components -->
+    <script src="/static/voice-capabilities.js"></script>
+    <script src="/static/voice-settings.js"></script>
+    <script src="/static/voice-error-handler.js"></script>
+    <script src="/static/voice-error-ui.js"></script>
+    <script src="/static/voice-controller.js"></script>
+    <script src="/static/voice-ui.js"></script>
+
+    <script>
+        // Global variables
+        let voiceController = null;
+        let voiceUI = null;
+        let errorHandler = null;
+        let errorUI = null;
+
+        // Initialize test environment
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize voice components
+                const container = document.getElementById('voiceContainer');
+                
+                // Create mock chat interface
+                const mockChatInterface = {
+                    sendMessage: (message) => console.log('Mock chat message:', message),
+                    displayMessage: (message) => console.log('Mock display message:', message)
+                };
+
+                // Initialize voice controller with debug mode
+                voiceController = new VoiceController(mockChatInterface, {
+                    debugMode: true,
+                    enableErrorRecovery: true
+                });
+
+                // Initialize voice UI
+                voiceUI = new VoiceUI(container, voiceController, {
+                    debugMode: true,
+                    showErrorRecovery: true
+                });
+
+                // Get references to error components
+                errorHandler = voiceController.errorHandler;
+                errorUI = voiceUI.errorUI;
+
+                // Set up event listeners for testing
+                setupTestEventListeners();
+
+                updateStatus('Voice controller initialized successfully', 'success');
+                updateErrorStats();
+
+            } catch (error) {
+                console.error('Failed to initialize voice components:', error);
+                updateStatus('Failed to initialize voice components: ' + error.message, 'error');
+            }
+        });
+
+        // Set up event listeners for testing
+        function setupTestEventListeners() {
+            if (!voiceController) return;
+
+            voiceController.addEventListener('error', (data) => {
+                logResult('error', `Error: ${data.type} - ${data.message}`);
+                updateErrorStats();
+            });
+
+            voiceController.addEventListener('fallback_activated', (data) => {
+                logResult('fallback', `Fallback activated: ${data.reason}`);
+                updateErrorStats();
+            });
+
+            voiceController.addEventListener('voice_restored', () => {
+                logResult('recovery', 'Voice functionality restored');
+                updateErrorStats();
+            });
+
+            voiceController.addEventListener('network_retry', (data) => {
+                logResult('network', `Network retry attempt ${data.attempt}/${data.maxAttempts}`);
+            });
+
+            voiceController.addEventListener('microphone_error', (data) => {
+                logResult('microphone', `Microphone error: ${data.userMessage}`);
+            });
+        }
+
+        // Test functions
+        function testBrowserCompatibility() {
+            if (!errorHandler) {
+                logResult('compatibilityResults', 'Error handler not initialized');
+                return;
+            }
+
+            const report = errorHandler.checkBrowserCompatibility();
+            displayCompatibilityReport(report);
+            logResult('compatibilityResults', 'Browser compatibility check completed');
+        }
+
+        function simulateIncompatibleBrowser() {
+            // Temporarily disable speech recognition
+            const originalSpeechRecognition = window.SpeechRecognition;
+            const originalWebkitSpeechRecognition = window.webkitSpeechRecognition;
+            
+            delete window.SpeechRecognition;
+            delete window.webkitSpeechRecognition;
+
+            testBrowserCompatibility();
+
+            // Restore original values
+            if (originalSpeechRecognition) window.SpeechRecognition = originalSpeechRecognition;
+            if (originalWebkitSpeechRecognition) window.webkitSpeechRecognition = originalWebkitSpeechRecognition;
+
+            logResult('compatibilityResults', 'Simulated incompatible browser');
+        }
+
+        async function testMicrophoneAccess() {
+            if (!errorHandler) {
+                logResult('microphoneResults', 'Error handler not initialized');
+                return;
+            }
+
+            const result = await errorHandler.testMicrophoneAccess();
+            logResult('microphoneResults', `Microphone test: ${JSON.stringify(result, null, 2)}`);
+        }
+
+        function simulatePermissionDenied() {
+            const mockError = {
+                type: 'permission',
+                error: 'not-allowed',
+                message: 'Microphone permission denied'
+            };
+
+            if (errorHandler) {
+                errorHandler.handleError(mockError, 'microphone_test');
+            }
+
+            logResult('microphoneResults', 'Simulated permission denied error');
+        }
+
+        function simulateMicrophoneUnavailable() {
+            const mockError = {
+                type: 'audio',
+                error: 'audio-capture',
+                message: 'No microphone found'
+            };
+
+            if (errorHandler) {
+                errorHandler.handleError(mockError, 'microphone_test');
+            }
+
+            logResult('microphoneResults', 'Simulated microphone unavailable error');
+        }
+
+        function testNetworkStatus() {
+            if (!errorHandler) {
+                logResult('networkResults', 'Error handler not initialized');
+                return;
+            }
+
+            const status = errorHandler.getNetworkStatus();
+            logResult('networkResults', `Network status: ${JSON.stringify(status, null, 2)}`);
+        }
+
+        function simulateNetworkError() {
+            const mockError = {
+                type: 'network',
+                error: 'network',
+                message: 'Network connection failed'
+            };
+
+            if (errorHandler) {
+                errorHandler.handleError(mockError, 'network_test');
+            }
+
+            logResult('networkResults', 'Simulated network error');
+        }
+
+        function simulateSlowNetwork() {
+            const mockError = {
+                type: 'network',
+                error: 'timeout',
+                message: 'Network request timed out'
+            };
+
+            if (errorHandler) {
+                errorHandler.handleError(mockError, 'network_test');
+            }
+
+            logResult('networkResults', 'Simulated slow network');
+        }
+
+        function testNetworkRecovery() {
+            if (errorHandler) {
+                errorHandler.emit('network_restored');
+            }
+
+            logResult('networkResults', 'Triggered network recovery');
+        }
+
+        function simulateGoodAudio() {
+            const mockEvent = {
+                results: [{
+                    0: { confidence: 0.9, transcript: 'test speech' },
+                    isFinal: true
+                }]
+            };
+
+            if (errorHandler) {
+                const assessment = errorHandler.detectAudioQuality(mockEvent);
+                logResult('audioQualityResults', `Good audio quality: ${JSON.stringify(assessment, null, 2)}`);
+            }
+        }
+
+        function simulatePoorAudio() {
+            const mockEvent = {
+                results: [{
+                    0: { confidence: 0.2, transcript: 'unclear speech' },
+                    isFinal: true
+                }]
+            };
+
+            if (errorHandler) {
+                const assessment = errorHandler.detectAudioQuality(mockEvent);
+                logResult('audioQualityResults', `Poor audio quality: ${JSON.stringify(assessment, null, 2)}`);
+            }
+        }
+
+        function simulateNoSpeech() {
+            const mockEvent = { results: [] };
+
+            if (errorHandler) {
+                const assessment = errorHandler.detectAudioQuality(mockEvent);
+                logResult('audioQualityResults', `No speech detected: ${JSON.stringify(assessment, null, 2)}`);
+            }
+        }
+
+        function simulateLowConfidence() {
+            const mockEvent = {
+                results: [{
+                    0: { confidence: 0.4, transcript: 'maybe this' },
+                    isFinal: true
+                }]
+            };
+
+            if (errorHandler) {
+                const assessment = errorHandler.detectAudioQuality(mockEvent);
+                logResult('audioQualityResults', `Low confidence: ${JSON.stringify(assessment, null, 2)}`);
+            }
+        }
+
+        function showCriticalError() {
+            if (errorUI) {
+                errorUI.show({
+                    type: 'browser_support',
+                    severity: 'critical',
+                    userMessage: 'Critical error: Voice features are not supported in your browser.'
+                }, {
+                    recoveryActions: [
+                        'Use text input instead',
+                        'Try a different browser',
+                        'Update your browser'
+                    ]
+                });
+            }
+
+            logResult('visualErrorResults', 'Displayed critical error');
+        }
+
+        function showWarningError() {
+            if (errorUI) {
+                errorUI.show({
+                    type: 'audio',
+                    severity: 'medium',
+                    userMessage: 'Warning: Poor audio quality detected.'
+                }, {
+                    recoveryActions: [
+                        'Speak more clearly',
+                        'Reduce background noise',
+                        'Check your microphone'
+                    ],
+                    actionButtons: [
+                        {
+                            text: 'Try Again',
+                            type: 'primary',
+                            action: () => logResult('visualErrorResults', 'Retry button clicked')
+                        }
+                    ]
+                });
+            }
+
+            logResult('visualErrorResults', 'Displayed warning error');
+        }
+
+        function showInfoMessage() {
+            if (errorUI) {
+                errorUI.show({
+                    type: 'unknown',
+                    severity: 'low',
+                    userMessage: 'Info: Voice processing is taking longer than usual.'
+                }, {
+                    showProgress: true,
+                    progressText: 'Processing...'
+                });
+            }
+
+            logResult('visualErrorResults', 'Displayed info message');
+        }
+
+        function showRecoverySuccess() {
+            if (errorUI) {
+                errorUI.showRecoverySuccess('Voice features have been successfully restored!');
+            }
+
+            logResult('visualErrorResults', 'Displayed recovery success');
+        }
+
+        function hideAllErrors() {
+            if (errorUI) {
+                errorUI.hide();
+            }
+
+            logResult('visualErrorResults', 'Hidden all error messages');
+        }
+
+        function activateFallbackMode() {
+            if (voiceController) {
+                voiceController.forceFallbackMode('test');
+            }
+
+            logResult('fallbackResults', 'Activated fallback mode');
+            updateErrorStats();
+        }
+
+        async function attemptVoiceRestore() {
+            if (voiceController) {
+                const restored = await voiceController.resetErrorState();
+                logResult('fallbackResults', `Voice restore attempt: ${restored ? 'Success' : 'Failed'}`);
+            }
+
+            updateErrorStats();
+        }
+
+        function forceVoiceDisable() {
+            if (voiceController) {
+                voiceController.forceFallbackMode('forced_disable');
+            }
+
+            logResult('fallbackResults', 'Forced voice disable');
+            updateErrorStats();
+        }
+
+        function resetVoiceState() {
+            if (errorHandler) {
+                errorHandler.reset();
+            }
+
+            if (voiceController) {
+                voiceController.resetErrorState();
+            }
+
+            logResult('fallbackResults', 'Reset voice state');
+            updateErrorStats();
+        }
+
+        function updateErrorStats() {
+            if (!voiceController || !errorHandler) return;
+
+            const stats = voiceController.getErrorStatistics();
+            
+            document.getElementById('totalErrors').textContent = stats.totalErrors || 0;
+            document.getElementById('recentErrors').textContent = stats.recentErrors || 0;
+            document.getElementById('consecutiveErrors').textContent = stats.consecutiveErrors || 0;
+            document.getElementById('fallbackMode').textContent = stats.fallbackMode ? 'Yes' : 'No';
+        }
+
+        function clearErrorHistory() {
+            if (errorHandler) {
+                errorHandler.reset();
+            }
+
+            updateErrorStats();
+            logResult('errorStats', 'Error history cleared');
+        }
+
+        // Utility functions
+        function displayCompatibilityReport(report) {
+            const container = document.getElementById('compatibilityReport');
+            container.innerHTML = '';
+
+            const features = [
+                { name: 'Speech Recognition', supported: report.speechRecognition.supported },
+                { name: 'Speech Synthesis', supported: report.speechSynthesis.supported },
+                { name: 'Media Devices', supported: report.mediaDevices.supported },
+                { name: 'Overall Compatible', supported: report.overall.compatible }
+            ];
+
+            features.forEach(feature => {
+                const item = document.createElement('div');
+                item.className = 'compatibility-item';
+                
+                const name = document.createElement('span');
+                name.textContent = feature.name;
+                
+                const status = document.createElement('span');
+                status.className = `status-indicator ${feature.supported ? 'supported' : 'not-supported'}`;
+                status.textContent = feature.supported ? 'Supported' : 'Not Supported';
+                
+                item.appendChild(name);
+                item.appendChild(status);
+                container.appendChild(item);
+            });
+
+            if (report.overall.recommendations.length > 0) {
+                const recommendations = document.createElement('div');
+                recommendations.innerHTML = '<strong>Recommendations:</strong><ul>' + 
+                    report.overall.recommendations.map(rec => `<li>${rec}</li>`).join('') + 
+                    '</ul>';
+                container.appendChild(recommendations);
+            }
+        }
+
+        function logResult(containerId, message) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const timestamp = new Date().toLocaleTimeString();
+                container.innerHTML += `[${timestamp}] ${message}\n`;
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDisplay = document.getElementById('statusDisplay');
+            statusDisplay.textContent = message;
+            statusDisplay.className = `status-display ${type}`;
+        }
+    </script>
+</body>
+</html>

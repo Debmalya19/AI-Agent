@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Voice Features Test Suite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn.success {
+            background: #28a745;
+        }
+        
+        .btn.danger {
+            background: #dc3545;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status.running {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.failure {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
+        
+        .console {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+        }
+        
+        .suite-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .suite-card {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .suite-card.passed {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .suite-card.failed {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .suite-card.pending {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .metric-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .metric-unit {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Comprehensive Voice Features Test Suite</h1>
+            <p>Complete testing of voice assistant functionality including unit tests, integration tests, E2E tests, accessibility tests, and performance tests.</p>
+        </div>
+        
+        <div class="controls">
+            <button id="runAllTests" class="btn">Run All Tests</button>
+            <button id="runUnitTests" class="btn">Unit Tests Only</button>
+            <button id="runE2ETests" class="btn">E2E Tests Only</button>
+            <button id="runAccessibilityTests" class="btn">Accessibility Tests</button>
+            <button id="runPerformanceTests" class="btn">Performance Tests</button>
+            <button id="exportReport" class="btn" disabled>Export Report</button>
+            <button id="clearResults" class="btn">Clear Results</button>
+        </div>
+        
+        <div id="status" class="status hidden">
+            <div id="statusText">Ready to run tests</div>
+            <div class="progress">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div id="suiteSummary" class="suite-summary hidden"></div>
+        
+        <div id="console" class="console hidden"></div>
+        
+        <div id="metrics" class="metrics hidden"></div>
+        
+        <div id="testResults" class="test-results"></div>
+    </div>
+
+    <!-- Load test dependencies -->
+    <script src="/static/voice-capabilities.js"></script>
+    <script src="/static/voice-settings.js"></script>
+    <script src="/static/voice-controller.js"></script>
+    <script src="/static/voice-ui.js"></script>
+    
+    <!-- Load test suites -->
+    <script src="/static/tests/voice-capabilities.test.js"></script>
+    <script src="/static/tests/voice-settings.test.js"></script>
+    <script src="/static/tests/voice-controller.test.js"></script>
+    <script src="/static/tests/voice-ui.test.js"></script>
+    <script src="/static/tests/voice-accessibility.test.js"></script>
+    <script src="/static/tests/voice-e2e.test.js"></script>
+    <script src="/static/tests/voice-performance.test.js"></script>
+    
+    <!-- Load test runner -->
+    <script src="/static/tests/comprehensive-voice-test-runner.js"></script>
+
+    <script>
+        class VoiceTestInterface {
+            constructor() {
+                this.runner = null;
+                this.currentResults = null;
+                this.isRunning = false;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+                this.setupConsoleCapture();
+            }
+            
+            initializeElements() {
+                this.elements = {
+                    runAllTests: document.getElementById('runAllTests'),
+                    runUnitTests: document.getElementById('runUnitTests'),
+                    runE2ETests: document.getElementById('runE2ETests'),
+                    runAccessibilityTests: document.getElementById('runAccessibilityTests'),
+                    runPerformanceTests: document.getElementById('runPerformanceTests'),
+                    exportReport: document.getElementById('exportReport'),
+                    clearResults: document.getElementById('clearResults'),
+                    status: document.getElementById('status'),
+                    statusText: document.getElementById('statusText'),
+                    progressBar: document.getElementById('progressBar'),
+                    suiteSummary: document.getElementById('suiteSummary'),
+                    console: document.getElementById('console'),
+                    metrics: document.getElementById('metrics'),
+                    testResults: document.getElementById('testResults')
+                };
+            }
+            
+            attachEventListeners() {
+                this.elements.runAllTests.addEventListener('click', () => this.runAllTests());
+                this.elements.runUnitTests.addEventListener('click', () => this.runCategoryTests('unit'));
+                this.elements.runE2ETests.addEventListener('click', () => this.runCategoryTests('e2e'));
+                this.elements.runAccessibilityTests.addEventListener('click', () => this.runCategoryTests('accessibility'));
+                this.elements.runPerformanceTests.addEventListener('click', () => this.runCategoryTests('performance'));
+                this.elements.exportReport.addEventListener('click', () => this.exportReport());
+                this.elements.clearResults.addEventListener('click', () => this.clearResults());
+            }
+            
+            setupConsoleCapture() {
+                // Capture console output for display
+                const originalLog = console.log;
+                const originalError = console.error;
+                
+                console.log = (...args) => {
+                    originalLog.apply(console, args);
+                    this.appendToConsole(args.join(' '), 'log');
+                };
+                
+                console.error = (...args) => {
+                    originalError.apply(console, args);
+                    this.appendToConsole(args.join(' '), 'error');
+                };
+            }
+            
+            appendToConsole(message, type = 'log') {
+                if (!this.elements.console.classList.contains('hidden')) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    const prefix = type === 'error' ? '❌' : '📝';
+                    this.elements.console.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+                    this.elements.console.scrollTop = this.elements.console.scrollHeight;
+                }
+            }
+            
+            async runAllTests() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.showStatus('Running comprehensive voice tests...', 'running');
+                this.showConsole();
+                this.disableButtons();
+                
+                try {
+                    this.runner = new ComprehensiveVoiceTestRunner();
+                    this.setupTestRunner();
+                    
+                    const results = await this.runner.runAllTests();
+                    this.currentResults = results;
+                    
+                    this.showResults(results);
+                    this.showMetrics(this.runner.performanceMetrics);
+                    this.updateSuiteSummary(results.suites);
+                    
+                    const status = results.failed === 0 ? 'success' : 'failure';
+                    const message = results.failed === 0 
+                        ? `All tests passed! (${results.passed}/${results.total})`
+                        : `${results.failed} test(s) failed (${results.passed}/${results.total})`;
+                    
+                    this.showStatus(message, status);
+                    this.elements.exportReport.disabled = false;
+                    
+                } catch (error) {
+                    console.error('Test execution error:', error);
+                    this.showStatus('Test execution failed', 'failure');
+                } finally {
+                    this.isRunning = false;
+                    this.enableButtons();
+                }
+            }
+            
+            async runCategoryTests(category) {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.showStatus(`Running ${category} tests...`, 'running');
+                this.showConsole();
+                this.disableButtons();
+                
+                try {
+                    this.runner = new ComprehensiveVoiceTestRunner();
+                    this.setupTestRunner();
+                    
+                    // Filter test suites by category
+                    const originalSuites = [...this.runner.testSuites];
+                    this.runner.testSuites = originalSuites.filter(suite => suite.category === category);
+                    
+                    const results = await this.runner.runAllTests();
+                    this.currentResults = results;
+                    
+                    this.showResults(results);
+                    this.showMetrics(this.runner.performanceMetrics);
+                    this.updateSuiteSummary(results.suites);
+                    
+                    const status = results.failed === 0 ? 'success' : 'failure';
+                    const message = results.failed === 0 
+                        ? `${category} tests passed! (${results.passed}/${results.total})`
+                        : `${results.failed} ${category} test(s) failed (${results.passed}/${results.total})`;
+                    
+                    this.showStatus(message, status);
+                    this.elements.exportReport.disabled = false;
+                    
+                } catch (error) {
+                    console.error('Test execution error:', error);
+                    this.showStatus('Test execution failed', 'failure');
+                } finally {
+                    this.isRunning = false;
+                    this.enableButtons();
+                }
+            }
+            
+            setupTestRunner() {
+                // Add all available test suites
+                if (window.VoiceCapabilitiesTest) {
+                    this.runner.addTestSuite('Voice Capabilities', window.VoiceCapabilitiesTest, 'unit');
+                }
+                if (window.VoiceSettingsTest) {
+                    this.runner.addTestSuite('Voice Settings', window.VoiceSettingsTest, 'unit');
+                }
+                if (window.VoiceControllerTest) {
+                    this.runner.addTestSuite('Voice Controller', window.VoiceControllerTest, 'unit');
+                }
+                if (window.VoiceUITest) {
+                    this.runner.addTestSuite('Voice UI', window.VoiceUITest, 'integration');
+                }
+                if (window.VoiceAccessibilityTest) {
+                    this.runner.addTestSuite('Voice Accessibility', window.VoiceAccessibilityTest, 'accessibility');
+                }
+                if (window.VoiceE2ETest) {
+                    this.runner.addTestSuite('Voice End-to-End', window.VoiceE2ETest, 'e2e');
+                }
+                if (window.VoicePerformanceTest) {
+                    this.runner.addTestSuite('Voice Performance', window.VoicePerformanceTest, 'performance');
+                }
+            }
+            
+            showStatus(message, type) {
+                this.elements.statusText.textContent = message;
+                this.elements.status.className = `status ${type}`;
+                this.elements.status.classList.remove('hidden');
+                
+                if (type === 'running') {
+                    this.elements.statusText.innerHTML = `<span class="loading"></span> ${message}`;
+                }
+            }
+            
+            showConsole() {
+                this.elements.console.classList.remove('hidden');
+                this.elements.console.textContent = '';
+            }
+            
+            showResults(results) {
+                if (this.runner && this.runner.generateHTMLReport) {
+                    this.elements.testResults.innerHTML = this.runner.generateHTMLReport();
+                }
+            }
+            
+            showMetrics(metrics) {
+                if (!metrics || metrics.length === 0) {
+                    this.elements.metrics.classList.add('hidden');
+                    return;
+                }
+                
+                this.elements.metrics.classList.remove('hidden');
+                
+                // Calculate key metrics
+                const sttMetrics = metrics.filter(m => m.test === 'STT_Latency');
+                const ttsMetrics = metrics.filter(m => m.test === 'TTS_Performance');
+                const memoryMetrics = metrics.filter(m => m.test === 'Memory_Usage');
+                const concurrentMetrics = metrics.filter(m => m.test === 'Concurrent_Operations');
+                
+                let metricsHTML = '';
+                
+                if (sttMetrics.length > 0) {
+                    const avgLatency = sttMetrics.reduce((sum, m) => sum + m.latency, 0) / sttMetrics.length;
+                    metricsHTML += `
+                        <div class="metric-card">
+                            <div class="metric-title">STT Average Latency</div>
+                            <div class="metric-value">${avgLatency.toFixed(0)}<span class="metric-unit">ms</span></div>
+                        </div>
+                    `;
+                }
+                
+                if (ttsMetrics.length > 0) {
+                    const avgRate = ttsMetrics.reduce((sum, m) => sum + m.rate, 0) / ttsMetrics.length;
+                    metricsHTML += `
+                        <div class="metric-card">
+                            <div class="metric-title">TTS Processing Rate</div>
+                            <div class="metric-value">${avgRate.toFixed(1)}<span class="metric-unit">chars/sec</span></div>
+                        </div>
+                    `;
+                }
+                
+                if (memoryMetrics.length > 0) {
+                    const maxMemory = Math.max(...memoryMetrics.map(m => m.peakMemory));
+                    metricsHTML += `
+                        <div class="metric-card">
+                            <div class="metric-title">Peak Memory Usage</div>
+                            <div class="metric-value">${maxMemory}<span class="metric-unit">MB</span></div>
+                        </div>
+                    `;
+                }
+                
+                if (concurrentMetrics.length > 0) {
+                    const avgThroughput = concurrentMetrics.reduce((sum, m) => sum + (m.operationCount / (m.totalTime / 1000)), 0) / concurrentMetrics.length;
+                    metricsHTML += `
+                        <div class="metric-card">
+                            <div class="metric-title">Concurrent Throughput</div>
+                            <div class="metric-value">${avgThroughput.toFixed(1)}<span class="metric-unit">ops/sec</span></div>
+                        </div>
+                    `;
+                }
+                
+                this.elements.metrics.innerHTML = metricsHTML;
+            }
+            
+            updateSuiteSummary(suites) {
+                this.elements.suiteSummary.classList.remove('hidden');
+                
+                const summaryHTML = suites.map(suite => {
+                    const status = suite.failed === 0 ? 'passed' : 'failed';
+                    const rate = suite.total > 0 ? ((suite.passed / suite.total) * 100).toFixed(1) : '0.0';
+                    
+                    return `
+                        <div class="suite-card ${status}">
+                            <h4>${suite.name}</h4>
+                            <div>${suite.passed}/${suite.total} (${rate}%)</div>
+                            <div><small>${suite.category.toUpperCase()}</small></div>
+                        </div>
+                    `;
+                }).join('');
+                
+                this.elements.suiteSummary.innerHTML = summaryHTML;
+            }
+            
+            exportReport() {
+                if (!this.runner || !this.currentResults) return;
+                
+                const report = this.runner.exportReport();
+                const blob = new Blob([report], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `voice-test-report-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            clearResults() {
+                this.elements.testResults.innerHTML = '';
+                this.elements.console.textContent = '';
+                this.elements.console.classList.add('hidden');
+                this.elements.status.classList.add('hidden');
+                this.elements.suiteSummary.classList.add('hidden');
+                this.elements.metrics.classList.add('hidden');
+                this.elements.exportReport.disabled = true;
+                this.currentResults = null;
+            }
+            
+            disableButtons() {
+                Object.values(this.elements).forEach(el => {
+                    if (el.tagName === 'BUTTON' && el.id !== 'clearResults') {
+                        el.disabled = true;
+                    }
+                });
+            }
+            
+            enableButtons() {
+                Object.values(this.elements).forEach(el => {
+                    if (el.tagName === 'BUTTON') {
+                        el.disabled = false;
+                    }
+                });
+            }
+        }
+        
+        // Initialize the test interface when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new VoiceTestInterface();
+        });
+    </script>
+</body>
+</html>

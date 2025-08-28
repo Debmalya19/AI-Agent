@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glassy Mic Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .button-showcase {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: bold;
+        }
+
+        /* New Glassy Mic Button Styles */
+        .voice-mic-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .voice-mic-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .voice-mic-button:disabled {
+            background: rgba(128, 128, 128, 0.1);
+            border-color: rgba(128, 128, 128, 0.2);
+            color: rgba(128, 128, 128, 0.5);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .voice-mic-button.recording {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: rgba(244, 67, 54, 0.4);
+            color: rgba(244, 67, 54, 0.9);
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.3);
+        }
+
+        .voice-mic-button svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .recording-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: rgba(244, 67, 54, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
+        }
+
+        .voice-mic-button.recording .recording-indicator {
+            opacity: 1;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { 
+                box-shadow: 0 0 20px rgba(244, 67, 54, 0.3), 0 0 0 0 rgba(244, 67, 54, 0.7);
+            }
+            70% { 
+                box-shadow: 0 0 25px rgba(244, 67, 54, 0.4), 0 0 0 10px rgba(244, 67, 54, 0);
+            }
+            100% { 
+                box-shadow: 0 0 20px rgba(244, 67, 54, 0.3), 0 0 0 0 rgba(244, 67, 54, 0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Old style for comparison */
+        .old-mic-button {
+            background: #2575fc;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            color: white;
+        }
+
+        .old-mic-button:hover {
+            background: #1e5bb8;
+            transform: scale(1.05);
+        }
+
+        .old-mic-button.recording {
+            background: #f44336;
+            animation: old-pulse 1.5s infinite;
+        }
+
+        @keyframes old-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Glassy Mic Button Design</h1>
+        
+        <div class="button-showcase">
+            <div class="button-group">
+                <div class="label">Old Design</div>
+                <button class="old-mic-button" id="oldBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="button-group">
+                <div class="label">New Glassy Design</div>
+                <button class="voice-mic-button" id="newBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <div class="recording-indicator"></div>
+                </button>
+            </div>
+
+            <div class="button-group">
+                <div class="label">Disabled State</div>
+                <button class="voice-mic-button" disabled>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="toggleRecording('old')">Toggle Old Recording</button>
+            <button class="control-btn" onclick="toggleRecording('new')">Toggle New Recording</button>
+        </div>
+
+        <p style="margin-top: 30px; color: rgba(255, 255, 255, 0.7); font-size: 14px;">
+            The new glassy design features:<br>
+            • Glassmorphism with backdrop blur<br>
+            • Semi-transparent backgrounds<br>
+            • Enhanced glow effects during recording<br>
+            • Better visual integration with modern UI
+        </p>
+    </div>
+
+    <script>
+        let oldRecording = false;
+        let newRecording = false;
+
+        function toggleRecording(type) {
+            if (type === 'old') {
+                oldRecording = !oldRecording;
+                const btn = document.getElementById('oldBtn');
+                btn.classList.toggle('recording', oldRecording);
+            } else {
+                newRecording = !newRecording;
+                const btn = document.getElementById('newBtn');
+                btn.classList.toggle('recording', newRecording);
+            }
+        }
+
+        // Add click handlers for direct button interaction
+        document.getElementById('oldBtn').addEventListener('click', () => toggleRecording('old'));
+        document.getElementById('newBtn').addEventListener('click', () => toggleRecording('new'));
+    </script>
+</body>
+</html>

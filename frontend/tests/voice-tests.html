@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Processing Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c003e, #4a148c);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .test-output {
+            background: #1e1e1e;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+
+        .test-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .test-output::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .test-output::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.running {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .status.passed {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status.failed {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .test-results {
+            margin-top: 20px;
+        }
+
+        .suite-result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .suite-header {
+            padding: 15px;
+            background: #e9ecef;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suite-header:hover {
+            background: #dee2e6;
+        }
+
+        .suite-body {
+            padding: 15px;
+            display: none;
+        }
+
+        .suite-body.expanded {
+            display: block;
+        }
+
+        .metric {
+            display: inline-block;
+            margin-right: 15px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .metric.passed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .metric.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .metric.total {
+            background: #e2e3e5;
+            color: #495057;
+        }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .btn {
+                display: block;
+                margin: 10px auto;
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Voice Processing Tests</h1>
+            <p>Unit tests for VoiceCapabilities, VoiceSettings, and VoiceController classes</p>
+        </div>
+
+        <div class="controls">
+            <button id="runTests" class="btn">▶️ Run All Tests</button>
+            <button id="clearOutput" class="btn">🗑️ Clear Output</button>
+            <button id="downloadReport" class="btn" disabled>📄 Download Report</button>
+        </div>
+
+        <div class="content">
+            <div id="status" class="status" style="display: none;"></div>
+            <div id="progress" class="progress" style="display: none;">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            
+            <div id="testOutput" class="test-output">
+Ready to run tests. Click "Run All Tests" to begin.
+            </div>
+
+            <div id="testResults" class="test-results" style="display: none;"></div>
+        </div>
+
+        <div class="footer">
+            <p>Voice Processing Test Suite - AI Agent Customer Support System</p>
+        </div>
+    </div>
+
+    <!-- Load voice processing classes -->
+    <script src="/static/voice-capabilities.js"></script>
+    <script src="/static/voice-settings.js"></script>
+    <script src="/static/voice-controller.js"></script>
+    
+    <!-- Load test classes -->
+    <script src="/static/tests/voice-capabilities.test.js"></script>
+    <script src="/static/tests/voice-settings.test.js"></script>
+    <script src="/static/tests/voice-controller.test.js"></script>
+    
+    <!-- Load test runner -->
+    <script src="/static/tests/run-voice-tests.js"></script>
+
+    <script>
+        class TestUI {
+            constructor() {
+                this.runButton = document.getElementById('runTests');
+                this.clearButton = document.getElementById('clearOutput');
+                this.downloadButton = document.getElementById('downloadReport');
+                this.statusDiv = document.getElementById('status');
+                this.progressDiv = document.getElementById('progress');
+                this.progressBar = document.getElementById('progressBar');
+                this.outputDiv = document.getElementById('testOutput');
+                this.resultsDiv = document.getElementById('testResults');
+                
+                this.isRunning = false;
+                this.testResults = null;
+                
+                this.setupEventListeners();
+                this.interceptConsole();
+            }
+
+            setupEventListeners() {
+                this.runButton.addEventListener('click', () => this.runTests());
+                this.clearButton.addEventListener('click', () => this.clearOutput());
+                this.downloadButton.addEventListener('click', () => this.downloadReport());
+            }
+
+            interceptConsole() {
+                const originalLog = console.log;
+                const originalError = console.error;
+                
+                console.log = (...args) => {
+                    this.appendOutput(args.join(' '), 'log');
+                    originalLog.apply(console, args);
+                };
+                
+                console.error = (...args) => {
+                    this.appendOutput(args.join(' '), 'error');
+                    originalError.apply(console, args);
+                };
+            }
+
+            appendOutput(text, type = 'log') {
+                const timestamp = new Date().toLocaleTimeString();
+                const prefix = type === 'error' ? '❌' : type === 'log' ? '📝' : 'ℹ️';
+                this.outputDiv.textContent += `[${timestamp}] ${prefix} ${text}\n`;
+                this.outputDiv.scrollTop = this.outputDiv.scrollHeight;
+            }
+
+            clearOutput() {
+                this.outputDiv.textContent = 'Output cleared.\n';
+                this.resultsDiv.style.display = 'none';
+                this.statusDiv.style.display = 'none';
+                this.progressDiv.style.display = 'none';
+                this.downloadButton.disabled = true;
+            }
+
+            updateStatus(message, type = 'running') {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = `status ${type}`;
+                this.statusDiv.style.display = 'block';
+            }
+
+            updateProgress(percentage) {
+                this.progressDiv.style.display = 'block';
+                this.progressBar.style.width = `${percentage}%`;
+            }
+
+            async runTests() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.runButton.disabled = true;
+                this.downloadButton.disabled = true;
+                this.clearOutput();
+                
+                this.updateStatus('🚀 Initializing test runner...', 'running');
+                this.updateProgress(0);
+
+                try {
+                    const runner = new VoiceTestRunner();
+                    
+                    // Add test suites
+                    runner.addTestSuite('VoiceCapabilities', VoiceCapabilitiesTest);
+                    this.updateProgress(10);
+                    
+                    runner.addTestSuite('VoiceSettings', VoiceSettingsTest);
+                    this.updateProgress(20);
+                    
+                    runner.addTestSuite('VoiceController', VoiceControllerTest);
+                    this.updateProgress(30);
+                    
+                    this.updateStatus('🧪 Running test suites...', 'running');
+                    
+                    // Run tests
+                    const results = await runner.runAllTests();
+                    this.testResults = results;
+                    
+                    this.updateProgress(100);
+                    
+                    // Update status based on results
+                    if (results.failed === 0) {
+                        this.updateStatus(`🎉 All tests passed! (${results.passed}/${results.total})`, 'passed');
+                    } else {
+                        this.updateStatus(`💥 ${results.failed} test(s) failed (${results.passed}/${results.total} passed)`, 'failed');
+                    }
+                    
+                    // Show detailed results
+                    this.showDetailedResults(results);
+                    this.downloadButton.disabled = false;
+                    
+                } catch (error) {
+                    this.updateStatus(`❌ Test execution failed: ${error.message}`, 'failed');
+                    this.appendOutput(`Test runner error: ${error.stack}`, 'error');
+                } finally {
+                    this.isRunning = false;
+                    this.runButton.disabled = false;
+                }
+            }
+
+            showDetailedResults(results) {
+                const html = `
+                    <h3>📊 Detailed Test Results</h3>
+                    ${results.suites.map(suite => `
+                        <div class="suite-result">
+                            <div class="suite-header" onclick="this.nextElementSibling.classList.toggle('expanded')">
+                                <span><strong>${suite.name}</strong></span>
+                                <div>
+                                    <span class="metric total">Total: ${suite.total}</span>
+                                    <span class="metric passed">Passed: ${suite.passed}</span>
+                                    <span class="metric failed">Failed: ${suite.failed}</span>
+                                </div>
+                            </div>
+                            <div class="suite-body">
+                                <p><strong>Success Rate:</strong> ${suite.total > 0 ? ((suite.passed / suite.total) * 100).toFixed(1) : '0.0'}%</p>
+                                ${suite.error ? `<p><strong>Error:</strong> ${suite.error}</p>` : ''}
+                                <p><em>Click header to expand/collapse details</em></p>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+                
+                this.resultsDiv.innerHTML = html;
+                this.resultsDiv.style.display = 'block';
+            }
+
+            downloadReport() {
+                if (!this.testResults) return;
+                
+                const runner = new VoiceTestRunner();
+                runner.results = this.testResults;
+                
+                const htmlReport = runner.generateHTMLReport();
+                const blob = new Blob([htmlReport], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `voice-tests-report-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.appendOutput('📄 Test report downloaded successfully', 'info');
+            }
+        }
+
+        // Initialize UI when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new TestUI();
+        });
+    </script>
+</body>
+</html>

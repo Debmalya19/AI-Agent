@@ -1,0 +1,191 @@
+{
+  "environment": "production",
+  "rate_limits": {
+    "requests_per_minute": 30,
+    "requests_per_hour": 500,
+    "requests_per_day": 5000,
+    "burst_limit": 5,
+    "enabled": true
+  },
+  "performance": {
+    "max_recording_duration": 20000,
+    "max_tts_text_length": 3000,
+    "max_concurrent_sessions": 50,
+    "memory_limit_mb": 30,
+    "cache_ttl_seconds": 7200,
+    "enable_compression": true
+  },
+  "feature_toggles": {
+    "voice_input": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_output": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_settings": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_analytics": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "error_handling": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "performance_tracking": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "lazy_loading": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "resource_monitoring": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "rate_limiting": {
+      "enabled": true,
+      "rollout_percentage": 100.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "ab_testing": {
+      "enabled": false,
+      "rollout_percentage": 0.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "advanced_tts": {
+      "enabled": false,
+      "rollout_percentage": 0.0,
+      "user_groups": ["beta_testers"],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "noise_cancellation": {
+      "enabled": false,
+      "rollout_percentage": 0.0,
+      "user_groups": ["premium_users"],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "voice_shortcuts": {
+      "enabled": false,
+      "rollout_percentage": 0.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    },
+    "multi_language": {
+      "enabled": false,
+      "rollout_percentage": 0.0,
+      "user_groups": [],
+      "start_date": null,
+      "end_date": null,
+      "ab_test_variant": null
+    }
+  },
+  "ab_tests": {
+    "voice_ui_layout": {
+      "variants": ["compact", "expanded"],
+      "percentage": 0,
+      "conditions": {
+        "browsers": ["chrome", "firefox", "safari"],
+        "platforms": ["desktop"]
+      },
+      "metadata": {
+        "description": "Test different voice UI layouts",
+        "owner": "product_team",
+        "start_date": "2024-01-01",
+        "end_date": "2024-03-01"
+      }
+    },
+    "tts_voice_selection": {
+      "variants": ["neural", "standard"],
+      "percentage": 0,
+      "conditions": {
+        "context": {
+          "user_type": "premium"
+        }
+      },
+      "metadata": {
+        "description": "Test neural vs standard TTS voices",
+        "owner": "engineering_team"
+      }
+    }
+  },
+  "debug_mode": false,
+  "analytics_enabled": true,
+  "error_reporting_enabled": true,
+  "fallback_mode_threshold": 2,
+  "circuit_breaker": {
+    "enabled": true,
+    "failure_threshold": 5,
+    "recovery_timeout": 60
+  },
+  "monitoring": {
+    "enable_performance_tracking": true,
+    "enable_resource_monitoring": true,
+    "reporting_interval": 60000,
+    "metrics_retention_hours": 24
+  },
+  "security": {
+    "enable_rate_limiting": true,
+    "enable_input_validation": true,
+    "max_audio_duration": 30,
+    "allowed_audio_formats": ["webm", "ogg", "mp4"],
+    "enable_content_filtering": true
+  },
+  "optimization": {
+    "enable_lazy_loading": true,
+    "enable_module_caching": true,
+    "enable_compression": true,
+    "preload_critical_modules": true,
+    "cache_ttl_minutes": 60,
+    "max_cache_size_mb": 10
+  }
+}

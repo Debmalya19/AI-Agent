@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Voice Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        #textInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+        
+        .whatsapp-voice-button {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+        
+        .whatsapp-voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+        }
+        
+        .whatsapp-voice-button.recording {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            animation: pulse-record 1.5s infinite;
+            box-shadow: 0 4px 16px rgba(255, 68, 68, 0.5);
+        }
+        
+        .whatsapp-voice-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+        
+        @keyframes pulse-record {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .status.visible {
+            opacity: 1;
+        }
+        
+        .status.recording {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .status.processing {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .status.ready {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .send-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .send-button:hover {
+            background: #0056b3;
+        }
+        
+        .messages {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        .message.user {
+            background: #007bff;
+            color: white;
+            text-align: right;
+        }
+        
+        .message.system {
+            background: #f8f9fa;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WhatsApp-Style Voice Test</h1>
+        <p>Test the voice functionality with a simple interface:</p>
+        
+        <div class="input-container">
+            <input type="text" id="textInput" placeholder="Type or speak your message...">
+            <button id="voiceBtn" class="whatsapp-voice-button" title="Hold to record voice message">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+            <button id="sendBtn" class="send-button">Send</button>
+        </div>
+        
+        <div id="status" class="status">Ready to record</div>
+        
+        <div id="messages" class="messages">
+            <div class="message system">Voice test interface loaded. Try the microphone button!</div>
+        </div>
+    </div>
+
+    <script>
+        // Voice functionality
+        let isRecording = false;
+        let recognition = null;
+        let recordingTimeout = null;
+        
+        const voiceBtn = document.getElementById('voiceBtn');
+        const textInput = document.getElementById('textInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        
+        // Check for speech recognition support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            showStatus('Speech recognition not supported in this browser', 'error');
+            voiceBtn.style.display = 'none';
+        } else {
+            initializeVoice();
+        }
+        
+        function initializeVoice() {
+            // Mouse/touch events for hold-to-record functionality
+            let isHolding = false;
+            let holdTimer = null;
+
+            // Mouse events
+            voiceBtn.addEventListener('mousedown', startHolding);
+            voiceBtn.addEventListener('mouseup', stopHolding);
+            voiceBtn.addEventListener('mouseleave', stopHolding);
+
+            // Touch events for mobile
+            voiceBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startHolding();
+            });
+            voiceBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopHolding();
+            });
+
+            function startHolding() {
+                if (isHolding || isRecording) return;
+                
+                isHolding = true;
+                
+                // Start recording after short delay to prevent accidental triggers
+                holdTimer = setTimeout(() => {
+                    if (isHolding) {
+                        startRecording();
+                    }
+                }, 200);
+
+                // Visual feedback
+                voiceBtn.style.transform = 'scale(0.95)';
+                showStatus('Hold to record...', 'ready');
+            }
+
+            function stopHolding() {
+                isHolding = false;
+                
+                if (holdTimer) {
+                    clearTimeout(holdTimer);
+                    holdTimer = null;
+                }
+
+                // Visual feedback
+                voiceBtn.style.transform = 'scale(1)';
+                
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    hideStatus();
+                }
+            }
+
+            // Click for toggle recording (alternative to hold)
+            voiceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!isHolding) { // Only if not using hold functionality
+                    if (isRecording) {
+                        stopRecording();
+                    } else {
+                        startRecording();
+                    }
+                }
+            });
+        }
+        
+        function startRecording() {
+            if (isRecording) return;
+
+            try {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    voiceBtn.classList.add('recording');
+                    showStatus('Listening...', 'recording');
+                    addMessage('system', 'Voice recording started');
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    let isFinal = false;
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            isFinal = true;
+                        }
+                    }
+
+                    if (transcript.trim()) {
+                        textInput.value = transcript;
+                        if (isFinal) {
+                            showStatus('Got it!', 'processing');
+                            setTimeout(() => hideStatus(), 1000);
+                            addMessage('system', `Recognized: "${transcript}"`);
+                        } else {
+                            showStatus(`"${transcript}"`, 'recording');
+                        }
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    showStatus('Error: ' + event.error, 'error');
+                    addMessage('system', `Voice error: ${event.error}`);
+                    setTimeout(() => hideStatus(), 2000);
+                    stopRecording();
+                };
+
+                recognition.onend = () => {
+                    stopRecording();
+                };
+
+                recognition.start();
+
+                // Auto-stop after 30 seconds
+                recordingTimeout = setTimeout(() => {
+                    if (isRecording) {
+                        stopRecording();
+                        addMessage('system', 'Recording stopped automatically after 30 seconds');
+                    }
+                }, 30000);
+
+            } catch (error) {
+                console.error('Failed to start voice recognition:', error);
+                showStatus('Voice not available', 'error');
+                addMessage('system', `Voice initialization error: ${error.message}`);
+                setTimeout(() => hideStatus(), 2000);
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+
+            isRecording = false;
+            voiceBtn.classList.remove('recording');
+
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+            }
+
+            if (recordingTimeout) {
+                clearTimeout(recordingTimeout);
+                recordingTimeout = null;
+            }
+
+            addMessage('system', 'Voice recording stopped');
+        }
+
+        function showStatus(text, type = 'ready') {
+            status.textContent = text;
+            status.className = `status visible ${type}`;
+        }
+
+        function hideStatus() {
+            status.className = 'status';
+        }
+        
+        function addMessage(sender, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        // Send button functionality
+        sendBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (text) {
+                addMessage('user', text);
+                addMessage('system', `Echo: ${text}`);
+                textInput.value = '';
+            }
+        });
+        
+        // Enter key to send
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+        
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isRecording) {
+                stopRecording();
+                addMessage('system', 'Recording stopped - tab hidden');
+            }
+        });
+        
+        console.log('Voice test interface initialized');
+    </script>
+</body>
+</html>
