@@ -8,20 +8,21 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.tools import Tool
 from backend.tools import (
     search_tool, wiki_tool, save_tool, bt_website_tool, 
-    bt_support_hours_tool_instance, bt_plans_tool, multi_tool_tool,
+    bt_support_hours_tool_instance, bt_plans_tool,
     intelligent_orchestrator_tool, context_memory, create_ticket_tool_instance
 )
 from backend.customer_db_tool import get_customer_orders
 import os
 import json
+import asyncio
 from fastapi import FastAPI, HTTPException, Request, Response, status, Cookie, Form, BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+# Removed unused HTTPBasic imports
 from fastapi.staticfiles import StaticFiles
 import secrets
-import pandas as pd
+# Removed unused pandas import
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
 from backend.database import SessionLocal, get_db
@@ -317,7 +318,6 @@ tools = [
     support_knowledge_tool,  # Support responses
     create_ticket_tool_instance,  # Support ticket creation for customer issues
     intelligent_orchestrator_tool,  # Intelligent tool orchestrator with context memory
-    multi_tool_tool,  # Multi-tool orchestrator for complex queries
     bt_website_tool,  # BT.com specific information with scraping
     bt_support_hours_tool_instance,  # BT support hours with real-time data
     bt_plans_tool,  # BT plans and pricing with scraping
@@ -386,8 +386,51 @@ except Exception as e:
     logger.error(f"Failed to initialize intelligent chat UI components: {e}")
     intelligent_chat_manager = None
 
-# FastAPI app setup
-app = FastAPI(title="AI Agent Customer Support", version="1.0.0")
+# Lifespan function for FastAPI
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifespan events"""
+    # Startup
+    try:
+        logger.info("Starting AI Agent Customer Support application...")
+        
+        # Log configuration status
+        if llm:
+            logger.info("✅ LLM (Gemini) is available")
+        else:
+            logger.warning("⚠️ LLM is not available")
+        
+        if agent_executor:
+            logger.info("✅ Agent executor is available")
+        else:
+            logger.warning("⚠️ Agent executor is not available")
+        
+        if memory_manager:
+            logger.info("✅ Memory manager is available")
+        else:
+            logger.warning("⚠️ Memory manager is not available")
+        
+        # Start background cleanup task
+        if memory_config.retention.auto_cleanup_enabled:
+            asyncio.create_task(cleanup_memory_task())
+            logger.info("Memory cleanup background task started")
+        
+        logger.info("🚀 AI Agent Customer Support application started successfully!")
+        
+    except Exception as e:
+        logger.error(f"Startup error: {e}")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down AI Agent Customer Support application...")
+
+# FastAPI app setup with lifespan
+app = FastAPI(
+    title="AI Agent Customer Support", 
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # Allow CORS for local frontend testing
 app.add_middleware(
@@ -434,46 +477,27 @@ async def cleanup_memory_task():
         # Wait for next cleanup interval (convert hours to seconds)
         await asyncio.sleep(memory_config.retention.cleanup_interval_hours * 3600)
 
-# Start background cleanup task
-@app.on_event("startup")
-async def start_background_tasks():
-    """Start background tasks on application startup"""
-    if memory_config.retention.auto_cleanup_enabled:
-        asyncio.create_task(cleanup_memory_task())
-        logger.info("Memory cleanup background task started")
+# Background cleanup task (now handled in lifespan)
+async def cleanup_memory_task():
+    """Background task to clean up old memory entries"""
+    while True:
+        try:
+            # Perform memory cleanup
+            if memory_manager:
+                # Use memory manager's cleanup functionality
+                # This would typically clean up old conversations, expired sessions, etc.
+                logger.info("Running memory cleanup task...")
+                # Add actual cleanup logic here based on your memory manager's API
+        except Exception as e:
+            logger.error(f"Memory cleanup task error: {e}")
+        
+        # Wait for next cleanup interval (convert hours to seconds)
+        await asyncio.sleep(memory_config.retention.cleanup_interval_hours * 3600)
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup"""
-    try:
-        logger.info("Starting AI Agent Customer Support application...")
-        
-        # Log configuration status
-        if llm:
-            logger.info("LLM: Available")
-        else:
-            logger.warning("LLM: Not available - agent functionality will be limited")
-        
-        # Initialize memory layer
-        logger.info("Initializing memory layer...")
-        memory_stats = memory_manager.get_memory_stats()
-        logger.info(f"Memory layer initialized - Stats: {memory_stats.to_dict()}")
+# Startup logic moved to lifespan function above
         
         logger.info("Application startup completed successfully")
-        
-    except Exception as e:
-        logger.error(f"Startup failed: {e}")
-        logger.warning("Continuing with degraded functionality")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on application shutdown"""
-    try:
-        logger.info("Shutting down AI Agent Customer Support application...")
-        # Close any open database connections or resources
-        logger.info("Application shutdown completed successfully")
-    except Exception as e:
-        logger.error(f"Shutdown error: {e}")
+# Old startup/shutdown code removed - now handled by lifespan function
 
 # Learning and insights endpoints
 @app.get("/learning/insights")
@@ -599,9 +623,7 @@ async def chat_page():
 async def register_page():
     return FileResponse("frontend/register.html")
 
-@app.get("/test-fixes.html")
-async def test_fixes_page():
-    return FileResponse("test-fixes.html")
+# Removed test-fixes.html endpoint - file not found
 
 # Authentication endpoints
 @app.post("/logout")

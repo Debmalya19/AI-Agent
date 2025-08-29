@@ -51,6 +51,7 @@ class Customer(Base):
     # Ticket relationships
     tickets = relationship("Ticket", foreign_keys="Ticket.customer_id", back_populates="customer")
     assigned_tickets = relationship("Ticket", foreign_keys="Ticket.assigned_agent_id", back_populates="assigned_agent")
+    orders = relationship("Order", back_populates="customer")
 
 class Ticket(Base):
     __tablename__ = 'tickets'
@@ -78,6 +79,8 @@ class Ticket(Base):
     # Relationships
     customer = relationship("Customer", foreign_keys=[customer_id], back_populates="tickets")
     assigned_agent = relationship("Customer", foreign_keys=[assigned_agent_id], back_populates="assigned_tickets")
+    comments = relationship("TicketComment", back_populates="ticket")
+    activities = relationship("TicketActivity", back_populates="ticket")
 
 class TicketComment(Base):
     __tablename__ = 'ticket_comments'
@@ -128,6 +131,8 @@ class SupportIntent(Base):
     description = Column(Text)
     category = Column(String(100))
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    responses = relationship("SupportResponse", back_populates="intent")
 
 class SupportResponse(Base):
     __tablename__ = "support_responses"
@@ -164,6 +169,10 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    sessions = relationship("UserSession", back_populates="user")
+    voice_settings = relationship("VoiceSettings", back_populates="user", uselist=False)
+    voice_analytics = relationship("VoiceAnalytics", back_populates="user")
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
@@ -219,13 +228,5 @@ class VoiceAnalytics(Base):
     user = relationship("User", back_populates="voice_analytics")
 
 
-# Add relationships
-Customer.orders = relationship("Order", back_populates="customer")
-Customer.tickets = relationship("Ticket", foreign_keys="Ticket.customer_id", back_populates="customer")
-Customer.assigned_tickets = relationship("Ticket", foreign_keys="Ticket.assigned_agent_id", back_populates="assigned_agent")
-SupportIntent.responses = relationship("SupportResponse", back_populates="intent")
-Ticket.comments = relationship("TicketComment", back_populates="ticket", cascade="all, delete-orphan")
-Ticket.activities = relationship("TicketActivity", back_populates="ticket", cascade="all, delete-orphan")
-User.sessions = relationship("UserSession", back_populates="user")
-User.voice_settings = relationship("VoiceSettings", back_populates="user", uselist=False)
-User.voice_analytics = relationship("VoiceAnalytics", back_populates="user")
+# Note: Relationships are now defined within their respective class definitions
+# to avoid SQLAlchemy 2.0 deprecation warnings about duplicate attribute assignments

@@ -3,7 +3,7 @@ Voice assistant Pydantic models for API validation and data transfer.
 These models handle voice settings, analytics, and API request/response validation.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum
@@ -32,14 +32,16 @@ class VoiceSettings(BaseModel):
     microphone_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0, description="Microphone sensitivity")
     noise_cancellation: bool = Field(default=True, description="Enable noise cancellation")
 
-    @validator('voice_name')
+    @field_validator('voice_name')
+    @classmethod
     def validate_voice_name(cls, v):
         """Validate voice name format"""
         if not v or len(v.strip()) == 0:
             return "default"
         return v.strip()
 
-    @validator('language')
+    @field_validator('language')
+    @classmethod
     def validate_language(cls, v):
         """Validate language code format"""
         if not v or len(v) < 2:
@@ -49,11 +51,11 @@ class VoiceSettings(BaseModel):
             return v
         return "en-US"
 
-    class Config:
-        """Pydantic configuration"""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat()
         }
+    )
 
 
 class VoiceSettingsUpdate(BaseModel):
@@ -67,14 +69,16 @@ class VoiceSettingsUpdate(BaseModel):
     microphone_sensitivity: Optional[float] = Field(None, ge=0.0, le=1.0)
     noise_cancellation: Optional[bool] = None
 
-    @validator('voice_name')
+    @field_validator('voice_name')
+    @classmethod
     def validate_voice_name(cls, v):
         """Validate voice name format"""
         if v is not None and (not v or len(v.strip()) == 0):
             raise ValueError("voice_name cannot be empty")
         return v.strip() if v else v
 
-    @validator('language')
+    @field_validator('language')
+    @classmethod
     def validate_language(cls, v):
         """Validate language code format"""
         if v is not None:
@@ -95,14 +99,16 @@ class VoiceAnalytics(BaseModel):
     error_message: Optional[str] = Field(None, description="Error message if action failed")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
 
-    @validator('error_message')
+    @field_validator('error_message')
+    @classmethod
     def validate_error_message(cls, v):
         """Validate error message length"""
         if v and len(v) > 1000:
             return v[:1000]  # Truncate long error messages
         return v
 
-    @validator('metadata')
+    @field_validator('metadata')
+    @classmethod
     def validate_metadata(cls, v):
         """Validate metadata is JSON serializable"""
         if v is None:
@@ -115,9 +121,9 @@ class VoiceAnalytics(BaseModel):
         except (TypeError, ValueError):
             return {}
 
-    class Config:
-        """Pydantic configuration"""
-        use_enum_values = True
+    model_config = ConfigDict(
+        use_enum_values=True
+    )
 
 
 class VoiceCapabilities(BaseModel):

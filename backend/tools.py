@@ -1,6 +1,6 @@
 from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
 from langchain_community.utilities import WikipediaAPIWrapper
-from langchain.tools import Tool
+from langchain.tools import Tool, tool
 from datetime import datetime
 import logging
 from typing import Optional, Dict, Any, List, Union
@@ -15,80 +15,16 @@ import time
 from urllib.parse import urljoin, urlparse
 import hashlib
 
-# Short-term memory for context understanding
-class ContextMemory:
-    def __init__(self, max_size: int = 10):
-        self.max_size = max_size
-        self.conversation_history = []
-        self.context_cache = {}
-        self.tool_usage_history = []
-        
-        # Initialize enhanced context retrieval engine lazily to avoid circular imports
-        self.enhanced_engine = None
-        self._enhanced_engine_initialized = False
-    
-    def add_conversation(self, user_query: str, response: str, tools_used: List[str]):
-        """Add conversation to memory"""
-        entry = {
-            'timestamp': datetime.now(),
-            'user_query': user_query,
-            'response': response,
-            'tools_used': tools_used
-        }
-        self.conversation_history.append(entry)
-        
-        # Keep only recent conversations
-        if len(self.conversation_history) > self.max_size:
-            self.conversation_history.pop(0)
-        
-        # Enhanced engine integration can be added later if needed
-    
-    def add_context(self, key: str, data: Any, ttl: int = 3600):
-        """Add context data with TTL"""
-        self.context_cache[key] = {
-            'data': data,
-            'timestamp': datetime.now(),
-            'ttl': ttl
-        }
-        
-        # Enhanced engine caching can be added later if needed
-    
-    def get_context(self, key: str) -> Optional[Any]:
-        """Get context data if not expired"""
-        if key in self.context_cache:
-            entry = self.context_cache[key]
-            if (datetime.now() - entry['timestamp']).seconds < entry['ttl']:
-                return entry['data']
-            else:
-                del self.context_cache[key]
-        return None
-    
-    def get_recent_context(self, query: str, limit: int = 3) -> List[Dict]:
-        """Get recent relevant context based on query similarity"""
-        # Use legacy implementation for now
-        relevant_contexts = []
-        query_lower = query.lower()
-        
-        for entry in reversed(self.conversation_history[-limit:]):
-            if any(word in entry['user_query'].lower() for word in query_lower.split()):
-                relevant_contexts.append(entry)
-        
-        return relevant_contexts
-    
-    def get_tool_usage_pattern(self, query_type: str) -> List[str]:
-        """Get recommended tools based on query type and usage history"""
-        # Use legacy implementation for now
-        if query_type in ['support_hours', 'contact']:
-            return ['BTSupportHours', 'BTWebsiteSearch']
-        elif query_type in ['plans', 'pricing', 'upgrade']:
-            return ['BTPlansInformation', 'BTWebsiteSearch', 'ContextRetriever']
-        elif query_type in ['technical', 'troubleshooting']:
-            return ['ContextRetriever', 'BTWebsiteSearch', 'Search Tool']
-        else:
-            return ['ContextRetriever', 'BTWebsiteSearch']
-
-# Global context memory instance
-context_memory = ContextMemory()
+# Import memory manager for context handling
+try:
+    from backend.memory_layer_manager import MemoryLayerManager
+    from backend.memory_config import load_config
+    # Initialize global memory manager
+    memory_config = load_config()
+    context_memory = MemoryLayerManager(config=memory_config)
+except ImportError:
+    # Fallback for when memory layer is not available
+    context_memory = None
 
 def scrape_bt_website(query: str, max_pages: int = 5) -> str:
     """
@@ -96,9 +32,18 @@ def scrape_bt_website(query: str, max_pages: int = 5) -> str:
     This tool provides detailed, up-to-date information directly from BT's official website.
     """
     try:
-        # Check memory first
+        # Check memory first (if available)
         cache_key = f"bt_scrape_{hashlib.md5(query.encode()).hexdigest()}"
-        cached_result = context_memory.get_context(cache_key)
+        cached_result = None
+        if context_memory:
+            # Use memory manager's context retrieval instead
+            try:
+                contexts = context_memory.retrieve_context(query, "system", 1)
+                if contexts:
+                    cached_result = contexts[0].content
+            except:
+                cached_result = None
+        
         if cached_result:
             return f"From BT.com (cached):\n\n{cached_result}"
         
@@ -151,8 +96,8 @@ def scrape_bt_website(query: str, max_pages: int = 5) -> str:
         
         if scraped_data:
             combined_result = "\n\n".join(scraped_data[:3])  # Limit to top 3 results
-            # Cache the result
-            context_memory.add_context(cache_key, combined_result, ttl=1800)  # 30 minutes
+            # Cache the result (MemoryLayerManager doesn't have add_context, skip caching for now)
+            # TODO: Implement proper caching with MemoryLayerManager
             return f"From BT.com:\n\n{combined_result}"
         else:
             return "I couldn't find specific information about that on BT.com. Let me try a different approach."
@@ -236,7 +181,7 @@ def bt_support_hours_tool(query: str) -> str:
     try:
         # Check memory first
         cache_key = "bt_support_hours"
-        cached_result = context_memory.get_context(cache_key)
+        cached_result = None  # MemoryLayerManager doesn't have get_context method
         if cached_result:
             return cached_result
         
@@ -252,8 +197,8 @@ def bt_support_hours_tool(query: str) -> str:
             else:
                 result = "Based on BT.com information, customer support is available. Please visit bt.com/help for current support hours and contact information."
             
-            # Cache the result for 1 hour
-            context_memory.add_context(cache_key, result, ttl=3600)
+            # Cache the result for 1 hour (skip caching for now)
+            # TODO: Implement proper caching with MemoryLayerManager
             return result
         else:
             return "Our customer support is available to help you. Please contact us for current hours."
@@ -270,7 +215,7 @@ def bt_plan_information_tool(query: str) -> str:
     try:
         # Check memory first
         cache_key = f"bt_plans_{hashlib.md5(query.encode()).hexdigest()}"
-        cached_result = context_memory.get_context(cache_key)
+        cached_result = None  # MemoryLayerManager doesn't have get_context method
         if cached_result:
             return cached_result
         
@@ -278,12 +223,12 @@ def bt_plan_information_tool(query: str) -> str:
         plans_result = scrape_bt_website(f"mobile plans {query}")
         
         if "From BT.com:" in plans_result:
-            # Cache the result for 2 hours
-            context_memory.add_context(cache_key, plans_result, ttl=7200)
+            # Cache the result for 2 hours (skip caching for now)
+            # TODO: Implement proper caching with MemoryLayerManager
             return plans_result
         else:
             result = "For current BT mobile plans and pricing, please visit bt.com/mobile or contact our sales team."
-            context_memory.add_context(cache_key, result, ttl=7200)
+            # Skip caching for now - TODO: Implement proper caching with MemoryLayerManager
             return result
         
     except Exception as e:
@@ -298,8 +243,25 @@ def intelligent_tool_orchestrator(query: str) -> str:
     try:
         # Analyze query type and context
         query_type = analyze_query_type(query)
-        relevant_context = context_memory.get_recent_context(query)
-        recommended_tools = context_memory.get_tool_usage_pattern(query_type)
+        # Get context using MemoryLayerManager
+        relevant_context = []
+        if context_memory:
+            try:
+                contexts = context_memory.retrieve_context(query, "system", 3)
+                relevant_context = [{"user_query": ctx.content, "response": "", "tools_used": []} for ctx in contexts]
+            except:
+                relevant_context = []
+        
+        # Simple tool recommendation based on query type
+        recommended_tools = []
+        if query_type in ['support_hours', 'contact']:
+            recommended_tools = ['BTSupportHours', 'BTWebsiteSearch']
+        elif query_type in ['plans', 'pricing', 'upgrade']:
+            recommended_tools = ['BTPlansInformation', 'BTWebsiteSearch', 'ContextRetriever']
+        elif query_type in ['technical', 'troubleshooting']:
+            recommended_tools = ['ContextRetriever', 'BTWebsiteSearch', 'Search Tool']
+        else:
+            recommended_tools = ['ContextRetriever', 'BTWebsiteSearch']
         
         comprehensive_answer = []
         tools_used = []
@@ -381,8 +343,23 @@ def intelligent_tool_orchestrator(query: str) -> str:
             final_answer = "\n\n".join(comprehensive_answer)
             final_answer += f"\n\n*This comprehensive answer was compiled using: {', '.join(tools_used)}*"
             
-            # Store in memory for future context
-            context_memory.add_conversation(query, final_answer, tools_used)
+            # Store in memory for future context using MemoryLayerManager
+            if context_memory:
+                try:
+                    from backend.memory_models import ConversationEntryDTO
+                    conversation = ConversationEntryDTO(
+                        session_id="tool_session",
+                        user_id="system",
+                        user_message=query,
+                        bot_response=final_answer,
+                        tools_used=tools_used,
+                        tool_performance={},
+                        context_used=[],
+                        response_quality_score=0.8
+                    )
+                    context_memory.store_conversation(conversation)
+                except Exception as e:
+                    logging.warning(f"Failed to store conversation in memory: {e}")
             
             return final_answer
         else:
@@ -407,12 +384,7 @@ def analyze_query_type(query: str) -> str:
     else:
         return 'general'
 
-def multi_tool_orchestrator(query: str) -> str:
-    """
-    Enhanced multi-tool orchestrator with intelligent tool selection and context memory.
-    This tool combines multiple tools automatically for comprehensive answers.
-    """
-    return intelligent_tool_orchestrator(query)
+# Removed duplicate multi_tool_orchestrator - use intelligent_tool_orchestrator directly
 
 def create_ticket_tool(query: str, user_id: Optional[Union[int, str]] = None) -> str:
     """
@@ -514,8 +486,23 @@ Thank you for contacting us! Your support request has been logged and assigned t
 
 Please save your ticket number #{ticket.id} for future reference when contacting our support team."""
         
-        # Store in memory for context
-        context_memory.add_conversation(query, response, ["CreateSupportTicket"])
+        # Store in memory for context using MemoryLayerManager
+        if context_memory:
+            try:
+                from backend.memory_models import ConversationEntryDTO
+                conversation = ConversationEntryDTO(
+                    session_id="ticket_session",
+                    user_id=str(user_id) if user_id else "anonymous",
+                    user_message=query,
+                    bot_response=response,
+                    tools_used=["CreateSupportTicket"],
+                    tool_performance={},
+                    context_used=[],
+                    response_quality_score=0.9
+                )
+                context_memory.store_conversation(conversation)
+            except Exception as e:
+                logging.warning(f"Failed to store ticket conversation in memory: {e}")
         
         return response
         
@@ -534,64 +521,126 @@ def save_to_txt(data: str, filename: str = "research_output.txt"):
     
     return f"Data successfully saved to {filename}"
 
-# Create enhanced tools
-save_tool = Tool(
-    name="save_text_to_file",
-    func=save_to_txt,
-    description="Saves structured research data to a text file.",
-)
+# Create enhanced tools using modern @tool decorator
+@tool
+def save_text_to_file(data: str, filename: str = "research_output.txt") -> str:
+    """Saves structured research data to a text file."""
+    return save_to_txt(data, filename)
 
-search = DuckDuckGoSearchRun()
-search_tool = Tool(
-    name="search",
-    func=search.run,
-    description="Search the web for information",
-)
+save_tool = save_text_to_file
 
-api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100)
-wiki_tool = Tool(
-    name="wikipedia",
-    func=WikipediaQueryRun(api_wrapper=api_wrapper).run,
-    description="Search Wikipedia for general information and context",
-)
+@tool
+def search(query: str) -> str:
+    """Search the web for information"""
+    search_engine = DuckDuckGoSearchRun()
+    return search_engine.run(query)
+
+search_tool = search
+
+@tool
+def wikipedia(query: str) -> str:
+    """Search Wikipedia for general information and context"""
+    api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100)
+    wiki_search = WikipediaQueryRun(api_wrapper=api_wrapper)
+    return wiki_search.run(query)
+
+wiki_tool = wikipedia
 
 # BT-specific tools with enhanced capabilities
-bt_website_tool = Tool(
-    name="BTWebsiteSearch",
-    func=bt_website_search,
-    description="Search and scrape BT.com website for official information about services, plans, and support. Use this for current BT-specific information.",
-)
+@tool
+def BTWebsiteSearch(query: str) -> str:
+    """Search and scrape BT.com website for official information about services, plans, and support. Use this for current BT-specific information."""
+    return bt_website_search(query)
 
-bt_support_hours_tool_instance = Tool(
-    name="BTSupportHours",
-    func=bt_support_hours_tool,
-    description="Get current BT customer support hours and contact information from www.bt.com with real-time scraping",
-)
+bt_website_tool = BTWebsiteSearch
 
-bt_plans_tool = Tool(
-    name="BTPlansInformation",
-    func=bt_plan_information_tool,
-    description="Get comprehensive information about BT mobile plans, pricing, and features from www.bt.com with scraping",
-)
+@tool
+def BTSupportHours(query: str) -> str:
+    """Get current BT customer support hours and contact information from www.bt.com with real-time scraping"""
+    return bt_support_hours_tool(query)
 
-# Enhanced multi-tool orchestrator
-multi_tool_tool = Tool(
-    name="ComprehensiveAnswerGenerator",
-    func=multi_tool_orchestrator,
-    description="Generate comprehensive answers by intelligently combining multiple information sources including knowledge base, support database, BT.com scraping, and web search. Uses context memory for better understanding.",
-)
+bt_support_hours_tool_instance = BTSupportHours
+
+@tool
+def BTPlansInformation(query: str) -> str:
+    """Get comprehensive information about BT mobile plans, pricing, and features from www.bt.com with scraping"""
+    return bt_plan_information_tool(query)
+
+bt_plans_tool = BTPlansInformation
+
+# Removed duplicate multi_tool_tool - functionality merged into intelligent_orchestrator_tool
 
 # Intelligent tool orchestrator
-intelligent_orchestrator_tool = Tool(
-    name="IntelligentToolOrchestrator",
-    func=intelligent_tool_orchestrator,
-    description="Intelligent tool orchestrator with context memory, smart tool selection, and comprehensive information gathering. Provides the most relevant and up-to-date answers.",
-)
+@tool
+def IntelligentToolOrchestrator(query: str) -> str:
+    """Intelligent tool orchestrator with context memory, smart tool selection, and comprehensive information gathering. Provides the most relevant and up-to-date answers."""
+    return intelligent_tool_orchestrator(query)
+
+intelligent_orchestrator_tool = IntelligentToolOrchestrator
 
 # Create ticket tool
-create_ticket_tool_instance = Tool.from_function(
-    func=create_ticket_tool,
-    name="CreateSupportTicket",
-    description="Use this tool DIRECTLY (without any introduction) when a customer has a technical issue, needs support, or has any problem that requires human assistance. The tool will create a support ticket and return a professional response. DO NOT add any explanatory text before or after using this tool."
-)
+@tool
+def CreateSupportTicket(query: str, user_id: Optional[Union[int, str]] = None) -> str:
+    """Use this tool DIRECTLY (without any introduction) when a customer has a technical issue, needs support, or has any problem that requires human assistance. The tool will create a support ticket and return a professional response. DO NOT add any explanatory text before or after using this tool."""
+    return create_ticket_tool(query, user_id)
+
+create_ticket_tool_instance = CreateSupportTicket
+
+# RAG search functions
+def rag_search(query: str) -> str:
+    """Search the knowledge base for relevant information about BT services, troubleshooting, and customer support"""
+    try:
+        # Use the enhanced RAG orchestrator if available
+        from backend.enhanced_rag_orchestrator import search_with_priority
+        results = search_with_priority(query, max_results=3)
+        if results:
+            formatted_results = []
+            for result in results:
+                formatted_results.append(f"📚 {result['content']}")
+            return "\n\n".join(formatted_results)
+        else:
+            return "No relevant information found in the knowledge base."
+    except ImportError:
+        # Fallback if enhanced RAG is not available
+        return "Knowledge base search is currently unavailable. Please contact support for assistance."
+    except Exception as e:
+        logging.error(f"RAG search error: {e}")
+        return "Error searching knowledge base. Please try again or contact support."
+
+def support_knowledge_search(query: str) -> str:
+    """Search the support knowledge base for customer service responses and troubleshooting guides"""
+    try:
+        # Use the enhanced RAG orchestrator with support-specific context
+        from backend.enhanced_rag_orchestrator import search_with_priority
+        support_query = f"customer support {query}"
+        results = search_with_priority(support_query, max_results=2)
+        if results:
+            formatted_results = []
+            for result in results:
+                formatted_results.append(f"🎧 Support: {result['content']}")
+            return "\n\n".join(formatted_results)
+        else:
+            return "No relevant support information found. Please contact our support team directly."
+    except ImportError:
+        # Fallback if enhanced RAG is not available
+        return "Support knowledge base is currently unavailable. Please contact our support team."
+    except Exception as e:
+        logging.error(f"Support knowledge search error: {e}")
+        return "Error searching support knowledge base. Please contact our support team."
+
+# RAG tool for knowledge base search
+@tool
+def ContextRetriever(query: str) -> str:
+    """Search the knowledge base for relevant information about BT services, troubleshooting, and customer support"""
+    return rag_search(query)
+
+rag_tool = ContextRetriever
+
+# Support knowledge tool
+@tool
+def SupportKnowledgeBase(query: str) -> str:
+    """Search the support knowledge base for customer service responses and troubleshooting guides"""
+    return support_knowledge_search(query)
+
+support_knowledge_tool = SupportKnowledgeBase
 

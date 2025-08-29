@@ -1,6 +1,6 @@
 """
 Enhanced Context Retrieval Engine for the AI agent memory layer.
-Extends existing ContextMemory class with database integration, semantic similarity,
+Integrates with MemoryLayerManager for database integration, semantic similarity,
 context relevance ranking, and performance caching mechanisms.
 """
 
@@ -25,7 +25,7 @@ from backend.memory_models import (
     ContextEntryDTO,
     create_context_cache_entry
 )
-from backend.tools import ContextMemory
+from backend.memory_layer_manager import MemoryLayerManager
 
 
 class SemanticFeatures:
@@ -428,7 +428,7 @@ class ContextRetrievalEngine:
                 self._close_session(session)
     
     def _get_legacy_context(self, query: str, limit: int) -> List[ContextEntryDTO]:
-        """Get context from legacy ContextMemory for backward compatibility"""
+        """Get context from legacy memory system for backward compatibility"""
         try:
             # Initialize legacy memory lazily to avoid circular imports
             if self.legacy_memory is None:
