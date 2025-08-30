@@ -25,7 +25,7 @@ import secrets
 # Removed unused pandas import
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
-from backend.database import SessionLocal, get_db
+from backend.database import SessionLocal, get_db, init_db
 from backend.models import KnowledgeEntry, ChatHistory, SupportIntent, SupportResponse, User, UserSession
 from backend.db_utils import search_knowledge_entries, get_knowledge_entries, save_chat_history, get_chat_history
 from backend.enhanced_rag_orchestrator import search_with_priority
@@ -394,6 +394,14 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Starting AI Agent Customer Support application...")
         
+        # Initialize database tables
+        try:
+            init_db()
+            logger.info("✅ Database tables initialized successfully")
+        except Exception as db_error:
+            logger.error(f"❌ Database initialization failed: {db_error}")
+            logger.warning("Application will continue but registration/login may not work")
+        
         # Log configuration status
         if llm:
             logger.info("✅ LLM (Gemini) is available")
@@ -659,6 +667,72 @@ async def logout(response: Response, session_token: str = Cookie(None)):
             content={"message": "Logged out successfully"},
             status_code=200
         )
+
+# Registration request model
+class RegisterRequest(PydanticBaseModel):
+    user_id: str
+    username: str
+    email: str
+    full_name: Optional[str] = None
+    password: str
+
+@app.post("/register")
+async def register_user(register_request: RegisterRequest):
+    """Register a new user"""
+    try:
+        logger.info(f"Registration attempt for user_id: {register_request.user_id}, username: {register_request.username}, email: {register_request.email}")
+        with SessionLocal() as db:
+            # Check if user_id already exists
+            existing_user_by_id = db.query(User).filter(User.user_id == register_request.user_id).first()
+            if existing_user_by_id:
+                raise HTTPException(status_code=400, detail="User ID already exists")
+            
+            # Check if username already exists
+            existing_user_by_username = db.query(User).filter(User.username == register_request.username).first()
+            if existing_user_by_username:
+                raise HTTPException(status_code=400, detail="Username already exists")
+            
+            # Check if email already exists
+            existing_user_by_email = db.query(User).filter(User.email == register_request.email).first()
+            if existing_user_by_email:
+                raise HTTPException(status_code=400, detail="Email already exists")
+            
+            # Hash the password
+            password_hash = hashlib.sha256(register_request.password.encode()).hexdigest()
+            
+            # Create new user
+            new_user = User(
+                user_id=register_request.user_id,
+                username=register_request.username,
+                email=register_request.email,
+                full_name=register_request.full_name,
+                password_hash=password_hash,
+                is_active=True,
+                is_admin=False
+            )
+            
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            
+            logger.info(f"New user registered successfully: {register_request.user_id}")
+            
+            return JSONResponse(
+                content={
+                    "message": "User registered successfully",
+                    "user_id": new_user.user_id,
+                    "username": new_user.username,
+                    "email": new_user.email
+                },
+                status_code=201
+            )
+            
+    except HTTPException as he:
+        logger.error(f"Registration HTTP error: {he.detail}")
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
 
 @app.get("/me")
 async def get_current_user(session_token: str = Cookie(None)):
@@ -1301,54 +1375,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
         logger.error(f"Login error: {e}")
         raise HTTPException(status_code=500, detail="Login failed")
     
-# User registration endpoint
-@app.post("/register")
-async def register(user_data: dict):
-    """Register new user with user ID and password"""
-    try:
-        user_id = user_data.get("user_id")
-        username = user_data.get("username")
-        email = user_data.get("email")
-        password = user_data.get("password")
-        full_name = user_data.get("full_name", "")
-        
-        if not all([user_id, username, email, password]):
-            raise HTTPException(status_code=400, detail="All fields are required")
-        
-        # Hash password (demo implementation)
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        
-        with SessionLocal() as db:
-            # Check if user already exists
-            existing_user = db.query(User).filter(
-                (User.user_id == user_id) | (User.username == username) | (User.email == email)
-            ).first()
-            
-            if existing_user:
-                raise HTTPException(status_code=400, detail="User already exists")
-            
-            # Create new user
-            new_user = User(
-                user_id=user_id,
-                username=username,
-                email=email,
-                password_hash=password_hash,
-                full_name=full_name
-            )
-            db.add(new_user)
-            db.commit()
-            
-            return {
-                "message": "User registered successfully",
-                "user_id": new_user.user_id,
-                "username": new_user.username
-            }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Registration error: {e}")
-        raise HTTPException(status_code=500, detail="Registration failed")
+
 
 # Logout endpoint
 @app.post("/logout")
