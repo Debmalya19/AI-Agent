@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
+import bcrypt
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.tools import Tool
 from backend.tools import (
@@ -1292,40 +1293,49 @@ async def initialize_database():
 # Login endpoint with proper user ID and password validation
 @app.post("/login")
 async def login(username: str = Form(...), password: str = Form(...)):
-    """
-    Authenticate user with user ID and password against database.
-    Validates credentials and creates secure session.
-    """
     try:
-        user_id = username
-        password = password
-
-        if not user_id or not password:
+        if not username or not password:
             raise HTTPException(status_code=400, detail="User ID and password required")
-
-        # Hash the password for comparison (demo implementation)
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
 
         with SessionLocal() as db:
             user = db.query(User).filter(
-                User.user_id == user_id,
+                User.user_id == username,
                 User.is_active == True
             ).first()
 
             if not user:
                 raise HTTPException(status_code=401, detail="Invalid user ID or password")
 
-            # 🔑 Generate secure session token
+            stored_hash = user.password_hash
+
+            # Debugging logs
+            logger.info(f"🔑 Raw entered password: {password}")
+            logger.info(f"🔑 Stored hash in DB: {stored_hash}")
+
+            # --- Password Validation ---
+            valid_password = False
+
+            # Case 1: bcrypt stored
+            if stored_hash.startswith("$2b$") or stored_hash.startswith("$2a$"):
+                valid_password = bcrypt.checkpw(password.encode(), stored_hash.encode())
+
+            # Case 2: SHA-256 stored
+            else:
+                entered_hash = hashlib.sha256(password.encode()).hexdigest()
+                logger.info(f"🔑 Entered SHA256 hash: {entered_hash}")
+                valid_password = (entered_hash == stored_hash)
+
+            if not valid_password:
+                raise HTTPException(status_code=401, detail="Invalid user ID or password")
+
+            # --- Session handling ---
             session_token = secrets.token_urlsafe(32)
             expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
-
-            # 🔑 Store token hash for validation
             token_hash = hashlib.sha256(session_token.encode()).hexdigest()
 
-            # Create user session
             user_session = UserSession(
-                session_id=session_token,   # raw token stored
-                token_hash=token_hash,      # hashed token stored
+                session_id=session_token,   # ❗️Consider storing only token_hash
+                token_hash=token_hash,
                 user_id=user.user_id,
                 created_at=datetime.now(timezone.utc),
                 expires_at=expires_at,
@@ -1335,7 +1345,6 @@ async def login(username: str = Form(...), password: str = Form(...)):
             db.add(user_session)
             db.commit()
 
-            # Create login record in chat history
             login_entry = ChatHistory(
                 session_id=session_token,
                 user_message="login",
@@ -1346,11 +1355,10 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
             db.refresh(user)
 
-        # Set secure cookie
         response = JSONResponse({
             "access_token": session_token,
             "token_type": "bearer",
-            "expires_in": 86400,  # 24 hours
+            "expires_in": 86400,
             "user": {
                 "user_id": user.user_id,
                 "username": user.username,
@@ -1363,7 +1371,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
             value=session_token,
             httponly=True,
             max_age=86400,
-            secure=False,  # Set True in production
+            secure=False,  # ✅ change to True in production
             samesite="lax"
         )
 
@@ -1374,7 +1382,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
     except Exception as e:
         logger.error(f"Login error: {e}")
         raise HTTPException(status_code=500, detail="Login failed")
-    
+
 
 
 # Logout endpoint
