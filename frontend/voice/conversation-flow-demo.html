@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation Flow Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .demo-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .conversation-history {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background: #e3f2fd;
+            text-align: right;
+        }
+        .assistant-message {
+            background: #f3e5f5;
+            text-align: left;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #2196f3;
+            color: white;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+        }
+        .auto-listen-toggle {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>Voice Assistant Conversation Flow Demo</h1>
+        <p>This demo shows the conversation flow and state management features implemented in task 6.</p>
+        
+        <div class="status" id="status">
+            Status: Ready
+        </div>
+        
+        <div class="auto-listen-toggle">
+            <label>
+                <input type="checkbox" id="autoListen" checked>
+                Auto-listen after AI responses
+            </label>
+        </div>
+        
+        <div class="controls">
+            <button onclick="simulateUserInput()">Simulate User Input</button>
+            <button onclick="simulateAIResponse()">Simulate AI Response</button>
+            <button onclick="testReplay()">Test Replay</button>
+            <button onclick="clearHistory()">Clear History</button>
+            <button onclick="showContext()">Show Context</button>
+        </div>
+        
+        <div class="conversation-history" id="conversationHistory">
+            <p><em>Conversation history will appear here...</em></p>
+        </div>
+        
+        <div id="contextInfo" style="display: none;">
+            <h3>Conversation Context:</h3>
+            <pre id="contextData"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Mock implementation for demo purposes
+        class ConversationFlowDemo {
+            constructor() {
+                this.conversationContext = {
+                    sessionId: 'demo-session-' + Date.now(),
+                    messages: [],
+                    currentTranscript: '',
+                    lastResponse: '',
+                    startTime: new Date(),
+                    totalInteractions: 0,
+                    autoListenEnabled: true
+                };
+                
+                this.silenceTimer = null;
+                this.autoListenTimer = null;
+                this.state = { currentState: 'idle', isMuted: false };
+                
+                this.initializeUI();
+            }
+            
+            initializeUI() {
+                const autoListenCheckbox = document.getElementById('autoListen');
+                autoListenCheckbox.addEventListener('change', (e) => {
+                    this.conversationContext.autoListenEnabled = e.target.checked;
+                    this.updateStatus(`Auto-listen ${e.target.checked ? 'enabled' : 'disabled'}`);
+                });
+            }
+            
+            addMessageToHistory(role, content, metadata = null) {
+                const message = {
+                    role: role,
+                    content: content,
+                    timestamp: new Date(),
+                    metadata: metadata
+                };
+                
+                this.conversationContext.messages.push(message);
+                
+                // Limit conversation history
+                if (this.conversationContext.messages.length > 50) {
+                    this.conversationContext.messages = this.conversationContext.messages.slice(-25);
+                }
+                
+                this.updateConversationDisplay();
+            }
+            
+            handleTranscript(transcript, isFinal) {
+                this.conversationContext.currentTranscript = transcript;
+                
+                if (isFinal && transcript.trim()) {
+                    this.addMessageToHistory('user', transcript.trim());
+                    this.updateStatus('Processing user input...');
+                    
+                    // Simulate processing delay
+                    setTimeout(() => {
+                        this.processUserInput(transcript.trim());
+                    }, 1000);
+                }
+            }
+            
+            processUserInput(transcript) {
+                // Simulate AI response
+                const responses = [
+                    `I understand you said: "${transcript}". How can I help you further?`,
+                    `That's interesting! You mentioned: "${transcript}". Tell me more.`,
+                    `Thanks for sharing: "${transcript}". What would you like to know?`,
+                    `I heard: "${transcript}". Let me think about that...`
+                ];
+                
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                
+                setTimeout(() => {
+                    this.handleAIResponse(randomResponse);
+                }, 500);
+            }
+            
+            handleAIResponse(responseText, fullResponse = null) {
+                this.addMessageToHistory('assistant', responseText, fullResponse);
+                this.conversationContext.lastResponse = responseText;
+                this.conversationContext.totalInteractions++;
+                
+                this.updateStatus('AI speaking...');
+                
+                // Simulate speech duration
+                setTimeout(() => {
+                    this.handleSpeechEnded();
+                }, 2000);
+            }
+            
+            handleSpeechEnded() {
+                this.state.currentState = 'idle';
+                this.updateStatus('Speech ended');
+                this.scheduleAutoListen();
+            }
+            
+            scheduleAutoListen() {
+                if (!this.conversationContext.autoListenEnabled) {
+                    this.updateStatus('Auto-listen disabled, staying idle');
+                    return;
+                }
+                
+                this.clearAutoListenTimer();
+                
+                this.autoListenTimer = setTimeout(() => {
+                    if (this.state.currentState === 'idle' && !this.state.isMuted) {
+                        this.updateStatus('Auto-listening started');
+                        this.state.currentState = 'listening';
+                        
+                        // Simulate listening timeout
+                        setTimeout(() => {
+                            if (this.state.currentState === 'listening') {
+                                this.state.currentState = 'idle';
+                                this.updateStatus('Listening timeout, back to idle');
+                            }
+                        }, 3000);
+                    }
+                }, 1500);
+            }
+            
+            handleReplay() {
+                if (this.conversationContext.lastResponse) {
+                    this.updateStatus(`Replaying: "${this.conversationContext.lastResponse.substring(0, 50)}..."`);
+                    
+                    // Simulate replay duration
+                    setTimeout(() => {
+                        this.updateStatus('Replay finished');
+                    }, 2000);
+                } else {
+                    this.updateStatus('No previous response to replay');
+                }
+            }
+            
+            clearAutoListenTimer() {
+                if (this.autoListenTimer) {
+                    clearTimeout(this.autoListenTimer);
+                    this.autoListenTimer = null;
+                }
+            }
+            
+            updateConversationDisplay() {
+                const historyDiv = document.getElementById('conversationHistory');
+                
+                if (this.conversationContext.messages.length === 0) {
+                    historyDiv.innerHTML = '<p><em>Conversation history will appear here...</em></p>';
+                    return;
+                }
+                
+                const messagesHtml = this.conversationContext.messages.map(message => {
+                    const className = message.role === 'user' ? 'user-message' : 'assistant-message';
+                    const time = message.timestamp.toLocaleTimeString();
+                    return `
+                        <div class="message ${className}">
+                            <strong>${message.role === 'user' ? 'You' : 'Assistant'}</strong> (${time}): 
+                            ${message.content}
+                        </div>
+                    `;
+                }).join('');
+                
+                historyDiv.innerHTML = messagesHtml;
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            }
+            
+            updateStatus(message) {
+                document.getElementById('status').textContent = `Status: ${message}`;
+            }
+            
+            getConversationContext() {
+                return {
+                    ...this.conversationContext,
+                    currentState: this.state.currentState,
+                    duration: new Date() - this.conversationContext.startTime
+                };
+            }
+        }
+        
+        // Initialize demo
+        const demo = new ConversationFlowDemo();
+        
+        // Demo functions
+        function simulateUserInput() {
+            const sampleInputs = [
+                "Hello, how are you?",
+                "What's the weather like today?",
+                "Can you help me with my homework?",
+                "Tell me a joke",
+                "What time is it?"
+            ];
+            
+            const randomInput = sampleInputs[Math.floor(Math.random() * sampleInputs.length)];
+            demo.handleTranscript(randomInput, true);
+        }
+        
+        function simulateAIResponse() {
+            const sampleResponses = [
+                "I'm doing well, thank you for asking!",
+                "I'm here to help you with whatever you need.",
+                "That's a great question! Let me think about it.",
+                "I appreciate you reaching out to me.",
+                "How can I assist you today?"
+            ];
+            
+            const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+            demo.handleAIResponse(randomResponse);
+        }
+        
+        function testReplay() {
+            demo.handleReplay();
+        }
+        
+        function clearHistory() {
+            demo.conversationContext.messages = [];
+            demo.conversationContext.totalInteractions = 0;
+            demo.conversationContext.lastResponse = '';
+            demo.updateConversationDisplay();
+            demo.updateStatus('History cleared');
+        }
+        
+        function showContext() {
+            const contextDiv = document.getElementById('contextInfo');
+            const contextData = document.getElementById('contextData');
+            
+            if (contextDiv.style.display === 'none') {
+                contextData.textContent = JSON.stringify(demo.getConversationContext(), null, 2);
+                contextDiv.style.display = 'block';
+            } else {
+                contextDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

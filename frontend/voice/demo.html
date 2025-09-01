@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Speech Manager Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .demo-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.idle { background: #e3f2fd; color: #1976d2; }
+        .status.listening { background: #e8f5e8; color: #388e3c; }
+        .status.processing { background: #fff3e0; color: #f57c00; }
+        .status.speaking { background: #fce4ec; color: #c2185b; }
+        .status.error { background: #ffebee; color: #d32f2f; }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .primary { background: #2196f3; color: white; }
+        .secondary { background: #757575; color: white; }
+        .danger { background: #f44336; color: white; }
+        
+        .transcript, .response {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            min-height: 20px;
+        }
+        
+        .capabilities {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .error-msg {
+            background: #ffebee;
+            color: #d32f2f;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>Voice Speech Manager Demo</h1>
+        
+        <div id="capabilities" class="capabilities">
+            <h3>Browser Capabilities:</h3>
+            <div id="capability-list"></div>
+        </div>
+        
+        <div id="status" class="status idle">Status: Idle</div>
+        
+        <div class="controls">
+            <button id="start-btn" class="primary">Start Listening</button>
+            <button id="stop-btn" class="secondary">Stop Listening</button>
+            <button id="speak-btn" class="primary">Test Speech</button>
+            <button id="stop-speech-btn" class="danger">Stop Speaking</button>
+        </div>
+        
+        <div>
+            <h3>Transcript:</h3>
+            <div id="transcript" class="transcript">No speech detected yet...</div>
+        </div>
+        
+        <div>
+            <h3>Test Speech Input:</h3>
+            <input type="text" id="speech-input" placeholder="Enter text to speak" value="Hello, this is a test of the speech synthesis system.">
+            <button onclick="testSpeech()">Speak Text</button>
+        </div>
+        
+        <div id="error-display" class="error-msg" style="display: none;"></div>
+        
+        <div>
+            <h3>Configuration:</h3>
+            <label>Language: 
+                <select id="language-select">
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="fr-FR">French</option>
+                </select>
+            </label>
+            <br><br>
+            <label>Speech Rate: 
+                <input type="range" id="rate-slider" min="0.5" max="2" step="0.1" value="1">
+                <span id="rate-value">1.0</span>
+            </label>
+        </div>
+    </div>
+
+    <script src="voice-speech-manager.js"></script>
+    <script>
+        let speechManager;
+        
+        function updateStatus(state, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${state}`;
+            statusEl.textContent = `Status: ${message}`;
+        }
+        
+        function updateTranscript(text, isFinal) {
+            const transcriptEl = document.getElementById('transcript');
+            transcriptEl.textContent = text;
+            if (isFinal) {
+                transcriptEl.style.fontWeight = 'bold';
+            } else {
+                transcriptEl.style.fontWeight = 'normal';
+                transcriptEl.style.fontStyle = 'italic';
+            }
+        }
+        
+        function showError(errorCode, errorMessage) {
+            const errorEl = document.getElementById('error-display');
+            errorEl.textContent = `Error [${errorCode}]: ${errorMessage}`;
+            errorEl.style.display = 'block';
+            
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function handleStateChange(newState, oldState) {
+            console.log(`State changed: ${oldState} -> ${newState}`);
+            
+            switch (newState) {
+                case 'idle':
+                    updateStatus('idle', 'Idle - Ready to listen');
+                    break;
+                case 'listening':
+                    updateStatus('listening', 'Listening for speech...');
+                    break;
+                case 'processing':
+                    updateStatus('processing', 'Processing speech...');
+                    break;
+                case 'speaking':
+                    updateStatus('speaking', 'Speaking response...');
+                    break;
+                case 'error':
+                    updateStatus('error', 'Error occurred');
+                    break;
+            }
+        }
+        
+        function displayCapabilities() {
+            if (!speechManager) return;
+            
+            const capabilities = speechManager.getCapabilities();
+            const capabilityList = document.getElementById('capability-list');
+            
+            capabilityList.innerHTML = `
+                <div>Speech Recognition: ${capabilities.speechRecognition ? '✅' : '❌'}</div>
+                <div>Speech Synthesis: ${capabilities.speechSynthesis ? '✅' : '❌'}</div>
+                <div>Media Devices: ${capabilities.mediaDevices ? '✅' : '❌'}</div>
+                <div>Secure Context: ${capabilities.secureContext ? '✅' : '❌'}</div>
+                <div>Fully Supported: ${capabilities.supported ? '✅' : '❌'}</div>
+            `;
+        }
+        
+        function testSpeech() {
+            const text = document.getElementById('speech-input').value;
+            const rate = parseFloat(document.getElementById('rate-slider').value);
+            
+            if (speechManager && text) {
+                speechManager.speakText(text, { rate: rate });
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                speechManager = new VoiceSpeechManager(
+                    updateTranscript,
+                    showError,
+                    handleStateChange
+                );
+                
+                displayCapabilities();
+                
+                // Set up event listeners
+                document.getElementById('start-btn').addEventListener('click', async () => {
+                    const success = await speechManager.startListening();
+                    if (!success) {
+                        console.log('Failed to start listening');
+                    }
+                });
+                
+                document.getElementById('stop-btn').addEventListener('click', () => {
+                    speechManager.stopListening();
+                });
+                
+                document.getElementById('speak-btn').addEventListener('click', () => {
+                    speechManager.speakText('This is a test of the speech synthesis system.');
+                });
+                
+                document.getElementById('stop-speech-btn').addEventListener('click', () => {
+                    speechManager.stopSpeaking();
+                });
+                
+                document.getElementById('language-select').addEventListener('change', (e) => {
+                    speechManager.updateConfig({ language: e.target.value });
+                });
+                
+                document.getElementById('rate-slider').addEventListener('input', (e) => {
+                    document.getElementById('rate-value').textContent = e.target.value;
+                });
+                
+                console.log('Voice Speech Manager Demo initialized successfully');
+                
+            } catch (error) {
+                console.error('Failed to initialize Voice Speech Manager:', error);
+                showError('initialization-failed', error.message);
+            }
+        });
+    </script>
+</body>
+</html>

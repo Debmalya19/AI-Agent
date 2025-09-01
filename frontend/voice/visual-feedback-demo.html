@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Visual Feedback Demo</title>
+    <link rel="stylesheet" href="voice-assistant.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .demo-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            z-index: 1000;
+        }
+        
+        .demo-controls h3 {
+            margin: 0 0 var(--spacing-sm) 0;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .demo-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .demo-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .demo-input {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: var(--spacing-xs);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+            width: 200px;
+        }
+        
+        .demo-input::placeholder {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div id="voice-container">
+        <div id="voice-header">
+            <button id="close-btn" class="control-btn" aria-label="Close demo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <h1>Visual Feedback Demo</h1>
+            <button id="settings-btn" class="control-btn" aria-label="Open settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="voice-main">
+            <div id="microphone-container">
+                <div id="microphone-visual">
+                    <div id="mic-button" class="mic-button" role="button" tabindex="0" aria-label="Microphone">
+                        <svg id="mic-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1C10.8954 1 10 1.89543 10 3V11C10 12.1046 10.8954 13 12 13C13.1046 13 14 12.1046 14 11V3C14 1.89543 13.1046 1 12 1Z" fill="currentColor"/>
+                            <path d="M19 11C19 15.4183 15.4183 19 11 19V21H13C13.5523 21 14 21.4477 14 22C14 22.5523 13.5523 23 13 23H11C10.4477 23 10 22.5523 10 22C10 21.4477 10.4477 21 11 21V19C6.58172 19 3 15.4183 3 11C3 10.4477 3.44772 10 4 10C4.55228 10 5 10.4477 5 11C5 14.3137 7.68629 17 11 17C14.3137 17 17 14.3137 17 11C17 10.4477 17.4477 10 18 10C18.5523 10 19 10.4477 19 11Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div id="audio-visualizer" class="audio-visualizer">
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="conversation-display">
+                <div id="transcript-area" class="conversation-section">
+                    <div class="section-label">You said:</div>
+                    <div class="transcript-text"></div>
+                </div>
+                <div id="response-area" class="conversation-section">
+                    <div class="section-label">Assistant:</div>
+                    <div class="response-text"></div>
+                </div>
+            </div>
+            
+            <div id="status-indicator">
+                <span id="status-text">Visual Feedback Demo Ready</span>
+            </div>
+        </div>
+        
+        <div id="voice-controls">
+            <button id="mute-btn" class="control-btn" aria-label="Mute microphone">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1C10.8954 1 10 1.89543 10 3V11C10 12.1046 10.8954 13 12 13C13.1046 13 14 12.1046 14 11V3C14 1.89543 13.1046 1 12 1Z" fill="currentColor"/>
+                </svg>
+            </button>
+            <button id="stop-btn" class="control-btn" aria-label="Stop">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+                </svg>
+            </button>
+            <button id="replay-btn" class="control-btn" aria-label="Replay">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M10 8L14 12L10 16V8Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Demo Controls -->
+    <div class="demo-controls">
+        <h3>Demo Controls</h3>
+        <button class="demo-btn" onclick="demo.showIdle()">Show Idle</button>
+        <button class="demo-btn" onclick="demo.showListening()">Show Listening</button>
+        <button class="demo-btn" onclick="demo.showProcessing()">Show Processing</button>
+        <button class="demo-btn" onclick="demo.showSpeaking()">Show Speaking</button>
+        <button class="demo-btn" onclick="demo.showError()">Show Error</button>
+        <button class="demo-btn" onclick="demo.showMuted()">Show Muted</button>
+        <hr style="border: 1px solid var(--glass-border); margin: var(--spacing-sm) 0;">
+        <input type="text" class="demo-input" id="transcript-input" placeholder="Enter transcript text">
+        <button class="demo-btn" onclick="demo.setTranscript()">Set Transcript</button>
+        <input type="text" class="demo-input" id="response-input" placeholder="Enter response text">
+        <button class="demo-btn" onclick="demo.setResponse()">Set Response</button>
+        <hr style="border: 1px solid var(--glass-border); margin: var(--spacing-sm) 0;">
+        <button class="demo-btn" onclick="demo.clearAll()">Clear All</button>
+        <button class="demo-btn" onclick="demo.testSequence()">Test Sequence</button>
+    </div>
+    
+    <script src="voice-visual-feedback.js"></script>
+    <script>
+        // Demo functionality
+        class VisualFeedbackDemo {
+            constructor() {
+                this.container = document.getElementById('voice-container');
+                this.visualFeedback = new VoiceVisualFeedback(this.container);
+                
+                console.log('Visual Feedback Demo initialized');
+            }
+            
+            showIdle() {
+                this.visualFeedback.showIdle();
+                console.log('Demo: Showing idle state');
+            }
+            
+            showListening() {
+                this.visualFeedback.showListening();
+                console.log('Demo: Showing listening state');
+            }
+            
+            showProcessing() {
+                this.visualFeedback.showProcessing();
+                console.log('Demo: Showing processing state');
+            }
+            
+            showSpeaking() {
+                this.visualFeedback.showSpeaking();
+                console.log('Demo: Showing speaking state');
+            }
+            
+            showError() {
+                this.visualFeedback.showError('This is a demo error message');
+                console.log('Demo: Showing error state');
+            }
+            
+            showMuted() {
+                this.visualFeedback.showMuted();
+                console.log('Demo: Showing muted state');
+            }
+            
+            setTranscript() {
+                const input = document.getElementById('transcript-input');
+                const text = input.value || 'This is a sample transcript';
+                this.visualFeedback.displayTranscript(text);
+                console.log('Demo: Set transcript:', text);
+            }
+            
+            setResponse() {
+                const input = document.getElementById('response-input');
+                const text = input.value || 'This is a sample response from the AI assistant';
+                this.visualFeedback.displayResponse(text);
+                console.log('Demo: Set response:', text);
+            }
+            
+            clearAll() {
+                this.visualFeedback.clearConversation();
+                this.visualFeedback.showIdle();
+                document.getElementById('transcript-input').value = '';
+                document.getElementById('response-input').value = '';
+                console.log('Demo: Cleared all');
+            }
+            
+            async testSequence() {
+                console.log('Demo: Starting test sequence');
+                
+                // Test sequence: idle -> listening -> processing -> speaking -> idle
+                this.visualFeedback.showIdle();
+                await this.delay(1000);
+                
+                this.visualFeedback.showListening();
+                await this.delay(2000);
+                
+                this.visualFeedback.displayTranscript('Hello, how are you today?');
+                await this.delay(1000);
+                
+                this.visualFeedback.showProcessing();
+                await this.delay(1500);
+                
+                this.visualFeedback.showSpeaking('I am doing well, thank you for asking! How can I help you today?');
+                await this.delay(3000);
+                
+                this.visualFeedback.showIdle();
+                console.log('Demo: Test sequence complete');
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.demo = new VisualFeedbackDemo();
+        });
+        
+        // Close button functionality
+        document.getElementById('close-btn').addEventListener('click', () => {
+            if (window.opener) {
+                window.close();
+            } else {
+                alert('Demo closed');
+            }
+        });
+    </script>
+</body>
+</html>

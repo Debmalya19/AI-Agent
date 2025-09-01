@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Integration Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .debug-button {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            font-size: 14px;
+        }
+        
+        .debug-button:hover {
+            background: #2575fc;
+        }
+        
+        .voice-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            background: #6a11cb;
+        }
+        
+        .voice-button:hover {
+            background: #2575fc;
+            transform: scale(1.05);
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>Voice Integration Debug</h1>
+    
+    <div class="debug-section">
+        <h2>1. Test Voice Page Integration Loading</h2>
+        <button class="debug-button" onclick="testScriptLoading()">Test Script Loading</button>
+        <button class="debug-button" onclick="testVoicePageIntegration()">Test VoicePageIntegration Class</button>
+        <button class="debug-button" onclick="testSessionGathering()">Test Session Gathering</button>
+        <div id="loading-log" class="log">Ready to test script loading...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. Test Voice Button Integration</h2>
+        <p>This simulates the voice button from the main chat interface:</p>
+        
+        <button id="test-voice-btn" class="voice-button" title="Test Voice Assistant">
+            <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: white;">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+        </button>
+        
+        <button class="debug-button" onclick="testVoiceButtonClick()">Test Voice Button Click</button>
+        <button class="debug-button" onclick="testDirectWindowOpen()">Test Direct Window Open</button>
+        <div id="button-log" class="log">Ready to test voice button...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. Test URL and Routing</h2>
+        <button class="debug-button" onclick="testVoiceAssistantURL()">Test Voice Assistant URL</button>
+        <button class="debug-button" onclick="testStaticFileAccess()">Test Static File Access</button>
+        <button class="debug-button" onclick="testSessionEndpoint()">Test Session Endpoint</button>
+        <div id="url-log" class="log">Ready to test URLs...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. Console Output</h2>
+        <button class="debug-button" onclick="clearConsoleLog()">Clear Console</button>
+        <div id="console-log" class="log">Console output will appear here...</div>
+    </div>
+
+    <!-- Include the voice page integration script -->
+    <script src="voice-page-integration.js"></script>
+    
+    <script>
+        let voicePageIntegration = null;
+        let consoleLog = [];
+        
+        // Override console methods to capture output
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+        
+        function captureConsole(type, ...args) {
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleLog.push({ type, message, timestamp: new Date().toLocaleTimeString() });
+            updateConsoleDisplay();
+            
+            // Call original console method
+            originalConsole[type](...args);
+        }
+        
+        console.log = (...args) => captureConsole('log', ...args);
+        console.error = (...args) => captureConsole('error', ...args);
+        console.warn = (...args) => captureConsole('warn', ...args);
+        console.info = (...args) => captureConsole('info', ...args);
+        
+        function updateConsoleDisplay() {
+            const consoleDiv = document.getElementById('console-log');
+            consoleDiv.innerHTML = consoleLog.map(entry => 
+                `<div class="${entry.type}">[${entry.timestamp}] ${entry.type.toUpperCase()}: ${entry.message}</div>`
+            ).join('');
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        function clearConsoleLog() {
+            consoleLog = [];
+            updateConsoleDisplay();
+        }
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `<div class="${type}">[${timestamp}] ${message}</div>`;
+            element.innerHTML += logEntry;
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        // Test functions
+        function testScriptLoading() {
+            clearLog('loading-log');
+            log('loading-log', 'Testing script loading...', 'info');
+            
+            // Check if VoicePageIntegration class is available
+            if (typeof VoicePageIntegration !== 'undefined') {
+                log('loading-log', '✅ VoicePageIntegration class loaded successfully', 'success');
+            } else {
+                log('loading-log', '❌ VoicePageIntegration class not found', 'error');
+                return;
+            }
+            
+            // Check if we can create an instance
+            try {
+                const testInstance = new VoicePageIntegration();
+                log('loading-log', '✅ VoicePageIntegration instance created successfully', 'success');
+                testInstance.destroy(); // Clean up
+            } catch (error) {
+                log('loading-log', `❌ Failed to create VoicePageIntegration instance: ${error.message}`, 'error');
+            }
+        }
+        
+        function testVoicePageIntegration() {
+            clearLog('loading-log');
+            log('loading-log', 'Testing VoicePageIntegration functionality...', 'info');
+            
+            try {
+                voicePageIntegration = new VoicePageIntegration();
+                log('loading-log', '✅ VoicePageIntegration initialized', 'success');
+                
+                // Test session data gathering
+                voicePageIntegration.gatherSessionData()
+                    .then(sessionData => {
+                        log('loading-log', `✅ Session data gathered: ${JSON.stringify(sessionData, null, 2)}`, 'success');
+                    })
+                    .catch(error => {
+                        log('loading-log', `❌ Session data gathering failed: ${error.message}`, 'error');
+                    });
+                    
+            } catch (error) {
+                log('loading-log', `❌ VoicePageIntegration test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testSessionGathering() {
+            clearLog('loading-log');
+            log('loading-log', 'Testing session gathering...', 'info');
+            
+            if (!voicePageIntegration) {
+                log('loading-log', '❌ VoicePageIntegration not initialized', 'error');
+                return;
+            }
+            
+            voicePageIntegration.gatherSessionData()
+                .then(sessionData => {
+                    log('loading-log', '✅ Session data gathered successfully:', 'success');
+                    log('loading-log', JSON.stringify(sessionData, null, 2), 'info');
+                })
+                .catch(error => {
+                    log('loading-log', `❌ Session gathering failed: ${error.message}`, 'error');
+                });
+        }
+        
+        function testVoiceButtonClick() {
+            clearLog('button-log');
+            log('button-log', 'Testing voice button click...', 'info');
+            
+            if (!voicePageIntegration) {
+                log('button-log', 'Initializing VoicePageIntegration...', 'info');
+                try {
+                    voicePageIntegration = new VoicePageIntegration();
+                    log('button-log', '✅ VoicePageIntegration initialized', 'success');
+                } catch (error) {
+                    log('button-log', `❌ Failed to initialize: ${error.message}`, 'error');
+                    return;
+                }
+            }
+            
+            // Test opening voice assistant
+            log('button-log', 'Attempting to open voice assistant...', 'info');
+            voicePageIntegration.openVoiceAssistant()
+                .then(() => {
+                    log('button-log', '✅ Voice assistant opened successfully', 'success');
+                })
+                .catch(error => {
+                    log('button-log', `❌ Failed to open voice assistant: ${error.message}`, 'error');
+                });
+        }
+        
+        function testDirectWindowOpen() {
+            clearLog('button-log');
+            log('button-log', 'Testing direct window open...', 'info');
+            
+            try {
+                const testWindow = window.open(
+                    '/static/voice/voice-assistant.html',
+                    'test-voice-assistant',
+                    'width=900,height=700,resizable=yes'
+                );
+                
+                if (testWindow) {
+                    log('button-log', '✅ Window opened successfully', 'success');
+                    setTimeout(() => {
+                        if (!testWindow.closed) {
+                            testWindow.close();
+                            log('button-log', '✅ Test window closed', 'info');
+                        }
+                    }, 3000);
+                } else {
+                    log('button-log', '❌ Failed to open window (popup blocked?)', 'error');
+                }
+            } catch (error) {
+                log('button-log', `❌ Window open failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testVoiceAssistantURL() {
+            clearLog('url-log');
+            log('url-log', 'Testing voice assistant URL...', 'info');
+            
+            fetch('/static/voice/voice-assistant.html')
+                .then(response => {
+                    if (response.ok) {
+                        log('url-log', '✅ Voice assistant URL accessible', 'success');
+                        return response.text();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                })
+                .then(html => {
+                    if (html.includes('Voice Assistant')) {
+                        log('url-log', '✅ Voice assistant HTML content valid', 'success');
+                    } else {
+                        log('url-log', '⚠️ Voice assistant HTML content may be invalid', 'warning');
+                    }
+                })
+                .catch(error => {
+                    log('url-log', `❌ Voice assistant URL test failed: ${error.message}`, 'error');
+                });
+        }
+        
+        function testStaticFileAccess() {
+            clearLog('url-log');
+            log('url-log', 'Testing static file access...', 'info');
+            
+            const testFiles = [
+                '/static/voice/voice-assistant.html',
+                '/static/voice/voice-assistant.js',
+                '/static/voice/voice-assistant.css',
+                '/static/voice/voice-session-receiver.js'
+            ];
+            
+            Promise.all(testFiles.map(file => 
+                fetch(file).then(response => ({
+                    file,
+                    status: response.status,
+                    ok: response.ok
+                }))
+            )).then(results => {
+                results.forEach(result => {
+                    if (result.ok) {
+                        log('url-log', `✅ ${result.file} - OK`, 'success');
+                    } else {
+                        log('url-log', `❌ ${result.file} - ${result.status}`, 'error');
+                    }
+                });
+            }).catch(error => {
+                log('url-log', `❌ Static file test failed: ${error.message}`, 'error');
+            });
+        }
+        
+        function testSessionEndpoint() {
+            clearLog('url-log');
+            log('url-log', 'Testing session endpoint...', 'info');
+            
+            fetch('/me', { credentials: 'include' })
+                .then(response => {
+                    if (response.ok) {
+                        log('url-log', '✅ Session endpoint accessible', 'success');
+                        return response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                })
+                .then(data => {
+                    log('url-log', `✅ Session data: ${JSON.stringify(data, null, 2)}`, 'success');
+                })
+                .catch(error => {
+                    log('url-log', `❌ Session endpoint test failed: ${error.message}`, 'error');
+                });
+        }
+        
+        // Set up test voice button
+        document.addEventListener('DOMContentLoaded', () => {
+            const testVoiceBtn = document.getElementById('test-voice-btn');
+            if (testVoiceBtn) {
+                testVoiceBtn.addEventListener('click', () => {
+                    log('button-log', 'Test voice button clicked', 'info');
+                    testVoiceButtonClick();
+                });
+            }
+            
+            // Auto-run initial tests
+            setTimeout(() => {
+                testScriptLoading();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

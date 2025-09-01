@@ -1,7 +1,7 @@
 from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain.tools import Tool, tool
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from typing import Optional, Dict, Any, List, Union
 from backend.database import SessionLocal
@@ -15,16 +15,110 @@ import time
 from urllib.parse import urljoin, urlparse
 import hashlib
 
+def optimize_memory_layer_performance():
+    """
+    Optimize memory layer performance for intelligent_chat.tool_orchestrator prioritization.
+    """
+    global context_memory
+    if not context_memory:
+        return False
+    
+    try:
+        # Update memory configuration for better performance
+        if hasattr(context_memory, 'config'):
+            config = context_memory.config
+            if hasattr(config, 'performance'):
+                # Enable intelligent chat prioritization
+                config.performance.prioritize_intelligent_chat = True
+                config.performance.intelligent_chat_cache_size = 100
+                config.performance.intelligent_chat_priority_weight = 0.9
+                config.performance.context_retrieval_max_results = 5
+                
+                # Optimize cache settings
+                config.performance.enable_caching = True
+                config.performance.cache_ttl_seconds = 3600
+                config.performance.enable_query_optimization = True
+                
+                logging.info("Memory layer performance optimized for intelligent_chat.tool_orchestrator")
+                return True
+    except Exception as e:
+        logging.warning(f"Failed to optimize memory layer performance: {e}")
+    
+    return False
+
 # Import memory manager for context handling
 try:
     from backend.memory_layer_manager import MemoryLayerManager
     from backend.memory_config import load_config
-    # Initialize global memory manager
-    memory_config = load_config()
-    context_memory = MemoryLayerManager(config=memory_config)
+    # Use shared memory manager instance (will be set from main.py)
+    context_memory = None
+    
+    def set_shared_memory_manager(memory_manager):
+        """Set the shared memory manager instance"""
+        global context_memory
+        context_memory = memory_manager
+        # Optimize memory layer for intelligent_chat.tool_orchestrator prioritization
+        optimize_memory_layer_performance()
+    
 except ImportError:
     # Fallback for when memory layer is not available
     context_memory = None
+    
+    def set_shared_memory_manager(memory_manager):
+        pass
+
+def get_prioritized_memory_context(query: str, max_results: int = 5) -> tuple:
+    """
+    Get prioritized context from memory layer with intelligent_chat.tool_orchestrator priority.
+    Returns (intelligent_chat_contexts, general_contexts)
+    """
+    intelligent_chat_contexts = []
+    general_contexts = []
+    
+    if not context_memory:
+        return intelligent_chat_contexts, general_contexts
+    
+    try:
+        # Priority 1: Look for intelligent_chat.tool_orchestrator specific responses
+        intelligent_query = f"intelligent_chat tool_orchestrator {query}"
+        intelligent_contexts = context_memory.retrieve_context(
+            intelligent_query, 
+            "system", 
+            max_results // 2
+        )
+        
+        if intelligent_contexts:
+            intelligent_chat_contexts = [
+                {
+                    "user_query": ctx.content, 
+                    "response": getattr(ctx, 'response', ''), 
+                    "tools_used": ["intelligent_chat.tool_orchestrator"],
+                    "priority": "high",
+                    "source": "intelligent_chat_orchestrator"
+                } 
+                for ctx in intelligent_contexts
+            ]
+        
+        # Priority 2: Get general context as fallback
+        contexts = context_memory.retrieve_context(query, "system", max_results)
+        if contexts:
+            general_contexts = [
+                {
+                    "user_query": ctx.content, 
+                    "response": getattr(ctx, 'response', ''), 
+                    "tools_used": getattr(ctx, 'tools_used', []),
+                    "priority": "medium",
+                    "source": "memory_layer"
+                } 
+                for ctx in contexts
+            ]
+        
+        logging.info(f"Retrieved {len(intelligent_chat_contexts)} intelligent_chat contexts and {len(general_contexts)} general contexts")
+        
+    except Exception as e:
+        logging.warning(f"Memory layer context retrieval error: {e}")
+    
+    return intelligent_chat_contexts, general_contexts
 
 def scrape_bt_website(query: str, max_pages: int = 5) -> str:
     """
@@ -239,57 +333,65 @@ def intelligent_tool_orchestrator(query: str) -> str:
     """
     Intelligent tool orchestrator with context memory and smart tool selection.
     This tool combines multiple tools intelligently based on context and query analysis.
+    Prioritizes intelligent_chat.tool_orchestrator from memory layer for better performance.
     """
     try:
         # Analyze query type and context
         query_type = analyze_query_type(query)
-        # Get context using MemoryLayerManager
-        relevant_context = []
-        if context_memory:
-            try:
-                contexts = context_memory.retrieve_context(query, "system", 3)
-                relevant_context = [{"user_query": ctx.content, "response": "", "tools_used": []} for ctx in contexts]
-            except:
-                relevant_context = []
+        
+        # PRIORITY 1: Get prioritized context from memory layer
+        intelligent_chat_context, relevant_context = get_prioritized_memory_context(query, max_results=5)
         
         # Simple tool recommendation based on query type
         recommended_tools = []
         if query_type in ['support_hours', 'contact']:
-            recommended_tools = ['BTSupportHours', 'BTWebsiteSearch']
+            recommended_tools = ['IntelligentChatOrchestrator', 'BTSupportHours', 'BTWebsiteSearch']
         elif query_type in ['plans', 'pricing', 'upgrade']:
-            recommended_tools = ['BTPlansInformation', 'BTWebsiteSearch', 'ContextRetriever']
+            recommended_tools = ['IntelligentChatOrchestrator', 'BTPlansInformation', 'BTWebsiteSearch', 'ContextRetriever']
         elif query_type in ['technical', 'troubleshooting']:
-            recommended_tools = ['ContextRetriever', 'BTWebsiteSearch', 'Search Tool']
+            recommended_tools = ['IntelligentChatOrchestrator', 'ContextRetriever', 'BTWebsiteSearch', 'Search Tool']
         else:
-            recommended_tools = ['ContextRetriever', 'BTWebsiteSearch']
+            recommended_tools = ['IntelligentChatOrchestrator', 'ContextRetriever', 'BTWebsiteSearch']
         
         comprehensive_answer = []
         tools_used = []
         context_used = []
         
-        # Add context from recent conversations if relevant
-        if relevant_context:
-            context_used.append("Recent conversation context")
-            for ctx in relevant_context:
+        # PRIORITY 1: Add intelligent_chat.tool_orchestrator context first (highest priority)
+        if intelligent_chat_context:
+            context_used.append("Intelligent Chat Tool Orchestrator")
+            for ctx in intelligent_chat_context:
                 if any(word in query.lower() for word in ctx['user_query'].lower().split()):
-                    comprehensive_answer.append(f"📝 **Related to your previous question:**")
-                    comprehensive_answer.append(f"Previous: {ctx['user_query']}")
-                    comprehensive_answer.append(f"Answer: {ctx['response'][:200]}...")
+                    comprehensive_answer.append(f"🤖 **From Intelligent Chat Tool Orchestrator (Priority Context):**")
+                    comprehensive_answer.append(f"Previous Query: {ctx['user_query']}")
+                    comprehensive_answer.append(f"Orchestrated Response: {ctx['response'][:300]}...")
+                    tools_used.append("IntelligentChatOrchestrator")
                     break
         
-        # Step 1: Check database knowledge base first (always)
+        # PRIORITY 2: Add other memory layer context if no intelligent_chat context found
+        if not intelligent_chat_context and relevant_context:
+            context_used.append("Memory Layer Context")
+            for ctx in relevant_context:
+                if any(word in query.lower() for word in ctx['user_query'].lower().split()):
+                    comprehensive_answer.append(f"📝 **From Memory Layer Context:**")
+                    comprehensive_answer.append(f"Previous: {ctx['user_query']}")
+                    comprehensive_answer.append(f"Answer: {ctx['response'][:200]}...")
+                    tools_used.append("MemoryLayerContext")
+                    break
+        
+        # PRIORITY 3: Check database knowledge base (enhanced RAG)
         try:
             from backend.enhanced_rag_orchestrator import search_with_priority
             rag_results = search_with_priority(query, max_results=2)
             if rag_results:
-                comprehensive_answer.append("📚 **From our knowledge base:**")
+                comprehensive_answer.append("📚 **From Enhanced Knowledge Base:**")
                 for result in rag_results[:2]:
                     comprehensive_answer.append(result['content'])
-                tools_used.append("Knowledge Base")
+                tools_used.append("EnhancedRAG")
         except Exception as e:
-            logging.error(f"RAG search error in orchestrator: {e}")
+            logging.error(f"Enhanced RAG search error in orchestrator: {e}")
         
-        # Step 2: Use BT-specific tools based on query type
+        # PRIORITY 4: Use BT-specific tools based on query type
         if query_type in ['support_hours', 'contact']:
             try:
                 bt_result = bt_support_hours_tool(query)
@@ -310,52 +412,58 @@ def intelligent_tool_orchestrator(query: str) -> str:
             except Exception as e:
                 logging.error(f"BT plans error: {e}")
         
-        # Step 3: Scrape BT.com for comprehensive information
-        try:
-            bt_scraped = scrape_bt_website(query)
-            if "From BT.com:" in bt_scraped:
-                comprehensive_answer.append(f"\n🌐 **Comprehensive BT.com Information:**")
-                comprehensive_answer.append(bt_scraped)
-                tools_used.append("BTWebsiteScraping")
-        except Exception as e:
-            logging.error(f"BT scraping error: {e}")
+        # PRIORITY 5: Scrape BT.com for comprehensive information (only if no high-priority context found)
+        if not intelligent_chat_context:
+            try:
+                bt_scraped = scrape_bt_website(query)
+                if "From BT.com:" in bt_scraped:
+                    comprehensive_answer.append(f"\n🌐 **Comprehensive BT.com Information:**")
+                    comprehensive_answer.append(bt_scraped)
+                    tools_used.append("BTWebsiteScraping")
+            except Exception as e:
+                logging.error(f"BT scraping error: {e}")
         
-        # Step 4: Web search for additional context
-        try:
-            from langchain_community.tools import DuckDuckGoSearchRun
-            search = DuckDuckGoSearchRun()
-            web_results = search.run(f"BT {query} 2024")
-            
-            if web_results and len(web_results) > 100:
-                comprehensive_answer.append(f"\n🔍 **Additional Web Information:**")
-                web_content = clean_bt_content(web_results)
-                comprehensive_answer.append(web_content)
-                tools_used.append("Web Search")
-        except Exception as e:
-            logging.error(f"Web search error: {e}")
+        # PRIORITY 6: Web search for additional context (lowest priority)
+        if len(comprehensive_answer) < 2:  # Only if we don't have enough information
+            try:
+                from langchain_community.tools import DuckDuckGoSearchRun
+                search = DuckDuckGoSearchRun()
+                web_results = search.run(f"BT {query} 2024")
+                
+                if web_results and len(web_results) > 100:
+                    comprehensive_answer.append(f"\n🔍 **Additional Web Information:**")
+                    web_content = clean_bt_content(web_results)
+                    comprehensive_answer.append(web_content)
+                    tools_used.append("WebSearch")
+            except Exception as e:
+                logging.error(f"Web search error: {e}")
         
-        # Step 5: Add context and recommendations
+        # Add context and recommendations
         if context_used:
-            comprehensive_answer.append(f"\n💡 **Context Used:** {', '.join(context_used)}")
+            comprehensive_answer.append(f"\n💡 **Context Sources (Priority Order):** {', '.join(context_used)}")
         
-        # Combine all results
+        # Combine all results with priority indication
         if comprehensive_answer:
             final_answer = "\n\n".join(comprehensive_answer)
-            final_answer += f"\n\n*This comprehensive answer was compiled using: {', '.join(tools_used)}*"
+            final_answer += f"\n\n*This response prioritized intelligent_chat.tool_orchestrator from memory layer. Tools used: {', '.join(tools_used)}*"
             
-            # Store in memory for future context using MemoryLayerManager
+            # Store in memory for future context using MemoryLayerManager with enhanced metadata
             if context_memory:
                 try:
                     from backend.memory_models import ConversationEntryDTO
                     conversation = ConversationEntryDTO(
-                        session_id="tool_session",
+                        session_id="intelligent_tool_session",
                         user_id="system",
                         user_message=query,
                         bot_response=final_answer,
                         tools_used=tools_used,
-                        tool_performance={},
-                        context_used=[],
-                        response_quality_score=0.8
+                        tool_performance={
+                            "intelligent_chat_priority": len(intelligent_chat_context) > 0,
+                            "memory_layer_used": len(context_used) > 0,
+                            "tools_count": len(tools_used)
+                        },
+                        context_used=context_used,
+                        response_quality_score=0.9 if intelligent_chat_context else 0.8
                     )
                     context_memory.store_conversation(conversation)
                 except Exception as e:
@@ -397,22 +505,41 @@ def create_ticket_tool(query: str, user_id: Optional[Union[int, str]] = None) ->
     try:
         service = TickingService(db)
         
-        # Get customer information if user_id is provided
+        # Get customer information if user_id is provided and convert to proper type
         customer_info = ""
+        processed_user_id = None
+        
         if user_id:
+            # Try to convert user_id to integer if it's numeric
             try:
-                # Try to get customer details from the User table
-                from models import User
-                user = db.query(User).filter(User.user_id == str(user_id)).first()
-                if user:
-                    customer_info = f"Customer ID: {user_id}\nCustomer Email: {user.email if hasattr(user, 'email') else 'N/A'}\n"
-                    logging.info(f"Retrieved customer details for user {user_id}")
+                if isinstance(user_id, str) and user_id.isdigit():
+                    processed_user_id = int(user_id)
+                elif isinstance(user_id, int):
+                    processed_user_id = user_id
                 else:
-                    customer_info = f"Customer ID: {user_id}\n"
-                    logging.info(f"Customer {user_id} not found in User table, using ID only")
-            except Exception as e:
-                logging.warning(f"Could not retrieve customer details for {user_id}: {e}")
-                customer_info = f"Customer ID: {user_id}\n"
+                    # For non-numeric user_ids, we'll store as None and include in metadata
+                    processed_user_id = None
+                    customer_info = f"Customer Reference: {user_id}\n"
+                    logging.info(f"Non-numeric user_id {user_id}, storing as reference only")
+            except (ValueError, TypeError):
+                processed_user_id = None
+                customer_info = f"Customer Reference: {user_id}\n"
+                logging.warning(f"Could not convert user_id {user_id} to integer, storing as reference")
+            
+            # Try to get customer details from the User table if we have a numeric ID
+            if processed_user_id:
+                try:
+                    from models import User
+                    user = db.query(User).filter(User.user_id == processed_user_id).first()
+                    if user:
+                        customer_info = f"Customer ID: {processed_user_id}\nCustomer Email: {user.email if hasattr(user, 'email') else 'N/A'}\n"
+                        logging.info(f"Retrieved customer details for user {processed_user_id}")
+                    else:
+                        customer_info = f"Customer ID: {processed_user_id}\n"
+                        logging.info(f"Customer {processed_user_id} not found in User table, using ID only")
+                except Exception as e:
+                    logging.warning(f"Could not retrieve customer details for {processed_user_id}: {e}")
+                    customer_info = f"Customer ID: {processed_user_id}\n"
         
         # Determine ticket category based on query content
         category = TicketCategory.GENERAL
@@ -440,9 +567,10 @@ def create_ticket_tool(query: str, user_id: Optional[Union[int, str]] = None) ->
         # Prepare comprehensive metadata for customer service
         metadata = {
             "source": "ai_agent_chat",
-            "customer_id": user_id,
+            "customer_id": user_id,  # Keep original user_id in metadata for reference
+            "processed_customer_id": processed_user_id,  # Store the processed integer ID
             "initial_query": query,
-            "creation_timestamp": datetime.utcnow().isoformat(),
+            "creation_timestamp": datetime.now(timezone.utc).isoformat(),
             "channel": "web_chat",
             "agent_assisted": True
         }
@@ -460,19 +588,51 @@ Issue Description:
 Category: {category.value.replace('_', ' ').title()}
 Priority: {priority.value.title()}
 Submitted via: AI Chat Agent
-Timestamp: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+Timestamp: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 This ticket was automatically created based on the customer's chat interaction with our AI support agent."""
 
-        ticket = service.create_ticket(
-            title=title,
-            description=description,
-            user_id=user_id,
-            priority=priority,
-            category=category,
-            tags=tags,
-            ticket_metadata=metadata
-        )
+        # Try to create ticket with customer_id, fallback to None if customer doesn't exist
+        try:
+            ticket = service.create_ticket(
+                title=title,
+                description=description,
+                user_id=processed_user_id,  # Use the processed integer user_id or None
+                priority=priority,
+                category=category,
+                tags=tags,
+                ticket_metadata=metadata
+            )
+        except Exception as db_error:
+            # If foreign key constraint fails, create ticket without customer_id
+            if "foreign key constraint" in str(db_error).lower() or "violates foreign key" in str(db_error).lower():
+                logging.warning(f"Customer ID {processed_user_id} not found in database, creating ticket without customer reference")
+                
+                # Rollback the failed transaction
+                try:
+                    db.rollback()
+                except:
+                    pass
+                
+                # Update metadata to reflect this
+                metadata["customer_lookup_failed"] = True
+                metadata["original_customer_error"] = "Customer ID not found in database"
+                
+                # Update description to include customer reference info
+                description += f"\n\nNote: Original customer reference '{user_id}' could not be linked to existing customer record."
+                
+                ticket = service.create_ticket(
+                    title=title,
+                    description=description,
+                    user_id=None,  # Create without customer_id
+                    priority=priority,
+                    category=category,
+                    tags=tags,
+                    ticket_metadata=metadata
+                )
+            else:
+                # Re-raise other database errors
+                raise db_error
         
         # Create a professional customer-focused response
         response = f"""🎫 Support Ticket Created Successfully!
@@ -492,11 +652,14 @@ Please save your ticket number #{ticket.id} for future reference when contacting
                 from backend.memory_models import ConversationEntryDTO
                 conversation = ConversationEntryDTO(
                     session_id="ticket_session",
-                    user_id=str(user_id) if user_id else "anonymous",
+                    user_id=str(processed_user_id) if processed_user_id else (str(user_id) if user_id else "anonymous"),
                     user_message=query,
                     bot_response=response,
                     tools_used=["CreateSupportTicket"],
-                    tool_performance={},
+                    tool_performance={
+                        "user_id_processed": processed_user_id is not None,
+                        "original_user_id": str(user_id) if user_id else None
+                    },
                     context_used=[],
                     response_quality_score=0.9
                 )

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant Test - Fixed</title>
+    <link rel="stylesheet" href="voice/voice-assistant.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .test-info {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+        
+        .test-info h2 {
+            margin: 0 0 var(--space-3) 0;
+            color: var(--color-listening);
+        }
+        
+        .test-info ul {
+            margin: var(--space-3) 0;
+            padding-left: var(--space-6);
+        }
+        
+        .test-info li {
+            margin-bottom: var(--space-2);
+            color: var(--text-secondary);
+        }
+        
+        .voice-container-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Voice Assistant - Fixed Version</h2>
+        <p>This version includes the following fixes:</p>
+        <ul>
+            <li><strong>Settings Button:</strong> Now opens a functional settings modal</li>
+            <li><strong>API Integration:</strong> Uses actual backend chat API instead of demo responses</li>
+            <li><strong>Voice Settings:</strong> Fully functional voice configuration</li>
+            <li><strong>Error Handling:</strong> Improved error handling and fallbacks</li>
+        </ul>
+        <p><strong>Test Instructions:</strong></p>
+        <ul>
+            <li>Click the settings button (gear icon) to test the settings modal</li>
+            <li>Use the microphone to test voice input with real AI responses</li>
+            <li>Adjust voice settings and test them with the "Test Voice Settings" button</li>
+        </ul>
+    </div>
+    
+    <div class="voice-container-wrapper">
+        <!-- Voice Assistant Container -->
+        <div id="voice-container">
+            <!-- Header with close and settings -->
+            <div id="voice-header">
+                <button id="close-btn" class="header-btn" aria-label="Close voice assistant">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h1>Voice Assistant</h1>
+                <button id="settings-btn" class="header-btn" aria-label="Open settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Main voice interface -->
+            <div id="voice-main">
+                <!-- Central microphone button -->
+                <div id="microphone-container">
+                    <div id="mic-button" class="mic-button" role="button" tabindex="0" aria-label="Click to start talking">
+                        <div class="mic-inner">
+                            <svg id="mic-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 1C10.8954 1 10 1.89543 10 3V11C10 12.1046 10.8954 13 12 13C13.1046 13 14 12.1046 14 11V3C14 1.89543 13.1046 1 12 1Z" fill="currentColor"/>
+                                <path d="M19 11C19 15.4183 15.4183 19 11 19V21H13C13.5523 21 14 21.4477 14 22C14 22.5523 13.5523 23 13 23H11C10.4477 23 10 22.5523 10 22C10 21.4477 10.4477 21 11 21V19C6.58172 19 3 15.4183 3 11C3 10.4477 3.44772 10 4 10C4.55228 10 5 10.4477 5 11C5 14.3137 7.68629 17 11 17C14.3137 17 17 14.3137 17 11C17 10.4477 17.4477 10 18 10C18.5523 10 19 10.4477 19 11Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring pulse-ring-2"></div>
+                    </div>
+                    
+                    <!-- Audio visualizer -->
+                    <div id="audio-visualizer" class="audio-visualizer">
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                    </div>
+                </div>
+                
+                <!-- Status text -->
+                <div id="status-indicator">
+                    <span id="status-text">Tap to start talking</span>
+                </div>
+                
+                <!-- Conversation display -->
+                <div id="conversation-display">
+                    <div id="transcript-area" class="conversation-section">
+                        <div class="transcript-text">Your message will appear here...</div>
+                    </div>
+                    <div id="response-area" class="conversation-section">
+                        <div class="response-text">Assistant response will appear here...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom controls -->
+            <div id="voice-controls">
+                <button id="mute-btn" class="control-btn" aria-label="Mute microphone">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 1C10.8954 1 10 1.89543 10 3V11C10 12.1046 10.8954 13 12 13C13.1046 13 14 12.1046 14 11V3C14 1.89543 13.1046 1 12 1Z" fill="currentColor"/>
+                        <path d="M19 11C19 15.4183 15.4183 19 11 19V21H13C13.5523 21 14 21.4477 14 22C14 22.5523 13.5523 23 13 23H11C10.4477 23 10 22.5523 10 22C10 21.4477 10.4477 21 11 21V19C6.58172 19 3 15.4183 3 11C3 10.4477 3.44772 10 4 10C4.55228 10 5 10.4477 5 11C5 14.3137 7.68629 17 11 17C14.3137 17 17 14.3137 17 11C17 10.4477 17.4477 10 18 10C18.5523 10 19 10.4477 19 11Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button id="stop-btn" class="control-btn" aria-label="Stop">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button id="replay-btn" class="control-btn" aria-label="Replay">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 8L14 12L10 16V8Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-labelledby="settings-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="settings-title">Voice Settings</h2>
+                <button class="modal-close" aria-label="Close settings">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Speech Recognition</h3>
+                    <div class="setting-group">
+                        <label for="language-select">Language:</label>
+                        <select id="language-select">
+                            <option value="en-US">English (US)</option>
+                            <option value="en-GB">English (UK)</option>
+                            <option value="en-AU">English (Australia)</option>
+                            <option value="en-CA">English (Canada)</option>
+                            <option value="es-ES">Spanish (Spain)</option>
+                            <option value="es-MX">Spanish (Mexico)</option>
+                            <option value="fr-FR">French (France)</option>
+                            <option value="fr-CA">French (Canada)</option>
+                            <option value="de-DE">German</option>
+                            <option value="it-IT">Italian</option>
+                            <option value="pt-BR">Portuguese (Brazil)</option>
+                            <option value="pt-PT">Portuguese (Portugal)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ko-KR">Korean</option>
+                            <option value="zh-CN">Chinese (Simplified)</option>
+                            <option value="zh-TW">Chinese (Traditional)</option>
+                            <option value="ru-RU">Russian</option>
+                            <option value="ar-SA">Arabic</option>
+                            <option value="hi-IN">Hindi</option>
+                            <option value="nl-NL">Dutch</option>
+                            <option value="sv-SE">Swedish</option>
+                            <option value="da-DK">Danish</option>
+                            <option value="no-NO">Norwegian</option>
+                            <option value="fi-FI">Finnish</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Text-to-Speech</h3>
+                    <div class="setting-group">
+                        <label for="voice-select">Voice:</label>
+                        <select id="voice-select">
+                            <option value="default">Loading voices...</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="speech-rate">Speech Rate:</label>
+                        <div class="range-container">
+                            <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1">
+                            <span class="range-value">1.0</span>
+                        </div>
+                        <div class="range-labels">
+                            <span>Slow</span>
+                            <span>Fast</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label for="speech-pitch">Speech Pitch:</label>
+                        <div class="range-container">
+                            <input type="range" id="speech-pitch" min="0.5" max="2" step="0.1" value="1">
+                            <span class="range-value">1.0</span>
+                        </div>
+                        <div class="range-labels">
+                            <span>Low</span>
+                            <span>High</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label for="speech-volume">Volume:</label>
+                        <div class="range-container">
+                            <input type="range" id="speech-volume" min="0" max="1" step="0.1" value="1">
+                            <span class="range-value">100%</span>
+                        </div>
+                        <div class="range-labels">
+                            <span>Quiet</span>
+                            <span>Loud</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Interaction Mode</h3>
+                    <div class="setting-group">
+                        <label for="auto-listen">Auto-listen after response:</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="auto-listen" checked>
+                            <span class="checkbox-label">Automatically start listening after AI responds</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label for="push-to-talk">Push-to-talk mode:</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="push-to-talk">
+                            <span class="checkbox-label">Hold spacebar to talk (disables auto-listen)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Test Voice Settings</h3>
+                    <div class="setting-group">
+                        <button id="test-voice-btn" class="test-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M10 8L14 12L10 16V8Z" fill="currentColor"/>
+                            </svg>
+                            Test Voice Settings
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="settings-actions">
+                    <button id="reset-settings-btn" class="secondary-button">Reset to Defaults</button>
+                    <button id="save-settings-btn" class="primary-button">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="voice/voice-api-client.js"></script>
+    <script src="voice/voice-settings-manager.js"></script>
+    <script src="voice/voice-assistant.js"></script>
+</body>
+</html>

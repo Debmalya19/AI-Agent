@@ -1,0 +1,26 @@
+{
+    "name": "voice-assistant-tests",
+    "version": "1.0.0",
+    "description": "Unit tests for voice assistant functionality",
+    "scripts": {
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
+    },
+    "devDependencies": {
+        "jest": "^29.0.0",
+        "jest-environment-jsdom": "^30.1.2"
+    },
+    "jest": {
+        "testEnvironment": "jsdom",
+        "collectCoverageFrom": [
+            "voice-speech-manager.js",
+            "!**/*.test.js"
+        ],
+        "coverageReporters": [
+            "text",
+            "lcov",
+            "html"
+        ]
+    }
+}

@@ -1,0 +1,858 @@
+/* CSS Variables for Clean Voice Interface */
+:root {
+    /* Primary colors - ChatGPT-like theme */
+    --bg-primary: #0f0f23;
+    --bg-secondary: #1a1a2e;
+    --bg-accent: #16213e;
+
+    /* Text colors */
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+
+    /* State colors */
+    --color-idle: #6366f1;
+    --color-listening: #10b981;
+    --color-processing: #3b82f6;
+    --color-speaking: #f59e0b;
+    --color-error: #ef4444;
+    --color-muted: #6b7280;
+
+    /* Spacing system */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --space-20: 80px;
+
+    /* Border radius */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Main Container */
+#voice-container {
+    height: 100vh;
+    width: 100vw;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle background pattern */
+#voice-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Header */
+#voice-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-6) var(--space-6) 0;
+    z-index: 10;
+    position: relative;
+}
+
+#voice-header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    flex: 1;
+    margin: 0 var(--space-4);
+}
+
+.header-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.header-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    transform: scale(1.05);
+}
+
+.header-btn:active {
+    transform: scale(0.95);
+}
+
+/* Main Content Area */
+#voice-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8) var(--space-6);
+    z-index: 10;
+    position: relative;
+    gap: var(--space-8);
+}
+
+/* Microphone Container */
+#microphone-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+/* Microphone Button */
+#mic-button {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    background: var(--color-idle);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+}
+
+.mic-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    position: relative;
+    z-index: 2;
+}
+
+#mic-button:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-xl);
+}
+
+#mic-button:active {
+    transform: scale(0.95);
+}
+
+#mic-button:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 4px;
+}
+
+/* Pulse rings for animation */
+.pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    border: 2px solid var(--color-idle);
+    border-radius: var(--radius-full);
+    opacity: 0;
+    z-index: 1;
+}
+
+.pulse-ring-2 {
+    animation-delay: 1s;
+}
+
+/* Microphone States */
+#mic-button.listening {
+    background: var(--color-listening);
+}
+
+#mic-button.listening .pulse-ring {
+    border-color: var(--color-listening);
+    animation: pulse 2s infinite;
+}
+
+#mic-button.processing {
+    background: var(--color-processing);
+}
+
+#mic-button.processing .pulse-ring {
+    border-color: var(--color-processing);
+    animation: pulse 1.5s infinite;
+}
+
+#mic-button.speaking {
+    background: var(--color-speaking);
+}
+
+#mic-button.speaking .pulse-ring {
+    border-color: var(--color-speaking);
+    animation: pulse 1s infinite;
+}
+
+#mic-button.error {
+    background: var(--color-error);
+    animation: shake 0.5s ease-in-out;
+}
+
+#mic-button.muted {
+    background: var(--color-muted);
+    opacity: 0.6;
+}
+
+/* Microphone Icon */
+#mic-icon {
+    width: 32px;
+    height: 32px;
+    fill: white;
+    transition: all 0.3s ease;
+}
+
+/* Audio Visualizer */
+#audio-visualizer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: 40px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#audio-visualizer.active {
+    opacity: 1;
+}
+
+.visualizer-bar {
+    width: 3px;
+    background: var(--color-listening);
+    border-radius: var(--radius-sm);
+    transition: height 0.1s ease;
+    min-height: 8px;
+    height: 8px;
+}
+
+.visualizer-bar.speaking {
+    background: var(--color-speaking);
+}
+
+/* Status Indicator */
+#status-indicator {
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
+
+#status-text {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+#status-text.listening {
+    color: var(--color-listening);
+}
+
+#status-text.processing {
+    color: var(--color-processing);
+}
+
+#status-text.speaking {
+    color: var(--color-speaking);
+}
+
+#status-text.error {
+    color: var(--color-error);
+}
+
+/* Conversation Display */
+#conversation-display {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.conversation-section {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    min-height: 60px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.conversation-section.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.transcript-text,
+.response-text {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    min-height: 20px;
+}
+
+.transcript-text {
+    font-style: italic;
+}
+
+.response-text {
+    color: var(--text-primary);
+}
+
+/* Voice Controls */
+#voice-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    z-index: 10;
+    position: relative;
+}
+
+/* Control Buttons */
+.control-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+    backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.control-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 2px;
+}
+
+.control-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+/* Button States */
+.control-btn.active {
+    background: var(--color-idle);
+    color: white;
+}
+
+.control-btn.muted {
+    background: var(--color-error);
+    color: white;
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility animations */
+.fade-in-up {
+    animation: fade-in-up 0.3s ease forwards;
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #voice-header h1 {
+        font-size: 1.125rem;
+    }
+
+    #mic-button {
+        width: 100px;
+        height: 100px;
+    }
+
+    #mic-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .pulse-ring {
+        width: 100px;
+        height: 100px;
+    }
+
+    #conversation-display {
+        max-width: 400px;
+    }
+
+    .control-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .control-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    #voice-main {
+        padding: var(--space-6) var(--space-4);
+        gap: var(--space-6);
+    }
+
+    #voice-header {
+        padding: var(--space-4) var(--space-4) 0;
+    }
+
+    #voice-header h1 {
+        font-size: 1rem;
+    }
+
+    .header-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    #mic-button {
+        width: 90px;
+        height: 90px;
+    }
+
+    #mic-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .pulse-ring {
+        width: 90px;
+        height: 90px;
+    }
+
+    #conversation-display {
+        max-width: 100%;
+    }
+
+    .conversation-section {
+        padding: var(--space-3);
+        min-height: 50px;
+    }
+
+    .transcript-text,
+    .response-text {
+        font-size: 0.875rem;
+    }
+
+    #voice-controls {
+        gap: var(--space-4);
+        padding: var(--space-4);
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .control-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+/* Se
+ttings Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-lg);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-body {
+    padding: var(--space-6);
+}
+
+.settings-section {
+    margin-bottom: var(--space-6);
+}
+
+.settings-section h3 {
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4) 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.setting-group {
+    margin-bottom: var(--space-4);
+}
+
+.setting-group label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+    font-weight: 500;
+}
+
+.setting-group select {
+    width: 100%;
+    padding: var(--space-3);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.setting-group select:focus {
+    outline: none;
+    border-color: var(--color-idle);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+}
+
+.range-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.range-container input[type="range"] {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.range-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-idle);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.range-container input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--color-idle);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.range-value {
+    min-width: 50px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-idle);
+}
+
+.checkbox-label {
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.test-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-idle);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.test-button:hover {
+    background: #5855eb;
+    transform: translateY(-1px);
+}
+
+.test-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.settings-actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: flex-end;
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.primary-button {
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-idle);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.primary-button:hover {
+    background: #5855eb;
+    transform: translateY(-1px);
+}
+
+.secondary-button {
+    padding: var(--space-3) var(--space-6);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Success/Error states for buttons */
+.primary-button.success {
+    background: var(--color-listening);
+}
+
+.primary-button.error {
+    background: var(--color-error);
+}
+
+.secondary-button.success {
+    color: var(--color-listening);
+    border-color: var(--color-listening);
+}
+
+.secondary-button.error {
+    color: var(--color-error);
+    border-color: var(--color-error);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -24,6 +24,7 @@ def demo_simple_query():
         from tools import bt_support_hours_tool
         
         print("Using: BTSupportHours Tool")
+        # Note: bt_support_hours_tool is a function, not a LangChain tool, so direct call is correct
         result = bt_support_hours_tool(query)
         print(f"Answer: {result}")
         
@@ -103,6 +104,7 @@ def demo_bt_specific_queries():
         try:
             if tool_name == "BTPlansInformation":
                 from tools import bt_plan_information_tool
+                # Note: bt_plan_information_tool is a function, not a LangChain tool, so direct call is correct
                 result = bt_plan_information_tool(query)
             else:
                 from tools import bt_website_search
@@ -142,7 +144,7 @@ def demo_tool_combination():
             print("✗ No BT.com information found")
         
         print("\nStep 3: Additional Web Context")
-        web_results = search_tool.run("BT mobile number portability transfer")
+        web_results = search_tool.invoke({"query": "BT mobile number portability transfer"})
         if web_results and len(web_results) > 50:
             print("✓ Found additional web information")
         else:

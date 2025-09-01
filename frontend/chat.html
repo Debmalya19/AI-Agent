@@ -744,7 +744,8 @@
     </form>
   </div>
 
-  <!-- Simple voice functionality - no complex modules needed -->
+  <!-- Voice Page Integration -->
+  <script src="voice-page-integration.js"></script>
 
   <script>
     const chatLog = document.getElementById('chat-log');
@@ -753,6 +754,9 @@
     const sendButton = document.getElementById('send-button');
     const recommendedQuestions = document.querySelectorAll('.recommended-question-btn');
     const chatContainer = document.getElementById('chat-container');
+    
+    // Initialize voice page integration
+    let voicePageIntegration = null;
 
     // Simple voice recording variables
     let isRecording = false;
@@ -784,15 +788,81 @@
     // Run session check immediately
     checkSession();
 
-    // Initialize WhatsApp-style voice functionality
-    initializeWhatsAppVoice();
+    // Initialize voice page integration
+    initializeVoicePageIntegration();
+    
+    // Note: WhatsApp-style voice functionality is now used as fallback only
 
     // First logout function removed - using the async version below
 
     let hasAskedQuestion = false;
 
     /**
-     * Initialize WhatsApp-style voice functionality
+     * Initialize voice page integration
+     */
+    function initializeVoicePageIntegration() {
+      try {
+        console.log('Initializing voice page integration...');
+        voicePageIntegration = new VoicePageIntegration();
+        console.log('VoicePageIntegration instance created:', voicePageIntegration);
+        
+        // Add click handler to WhatsApp voice button for voice page
+        const voiceBtn = document.getElementById('whatsapp-voice-btn');
+        if (voiceBtn) {
+          console.log('Found voice button, setting up voice page integration');
+          
+          // Add new click handler for voice page (use capture to override existing handlers)
+          voiceBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            console.log('Voice button clicked - opening voice assistant');
+            
+            // Open voice assistant page
+            voicePageIntegration.openVoiceAssistant().catch(error => {
+              console.error('Failed to open voice assistant:', error);
+              
+              // Show user-friendly error
+              alert('Failed to open voice assistant: ' + error.message + '\n\nPlease allow popups and try again.');
+            });
+          }, true); // Use capture phase to ensure this runs first
+          
+          // Update button title
+          voiceBtn.title = 'Open Voice Assistant';
+          
+          // Add visual indicator that this opens a new window
+          voiceBtn.style.position = 'relative';
+          const indicator = document.createElement('div');
+          indicator.innerHTML = '↗';
+          indicator.style.cssText = `
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            z-index: 10;
+          `;
+          voiceBtn.appendChild(indicator);
+          
+          console.log('Voice button configured for voice page integration');
+        } else {
+          console.error('Voice button not found');
+        }
+        
+        console.log('Voice page integration initialized');
+        
+      } catch (error) {
+        console.error('Failed to initialize voice page integration:', error);
+        console.log('Falling back to inline voice functionality');
+        // Initialize fallback voice functionality
+        initializeWhatsAppVoice();
+      }
+    }
+
+    /**
+     * Initialize WhatsApp-style voice functionality (fallback)
      */
     function initializeWhatsAppVoice() {
       const voiceBtn = document.getElementById('whatsapp-voice-btn');

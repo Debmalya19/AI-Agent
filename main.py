@@ -34,7 +34,6 @@ import logging
 from sqlalchemy import text
 from datetime import datetime, timedelta, timezone
 import hashlib
-import asyncio
 import time
 
 # Memory layer imports
@@ -51,6 +50,9 @@ from backend.intelligent_chat.models import ChatResponse as IntelligentChatRespo
 
 # Voice assistant imports
 from backend.voice_api import voice_router
+
+# Tool imports (moved from middle of file)
+from backend.tools import set_shared_memory_manager
 
 load_dotenv()
 
@@ -349,9 +351,12 @@ except Exception as e:
     agent = None
     agent_executor = None
 
-# Initialize memory layer manager
+# Initialize memory layer manager (singleton instance)
 memory_config = load_config()
 memory_manager = MemoryLayerManager(config=memory_config)
+
+# Set shared memory manager for tools
+set_shared_memory_manager(memory_manager)
 
 # Initialize intelligent chat UI components
 try:
@@ -632,13 +637,36 @@ async def chat_page():
 async def register_page():
     return FileResponse("frontend/register.html")
 
+@app.get("/test-voice-button.html")
+async def test_voice_button_page():
+    return FileResponse("frontend/test-voice-button.html")
+
+@app.get("/voice-integration-debug.html")
+async def voice_integration_debug_page():
+    return FileResponse("frontend/voice-integration-debug.html")
+
+@app.get("/simple-voice-test.html")
+async def simple_voice_test_page():
+    return FileResponse("frontend/simple-voice-test.html")
+
+@app.get("/voice-page-integration.js")
+async def voice_page_integration_js():
+    return FileResponse("frontend/voice-page-integration.js")
+
+@app.get("/voice-assistant-test.html")
+async def voice_assistant_test_page():
+    return FileResponse("frontend/voice-assistant-test.html")
+
 # Removed test-fixes.html endpoint - file not found
 
 # Authentication endpoints
 @app.post("/logout")
 async def logout(response: Response, session_token: str = Cookie(None)):
-    """Logout endpoint to invalidate user session"""
+    """Logout endpoint to invalidate user session and clean up memory data"""
     try:
+        user_id = None
+        session_id = None
+        
         if session_token:
             # Invalidate the session in the database
             with SessionLocal() as db:
@@ -647,10 +675,26 @@ async def logout(response: Response, session_token: str = Cookie(None)):
                 ).first()
                 
                 if user_session:
+                    user_id = user_session.user_id
+                    session_id = user_session.session_id
+                    
                     user_session.is_active = False
                     user_session.logout_time = datetime.now(timezone.utc)
                     db.commit()
                     logger.info(f"User session {session_token} logged out successfully")
+        
+        # Clean up user memory data on logout
+        if user_id and memory_manager:
+            try:
+                cleanup_result = memory_manager.cleanup_user_session_data(user_id, session_id)
+                if cleanup_result.errors:
+                    logger.warning(f"Memory cleanup had errors for user {user_id}: {cleanup_result.errors}")
+                else:
+                    logger.info(f"Memory cleanup completed for user {user_id}: "
+                              f"{cleanup_result.conversations_cleaned} conversations, "
+                              f"{cleanup_result.context_entries_cleaned} cache entries cleaned")
+            except Exception as cleanup_error:
+                logger.error(f"Memory cleanup failed for user {user_id}: {cleanup_error}")
         
         # Clear the session cookie
         response.delete_cookie("session_token")
@@ -1077,7 +1121,7 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
                         
                         # Also try BT plans tool for additional info
                         try:
-                            bt_plans_result = bt_plans_tool.func(chat_request.query)
+                            bt_plans_result = bt_plans_tool.invoke({"query": chat_request.query})
                             if bt_plans_result and len(bt_plans_result) > 20:
                                 tools_used.append("BTPlansInformation")
                                 tool_performance["BTPlansInformation"] = 1.0
@@ -1087,11 +1131,84 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
                 except Exception as manual_error:
                     logger.warning(f"Manual plan tool trigger error: {manual_error}")
             
-            # 2. Check for support hours/contact queries
+            # 2. Check for data usage queries - USE MULTIPLE TOOLS
+            elif any(keyword in query_lower for keyword in ['data usage', 'check data', 'data balance', 'usage', 'remaining data', 'data allowance', 'how much data']):
+                try:
+                    logger.info("Detected data usage query - using multiple tools for comprehensive answer")
+                    
+                    # Start with support knowledge base for specific instructions
+                    support_result = support_knowledge_tool_func(chat_request.query)
+                    if support_result and len(support_result) > 20:
+                        tools_used.append("SupportKnowledgeBase")
+                        tool_performance["SupportKnowledgeBase"] = 1.0
+                        summary = support_result
+                        logger.info("Used SupportKnowledgeBase for data usage instructions")
+                    
+                    # Add BT-specific information from website
+                    try:
+                        bt_website_result = bt_website_tool.invoke({"query": "check data usage balance allowance"})
+                        if bt_website_result and len(bt_website_result) > 20:
+                            tools_used.append("BTWebsiteSearch")
+                            tool_performance["BTWebsiteSearch"] = 1.0
+                            # Combine with existing summary
+                            if summary:
+                                summary += f"\n\n**Additional BT Information:**\n{bt_website_result}"
+                            else:
+                                summary = bt_website_result
+                            logger.info("Added BTWebsiteSearch for current BT data usage info")
+                    except Exception as bt_error:
+                        logger.warning(f"BT website tool error: {bt_error}")
+                    
+                    # Add context from knowledge base
+                    try:
+                        rag_result = rag_tool_func("data usage check balance mobile app")
+                        if rag_result and len(rag_result) > 20:
+                            tools_used.append("ContextRetriever")
+                            tool_performance["ContextRetriever"] = 1.0
+                            # Enhance the summary with additional context
+                            if summary:
+                                summary += f"\n\n**Additional Help:**\n{rag_result}"
+                            else:
+                                summary = rag_result
+                            logger.info("Added ContextRetriever for additional data usage help")
+                    except Exception as rag_error:
+                        logger.warning(f"RAG tool error: {rag_error}")
+                    
+                    # Use intelligent orchestrator for comprehensive response
+                    try:
+                        orchestrator_result = intelligent_orchestrator_tool.invoke({"query": chat_request.query})
+                        if orchestrator_result and len(orchestrator_result) > 50:
+                            tools_used.append("IntelligentToolOrchestrator")
+                            tool_performance["IntelligentToolOrchestrator"] = 1.0
+                            
+                            # For data usage queries, prioritize relevant content over length
+                            # Check if orchestrator result is actually about data usage
+                            orchestrator_lower = orchestrator_result.lower()
+                            if any(keyword in orchestrator_lower for keyword in ['data usage', '*124#', '*123#', 'mobile app', 'check data', 'usage']):
+                                # Orchestrator result is relevant, use it
+                                summary = orchestrator_result
+                                logger.info("Used relevant IntelligentToolOrchestrator result for data usage")
+                            elif not summary or len(summary) < 50:
+                                # No good summary yet, use orchestrator as fallback
+                                summary = orchestrator_result
+                                logger.info("Used IntelligentToolOrchestrator as fallback for data usage")
+                            else:
+                                # Keep existing summary as it's more relevant
+                                logger.info("Kept existing summary as it's more relevant than orchestrator result")
+                    except Exception as orchestrator_error:
+                        logger.warning(f"Orchestrator tool error: {orchestrator_error}")
+                    
+                    if tools_used:
+                        logger.info(f"Data usage query processed with {len(tools_used)} tools: {tools_used}")
+                    
+                except Exception as manual_error:
+                    logger.warning(f"Manual data usage tool trigger error: {manual_error}")
+            
+            # 3. Check for support hours/contact queries
             elif any(keyword in query_lower for keyword in ['support hours', 'contact', 'phone number', 'opening hours', 'customer service']):
                 try:
                     # Use support hours tool
-                    support_hours_result = bt_support_hours_tool_instance.func(chat_request.query)
+                    support_hours_result = bt_support_hours_tool_instance.invoke({"query": chat_request.query})
                     if support_hours_result and len(support_hours_result) > 10:
                         tools_used.append("BTSupportHours")
                         tool_performance["BTSupportHours"] = 1.0
@@ -1100,7 +1217,7 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
                 except Exception as manual_error:
                     logger.warning(f"Manual support hours tool error: {manual_error}")
             
-            # 3. Check for password/account queries
+            # 4. Check for password/account queries
             elif any(keyword in query_lower for keyword in ['password', 'reset', 'account', 'login', 'username', 'forgot']):
                 try:
                     # Use knowledge base for password/account issues
@@ -1140,7 +1257,7 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
             # 6. Try the intelligent orchestrator
             if not tools_used:
                 try:
-                    orchestrator_result = intelligent_orchestrator_tool.func(chat_request.query)
+                    orchestrator_result = intelligent_orchestrator_tool.invoke({"query": chat_request.query})
                     if orchestrator_result and len(orchestrator_result) > 20:
                         tools_used.append("IntelligentToolOrchestrator")
                         tool_performance["IntelligentToolOrchestrator"] = 1.0
@@ -1162,7 +1279,7 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
                     # Convert user_id to int if it's a string (for compatibility with ticket system)
                     customer_id = int(user_id) if isinstance(user_id, str) and user_id.isdigit() else user_id
                     
-                    ticket_result = create_ticket_tool_instance.func(chat_request.query, customer_id)
+                    ticket_result = create_ticket_tool_instance.invoke({"query": chat_request.query, "user_id": customer_id})
                     if ticket_result and len(ticket_result) > 20:
                         tools_used.append("CreateSupportTicket")
                         tool_performance["CreateSupportTicket"] = 1.0
@@ -1385,25 +1502,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
 
 
-# Logout endpoint
-@app.post("/logout")
-async def logout(session_token: str = Cookie(None)):
-    """Logout user and invalidate session"""
-    try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No active session")
-        
-        # Remove session from database
-        with SessionLocal() as db:
-            # Delete UserSession
-            db.query(UserSession).filter(UserSession.session_id == session_token).delete()
-            # Delete ChatHistory
-            db.query(ChatHistory).filter(ChatHistory.session_id == session_token).delete()
-            db.commit()
-        
-        response = JSONResponse({"message": "Logged out successfully"})
-        response.delete_cookie("session_token")
-        return response
+# Duplicate logout endpoint removed - using the enhanced one above with memory cleanup
         
     except Exception as e:
         logger.error(f"Logout error: {e}")

@@ -43,6 +43,7 @@ def test_bt_support_hours():
     print("=" * 50)
     
     try:
+        # Note: bt_support_hours_tool is a function, not a LangChain tool, so direct call is correct
         result = bt_support_hours_tool("What are your support hours?")
         print(f"Support Hours Result: {result}")
     except Exception as e:
@@ -63,6 +64,7 @@ def test_bt_plans():
         print(f"\nQuery: {query}")
         print("-" * 30)
         try:
+            # Note: bt_plan_information_tool is a function, not a LangChain tool, so direct call is correct
             result = bt_plan_information_tool(query)
             print(f"Result: {result[:200]}...")
         except Exception as e:
@@ -97,7 +99,7 @@ def test_individual_tools():
     # Test web search
     print("\nTesting Web Search Tool:")
     try:
-        result = search_tool.run("BT mobile plans 2024")
+        result = search_tool.invoke({"query": "BT mobile plans 2024"})
         print(f"Web Search Result: {result[:200]}...")
     except Exception as e:
         print(f"Web Search Error: {e}")
@@ -105,7 +107,7 @@ def test_individual_tools():
     # Test Wikipedia tool
     print("\nTesting Wikipedia Tool:")
     try:
-        result = wiki_tool.run("telecommunications")
+        result = wiki_tool.invoke({"query": "telecommunications"})
         print(f"Wikipedia Result: {result[:200]}...")
     except Exception as e:
         print(f"Wikipedia Error: {e}")

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Settings Test</title>
+    <link rel="stylesheet" href="voice-assistant.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: var(--primary-gradient);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .test-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .test-header h1 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .test-header p {
+            color: var(--text-secondary);
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .test-button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--text-accent);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #1e5fcf;
+            transform: translateY(-1px);
+        }
+        
+        .test-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-md);
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .log-entry {
+            margin-bottom: 4px;
+        }
+        
+        .log-entry.success {
+            color: var(--listening-color);
+        }
+        
+        .log-entry.error {
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>Voice Settings Test</h1>
+            <p>Test the voice settings functionality independently</p>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-button" onclick="openSettings()">Open Settings</button>
+            <button class="test-button" onclick="testSpeech()">Test Speech</button>
+            <button class="test-button" onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div class="test-log" id="test-log">
+            <div class="log-entry">Settings test initialized...</div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal (copied from main voice assistant) -->
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-labelledby="settings-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="settings-title">Voice Settings</h2>
+                <button class="modal-close" aria-label="Close settings">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Speech Recognition</h3>
+                    <div class="setting-group">
+                        <label for="language-select">Language:</label>
+                        <select id="language-select">
+                            <option value="en-US">English (US)</option>
+                            <option value="en-GB">English (UK)</option>
+                            <option value="en-AU">English (Australia)</option>
+                            <option value="en-CA">English (Canada)</option>
+                            <option value="es-ES">Spanish (Spain)</option>
+                            <option value="es-MX">Spanish (Mexico)</option>
+                            <option value="fr-FR">French (France)</option>
+                            <option value="fr-CA">French (Canada)</option>
+                            <option value="de-DE">German</option>
+                            <option value="it-IT">Italian</option>
+                            <option value="pt-BR">Portuguese (Brazil)</option>
+                            <option value="pt-PT">Portuguese (Portugal)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ko-KR">Korean</option>
+                            <option value="zh-CN">Chinese (Simplified)</option>
+                            <option value="zh-TW">Chinese (Traditional)</option>
+                            <option value="ru-RU">Russian</option>
+                            <option value="ar-SA">Arabic</option>
+                            <option value="hi-IN">Hindi</option>
+                            <option value="nl-NL">Dutch</option>
+                            <option value="sv-SE">Swedish</option>
+                            <option value="da-DK">Danish</option>
+                            <option value="no-NO">Norwegian</option>
+                            <option value="fi-FI">Finnish</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Text-to-Speech</h3>
+                    <div class="setting-group">
+                        <label for="voice-select">Voice:</label>
+                        <select id="voice-select">
+                            <option value="default">Loading voices...</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="speech-rate">Speech Rate:</label>
+                        <div class="range-container">
+                            <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1">
+                            <span class="range-value">1.0</span>
+                        </div>
+                        <div class="range-labels">
+                            <span>Slow</span>
+                            <span>Fast</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label for="speech-pitch">Speech Pitch:</label>
+                        <div class="range-container">
+                            <input type="range" id="speech-pitch" min="0.5" max="2" step="0.1" value="1">
+                            <span class="range-value">1.0</span>
+                        </div>
+                        <div class="range-labels">
+                            <span>Low</span>
+                            <span>High</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label for="speech-volume">Volume:</label>
+                        <div class="range-container">
+                            <input type="range" id="speech-volume" min="0" max="1" step="0.1" value="1">
+                            <span class="range-value">100%</span>
+                        </div>
+                        <div class="range-labels">
+                            <span>Quiet</span>
+                            <span>Loud</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Interaction Mode</h3>
+                    <div class="setting-group">
+                        <label for="auto-listen">Auto-listen after response:</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="auto-listen" checked>
+                            <span class="checkbox-label">Automatically start listening after AI responds</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label for="push-to-talk">Push-to-talk mode:</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="push-to-talk">
+                            <span class="checkbox-label">Hold spacebar to talk (disables auto-listen)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Test Voice Settings</h3>
+                    <div class="setting-group">
+                        <button id="test-voice-btn" class="test-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M10 8L14 12L10 16V8Z" fill="currentColor"/>
+                            </svg>
+                            Test Voice Settings
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="settings-actions">
+                    <button id="reset-settings-btn" class="secondary-button">Reset to Defaults</button>
+                    <button id="save-settings-btn" class="primary-button">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mock Speech Manager for Testing -->
+    <script>
+        // Mock VoiceSpeechManager for testing
+        class MockVoiceSpeechManager {
+            constructor() {
+                this.settings = {};
+            }
+            
+            updateLanguage(language) {
+                this.settings.language = language;
+                log(`Speech recognition language updated to: ${language}`, 'success');
+            }
+            
+            updateTTSSettings(settings) {
+                this.settings.tts = settings;
+                log(`TTS settings updated: rate=${settings.rate}, pitch=${settings.pitch}, volume=${settings.volume}`, 'success');
+            }
+            
+            updateInteractionSettings(settings) {
+                this.settings.interaction = settings;
+                log(`Interaction settings updated: autoListen=${settings.autoListen}, pushToTalk=${settings.pushToTalk}`, 'success');
+            }
+            
+            speakText(text, options = {}) {
+                log(`Speaking: "${text.substring(0, 50)}..." with options: ${JSON.stringify(options)}`, 'success');
+                
+                // Use Web Speech API if available
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    if (options.voice) utterance.voice = options.voice;
+                    if (options.rate) utterance.rate = options.rate;
+                    if (options.pitch) utterance.pitch = options.pitch;
+                    if (options.volume) utterance.volume = options.volume;
+                    
+                    speechSynthesis.speak(utterance);
+                } else {
+                    log('Speech synthesis not available in this browser', 'error');
+                }
+            }
+        }
+        
+        // Initialize mock speech manager and settings manager
+        let mockSpeechManager;
+        let settingsManager;
+        
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function openSettings() {
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            log('Settings modal opened');
+        }
+        
+        function testSpeech() {
+            if (settingsManager) {
+                settingsManager.testVoiceSettings();
+                log('Voice settings test initiated');
+            } else {
+                log('Settings manager not initialized', 'error');
+            }
+        }
+        
+        function clearLog() {
+            const logElement = document.getElementById('test-log');
+            logElement.innerHTML = '<div class="log-entry">Log cleared...</div>';
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            try {
+                mockSpeechManager = new MockVoiceSpeechManager();
+                log('Mock speech manager initialized', 'success');
+            } catch (error) {
+                log(`Failed to initialize mock speech manager: ${error.message}`, 'error');
+            }
+        });
+        
+        // Close modal functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-close') || e.target.closest('.modal-close')) {
+                const modal = document.getElementById('settings-modal');
+                modal.classList.add('hidden');
+                modal.setAttribute('aria-hidden', 'true');
+                log('Settings modal closed');
+            }
+        });
+    </script>
+    
+    <!-- Load the actual settings manager -->
+    <script src="voice-settings-manager.js"></script>
+    <script>
+        // Initialize settings manager after it loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                try {
+                    if (typeof VoiceSettingsManager !== 'undefined') {
+                        settingsManager = new VoiceSettingsManager(mockSpeechManager);
+                        log('VoiceSettingsManager initialized successfully', 'success');
+                    } else {
+                        log('VoiceSettingsManager not found', 'error');
+                    }
+                } catch (error) {
+                    log(`Failed to initialize VoiceSettingsManager: ${error.message}`, 'error');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

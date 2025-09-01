@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-button {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            font-size: 14px;
+        }
+        
+        .test-button:hover {
+            background: #2575fc;
+        }
+        
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .mock-chat {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            min-height: 100px;
+        }
+        
+        .chat-message {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 70%;
+        }
+        
+        .chat-message.user {
+            background: #6a11cb;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .chat-message.bot {
+            background: #e1e1e1;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voice Page Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Voice Page Integration Module Test</h2>
+        <p>Test the voice page integration functionality</p>
+        
+        <button class="test-button" onclick="testVoicePageIntegration()">Test Voice Page Integration</button>
+        <button class="test-button" onclick="testSessionDataGathering()">Test Session Data Gathering</button>
+        <button class="test-button" onclick="openVoiceAssistant()">Open Voice Assistant</button>
+        
+        <div id="integration-status" class="status info">Ready to test integration...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Mock Chat Interface</h2>
+        <p>Simulates the main chat interface for testing</p>
+        
+        <div id="mock-chat" class="mock-chat">
+            <div class="chat-message user">How do I reset my password?</div>
+            <div class="chat-message bot">To reset your password, please visit the account settings page and click on "Reset Password". You'll receive an email with instructions.</div>
+            <div class="chat-message user">What are your support hours?</div>
+            <div class="chat-message bot">Our support team is available Monday through Friday, 9 AM to 6 PM EST. We also offer 24/7 emergency support for critical issues.</div>
+        </div>
+        
+        <button class="test-button" onclick="addMockMessage('user')">Add User Message</button>
+        <button class="test-button" onclick="addMockMessage('bot')">Add Bot Message</button>
+        <button class="test-button" onclick="clearMockChat()">Clear Chat</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Session Management Test</h2>
+        <p>Test session data handling and communication</p>
+        
+        <button class="test-button" onclick="testSessionValidation()">Test Session Validation</button>
+        <button class="test-button" onclick="testMessagePassing()">Test Message Passing</button>
+        <button class="test-button" onclick="simulateSessionData()">Simulate Session Data</button>
+        
+        <div id="session-status" class="status info">Session management ready...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Window Communication Test</h2>
+        <p>Test communication between main chat and voice assistant</p>
+        
+        <button class="test-button" onclick="testWindowCommunication()">Test Window Communication</button>
+        <button class="test-button" onclick="testWindowPositioning()">Test Window Positioning</button>
+        
+        <div id="communication-status" class="status info">Communication test ready...</div>
+    </div>
+
+    <!-- Include the voice page integration script -->
+    <script src="voice-page-integration.js"></script>
+    
+    <script>
+        let voicePageIntegration = null;
+        let mockSessionData = null;
+        
+        // Initialize integration on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTest();
+        });
+        
+        function initializeTest() {
+            try {
+                voicePageIntegration = new VoicePageIntegration();
+                updateStatus('integration-status', 'Voice Page Integration initialized successfully', 'success');
+                
+                // Set up event listeners
+                voicePageIntegration.on('voicePageClosed', () => {
+                    updateStatus('integration-status', 'Voice page closed event received', 'info');
+                });
+                
+            } catch (error) {
+                updateStatus('integration-status', 'Failed to initialize: ' + error.message, 'error');
+            }
+        }
+        
+        function testVoicePageIntegration() {
+            if (!voicePageIntegration) {
+                updateStatus('integration-status', 'Voice page integration not initialized', 'error');
+                return;
+            }
+            
+            updateStatus('integration-status', 'Testing voice page integration...', 'info');
+            
+            // Test basic functionality
+            const config = {
+                sessionId: 'test_session_' + Date.now(),
+                userId: 'test_user',
+                authenticated: true
+            };
+            
+            updateStatus('integration-status', 'Voice page integration test completed', 'success');
+        }
+        
+        function testSessionDataGathering() {
+            if (!voicePageIntegration) {
+                updateStatus('integration-status', 'Voice page integration not initialized', 'error');
+                return;
+            }
+            
+            updateStatus('integration-status', 'Testing session data gathering...', 'info');
+            
+            voicePageIntegration.gatherSessionData()
+                .then(sessionData => {
+                    mockSessionData = sessionData;
+                    updateStatus('integration-status', 
+                        'Session data gathered: ' + JSON.stringify(sessionData, null, 2), 'success');
+                })
+                .catch(error => {
+                    updateStatus('integration-status', 'Session data gathering failed: ' + error.message, 'error');
+                });
+        }
+        
+        function openVoiceAssistant() {
+            if (!voicePageIntegration) {
+                updateStatus('integration-status', 'Voice page integration not initialized', 'error');
+                return;
+            }
+            
+            updateStatus('integration-status', 'Opening voice assistant...', 'info');
+            
+            voicePageIntegration.openVoiceAssistant()
+                .then(() => {
+                    updateStatus('integration-status', 'Voice assistant opened successfully', 'success');
+                })
+                .catch(error => {
+                    updateStatus('integration-status', 'Failed to open voice assistant: ' + error.message, 'error');
+                });
+        }
+        
+        function addMockMessage(sender) {
+            const mockChat = document.getElementById('mock-chat');
+            const message = document.createElement('div');
+            message.className = `chat-message ${sender}`;
+            
+            const messages = {
+                user: [
+                    'Can you help me with billing?',
+                    'How do I upgrade my plan?',
+                    'What features are included?',
+                    'Is there a mobile app?'
+                ],
+                bot: [
+                    'I\'d be happy to help you with billing questions.',
+                    'You can upgrade your plan from the account dashboard.',
+                    'Our premium plan includes advanced analytics and priority support.',
+                    'Yes, we have mobile apps for both iOS and Android.'
+                ]
+            };
+            
+            const randomMessage = messages[sender][Math.floor(Math.random() * messages[sender].length)];
+            message.textContent = randomMessage;
+            
+            mockChat.appendChild(message);
+            mockChat.scrollTop = mockChat.scrollHeight;
+        }
+        
+        function clearMockChat() {
+            const mockChat = document.getElementById('mock-chat');
+            mockChat.innerHTML = '';
+        }
+        
+        function testSessionValidation() {
+            updateStatus('session-status', 'Testing session validation...', 'info');
+            
+            // Simulate session validation
+            fetch('/me', { credentials: 'include' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Session validation failed: ' + response.status);
+                    }
+                })
+                .then(data => {
+                    updateStatus('session-status', 'Session valid for user: ' + (data.username || data.id), 'success');
+                })
+                .catch(error => {
+                    updateStatus('session-status', 'Session validation error: ' + error.message, 'error');
+                });
+        }
+        
+        function testMessagePassing() {
+            updateStatus('session-status', 'Testing message passing...', 'info');
+            
+            // Simulate message passing
+            const testMessage = {
+                type: 'TEST_MESSAGE',
+                data: {
+                    timestamp: Date.now(),
+                    content: 'Test message from integration test'
+                }
+            };
+            
+            // Test message handling
+            window.postMessage(testMessage, window.location.origin);
+            
+            updateStatus('session-status', 'Message passing test completed', 'success');
+        }
+        
+        function simulateSessionData() {
+            const sessionData = {
+                sessionId: 'test_session_' + Date.now(),
+                userId: 'test_user_123',
+                authenticated: true,
+                conversationHistory: [
+                    { role: 'user', content: 'Hello', timestamp: Date.now() - 60000 },
+                    { role: 'assistant', content: 'Hi there! How can I help you?', timestamp: Date.now() - 50000 }
+                ],
+                timestamp: Date.now(),
+                origin: window.location.origin
+            };
+            
+            mockSessionData = sessionData;
+            updateStatus('session-status', 'Mock session data created: ' + JSON.stringify(sessionData, null, 2), 'success');
+        }
+        
+        function testWindowCommunication() {
+            updateStatus('communication-status', 'Testing window communication...', 'info');
+            
+            // Test message listener
+            const testListener = (event) => {
+                if (event.data && event.data.type === 'TEST_COMMUNICATION') {
+                    updateStatus('communication-status', 'Window communication test successful', 'success');
+                    window.removeEventListener('message', testListener);
+                }
+            };
+            
+            window.addEventListener('message', testListener);
+            
+            // Send test message
+            setTimeout(() => {
+                window.postMessage({
+                    type: 'TEST_COMMUNICATION',
+                    data: { test: true }
+                }, window.location.origin);
+            }, 100);
+            
+            // Timeout after 5 seconds
+            setTimeout(() => {
+                window.removeEventListener('message', testListener);
+                updateStatus('communication-status', 'Window communication test timed out', 'error');
+            }, 5000);
+        }
+        
+        function testWindowPositioning() {
+            updateStatus('communication-status', 'Testing window positioning...', 'info');
+            
+            if (!voicePageIntegration) {
+                updateStatus('communication-status', 'Voice page integration not available', 'error');
+                return;
+            }
+            
+            // Test window feature calculation
+            const features = voicePageIntegration.calculateWindowFeatures();
+            updateStatus('communication-status', 'Window features calculated: ' + features, 'success');
+        }
+        
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.className = `status ${type}`;
+            }
+            console.log(`[${type.toUpperCase()}] ${elementId}: ${message}`);
+        }
+        
+        // Mock chat interface functions for testing
+        window.getCurrentSessionId = () => mockSessionData?.sessionId || 'mock_session_123';
+        window.getCurrentUserId = () => mockSessionData?.userId || 'mock_user_456';
+        window.getConversationContext = () => mockSessionData?.conversationHistory || [];
+    </script>
+</body>
+</html>

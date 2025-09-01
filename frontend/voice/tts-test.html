@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .settings {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .setting-group {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        label {
+            min-width: 80px;
+        }
+        input, select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e9ecef;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text-to-Speech Test</h1>
+        
+        <div class="status" id="status">
+            Initializing...
+        </div>
+        
+        <div>
+            <label for="testText">Text to speak:</label>
+            <textarea id="testText" placeholder="Enter text to test TTS functionality...">
+Hello! This is a test of the enhanced text-to-speech system. The system now supports voice selection, rate and pitch controls, automatic response playback, error handling with fallback to text display, and speech interruption and replay capabilities.
+            </textarea>
+        </div>
+        
+        <div class="controls">
+            <button id="speakBtn">Speak Text</button>
+            <button id="stopBtn">Stop Speaking</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="resumeBtn">Resume</button>
+            <button id="replayBtn">Replay Last</button>
+        </div>
+        
+        <div class="settings">
+            <h3>TTS Settings</h3>
+            
+            <div class="setting-group">
+                <label for="voiceSelect">Voice:</label>
+                <select id="voiceSelect">
+                    <option value="">Loading voices...</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="rateSlider">Rate:</label>
+                <input type="range" id="rateSlider" min="0.1" max="3" step="0.1" value="1">
+                <span id="rateValue">1.0</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="pitchSlider">Pitch:</label>
+                <input type="range" id="pitchSlider" min="0" max="2" step="0.1" value="1">
+                <span id="pitchValue">1.0</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="volumeSlider">Volume:</label>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
+                <span id="volumeValue">1.0</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="autoPlayCheck">Auto Play:</label>
+                <input type="checkbox" id="autoPlayCheck" checked>
+            </div>
+            
+            <div class="setting-group">
+                <label for="fallbackCheck">Fallback to Text:</label>
+                <input type="checkbox" id="fallbackCheck" checked>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="testAIResponse">Test AI Response Processing</button>
+            <button id="testErrorHandling">Test Error Handling</button>
+        </div>
+        
+        <div id="fallbackText" style="display: none; margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 4px;">
+            <h4>Fallback Text Display:</h4>
+            <div id="fallbackContent"></div>
+        </div>
+    </div>
+
+    <script src="voice-speech-manager.js"></script>
+    <script>
+        let speechManager;
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status';
+            if (type === 'error') status.classList.add('error');
+            if (type === 'success') status.classList.add('success');
+        }
+        
+        function updateControls() {
+            const isListening = speechManager.isListening();
+            const isSpeaking = speechManager.isSpeaking();
+            
+            document.getElementById('speakBtn').disabled = isSpeaking;
+            document.getElementById('stopBtn').disabled = !isSpeaking;
+            document.getElementById('pauseBtn').disabled = !isSpeaking;
+            document.getElementById('resumeBtn').disabled = !isSpeaking;
+            document.getElementById('replayBtn').disabled = !speechManager.getLastSpokenText();
+        }
+        
+        function populateVoices() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            const voices = speechManager.getAvailableVoices();
+            
+            voiceSelect.innerHTML = '<option value="">Default Voice</option>';
+            
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+            
+            updateStatus(`Loaded ${voices.length} voices`, 'success');
+        }
+        
+        function setupEventHandlers() {
+            // Speech controls
+            document.getElementById('speakBtn').addEventListener('click', () => {
+                const text = document.getElementById('testText').value;
+                if (text.trim()) {
+                    speechManager.speakText(text);
+                }
+            });
+            
+            document.getElementById('stopBtn').addEventListener('click', () => {
+                speechManager.stopSpeaking();
+            });
+            
+            document.getElementById('pauseBtn').addEventListener('click', () => {
+                speechManager.pauseSpeaking();
+            });
+            
+            document.getElementById('resumeBtn').addEventListener('click', () => {
+                speechManager.resumeSpeaking();
+            });
+            
+            document.getElementById('replayBtn').addEventListener('click', () => {
+                speechManager.replayLastSpeech();
+            });
+            
+            // Settings
+            document.getElementById('voiceSelect').addEventListener('change', (e) => {
+                const voices = speechManager.getAvailableVoices();
+                const selectedVoice = voices[e.target.value];
+                if (selectedVoice) {
+                    speechManager.setVoice(selectedVoice);
+                }
+            });
+            
+            document.getElementById('rateSlider').addEventListener('input', (e) => {
+                const rate = parseFloat(e.target.value);
+                speechManager.setTTSRate(rate);
+                document.getElementById('rateValue').textContent = rate.toFixed(1);
+            });
+            
+            document.getElementById('pitchSlider').addEventListener('input', (e) => {
+                const pitch = parseFloat(e.target.value);
+                speechManager.setTTSPitch(pitch);
+                document.getElementById('pitchValue').textContent = pitch.toFixed(1);
+            });
+            
+            document.getElementById('volumeSlider').addEventListener('input', (e) => {
+                const volume = parseFloat(e.target.value);
+                speechManager.setTTSVolume(volume);
+                document.getElementById('volumeValue').textContent = volume.toFixed(1);
+            });
+            
+            document.getElementById('autoPlayCheck').addEventListener('change', (e) => {
+                speechManager.updateTTSConfig({ autoPlay: e.target.checked });
+            });
+            
+            document.getElementById('fallbackCheck').addEventListener('change', (e) => {
+                speechManager.updateTTSConfig({ fallbackToText: e.target.checked });
+            });
+            
+            // Test buttons
+            document.getElementById('testAIResponse').addEventListener('click', () => {
+                const aiResponse = `Here's a sample AI response with **bold text**, *italic text*, and some code: \`console.log('hello')\`. This tests the text cleaning functionality for better speech synthesis.`;
+                speechManager.processAIResponse(aiResponse);
+            });
+            
+            document.getElementById('testErrorHandling').addEventListener('click', () => {
+                // Test with invalid voice to trigger error handling
+                speechManager.speakText('Testing error handling', { voice: null });
+            });
+        }
+        
+        function init() {
+            speechManager = new VoiceSpeechManager(
+                // onTranscript
+                (transcript, isFinal) => {
+                    console.log('Transcript:', transcript, 'Final:', isFinal);
+                },
+                // onError
+                (errorCode, errorMessage) => {
+                    updateStatus(`Error: ${errorMessage}`, 'error');
+                    updateControls();
+                },
+                // onStateChange
+                (newState, oldState, data) => {
+                    console.log('State change:', oldState, '->', newState, data);
+                    
+                    switch (newState) {
+                        case 'speaking':
+                            updateStatus('Speaking...', 'success');
+                            break;
+                        case 'idle':
+                            updateStatus('Ready');
+                            break;
+                        case 'processing':
+                            updateStatus('Processing AI response...');
+                            break;
+                        case 'voices-loaded':
+                            populateVoices();
+                            break;
+                        case 'tts-fallback':
+                        case 'ai-response-fallback':
+                            updateStatus(`TTS failed: ${data.error}`, 'error');
+                            // Show fallback text
+                            const fallbackDiv = document.getElementById('fallbackText');
+                            const fallbackContent = document.getElementById('fallbackContent');
+                            fallbackContent.textContent = data.text || data.fallbackText;
+                            fallbackDiv.style.display = 'block';
+                            break;
+                        case 'speech-ended':
+                            updateStatus('Speech completed', 'success');
+                            break;
+                    }
+                    
+                    updateControls();
+                }
+            );
+            
+            setupEventHandlers();
+            updateControls();
+            
+            // Test capabilities
+            const capabilities = speechManager.getCapabilities();
+            console.log('Speech capabilities:', capabilities);
+            
+            if (!capabilities.supported) {
+                updateStatus('Speech features not fully supported in this browser', 'error');
+            } else {
+                updateStatus('Speech manager initialized successfully', 'success');
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Voice Button</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c003e, #4a148c, #12005e);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .whatsapp-voice-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+        }
+
+        .whatsapp-voice-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .whatsapp-voice-button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .test-button {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .test-button:hover {
+            background: #2575fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Voice Button Integration Test</h1>
+        
+        <p>This page tests the voice button integration exactly as it appears in the main chat.</p>
+        
+        <!-- Exact copy of the voice button from chat.html -->
+        <button type="button" id="whatsapp-voice-btn" class="whatsapp-voice-button" title="Hold to record voice message">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+        </button>
+        
+        <div>
+            <button class="test-button" onclick="testIntegration()">Test Integration</button>
+            <button class="test-button" onclick="testDirectOpen()">Test Direct Open</button>
+            <button class="test-button" onclick="clearStatus()">Clear Status</button>
+        </div>
+        
+        <div id="status" class="status">
+            Loading...
+        </div>
+    </div>
+
+    <!-- Include the voice page integration script -->
+    <script src="voice-page-integration.js"></script>
+    
+    <script>
+        let voicePageIntegration = null;
+        
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString();
+            status.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            status.scrollTop = status.scrollHeight;
+        }
+        
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '';
+        }
+        
+        function testIntegration() {
+            updateStatus('Testing voice page integration...');
+            
+            try {
+                if (!voicePageIntegration) {
+                    voicePageIntegration = new VoicePageIntegration();
+                    updateStatus('✅ VoicePageIntegration created');
+                }
+                
+                voicePageIntegration.openVoiceAssistant()
+                    .then(() => {
+                        updateStatus('✅ Voice assistant opened successfully');
+                    })
+                    .catch(error => {
+                        updateStatus('❌ Error opening voice assistant: ' + error.message);
+                    });
+                    
+            } catch (error) {
+                updateStatus('❌ Integration error: ' + error.message);
+            }
+        }
+        
+        function testDirectOpen() {
+            updateStatus('Testing direct window open...');
+            
+            try {
+                const testWindow = window.open(
+                    '/static/voice/voice-assistant.html',
+                    'voice-test',
+                    'width=900,height=700,left=100,top=100,resizable=yes'
+                );
+                
+                if (testWindow) {
+                    updateStatus('✅ Window opened successfully');
+                    
+                    // Close after 3 seconds
+                    setTimeout(() => {
+                        if (!testWindow.closed) {
+                            testWindow.close();
+                            updateStatus('Test window closed');
+                        }
+                    }, 3000);
+                } else {
+                    updateStatus('❌ Failed to open window (popup blocked?)');
+                }
+            } catch (error) {
+                updateStatus('❌ Error: ' + error.message);
+            }
+        }
+        
+        // Initialize exactly like in chat.html
+        function initializeVoicePageIntegration() {
+            try {
+                updateStatus('Initializing voice page integration...');
+                voicePageIntegration = new VoicePageIntegration();
+                updateStatus('VoicePageIntegration instance created');
+                
+                // Add click handler to WhatsApp voice button for voice page
+                const voiceBtn = document.getElementById('whatsapp-voice-btn');
+                if (voiceBtn) {
+                    updateStatus('Found voice button, setting up voice page integration');
+                    
+                    // Add new click handler for voice page (use capture to override existing handlers)
+                    voiceBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        
+                        updateStatus('Voice button clicked - opening voice assistant');
+                        
+                        // Open voice assistant page
+                        voicePageIntegration.openVoiceAssistant().catch(error => {
+                            updateStatus('Failed to open voice assistant: ' + error.message);
+                            
+                            // Show user-friendly error
+                            alert('Failed to open voice assistant: ' + error.message + '\n\nPlease allow popups and try again.');
+                        });
+                    }, true); // Use capture phase to ensure this runs first
+                    
+                    // Update button title
+                    voiceBtn.title = 'Open Voice Assistant';
+                    
+                    // Add visual indicator that this opens a new window
+                    voiceBtn.style.position = 'relative';
+                    const indicator = document.createElement('div');
+                    indicator.innerHTML = '↗';
+                    indicator.style.cssText = `
+                        position: absolute;
+                        top: -2px;
+                        right: -2px;
+                        font-size: 10px;
+                        color: rgba(255, 255, 255, 0.7);
+                        pointer-events: none;
+                        z-index: 10;
+                    `;
+                    voiceBtn.appendChild(indicator);
+                    
+                    updateStatus('Voice button configured for voice page integration');
+                } else {
+                    updateStatus('❌ Voice button not found');
+                }
+                
+                updateStatus('Voice page integration initialized successfully');
+                
+            } catch (error) {
+                updateStatus('❌ Failed to initialize voice page integration: ' + error.message);
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('Page loaded, initializing...');
+            
+            // Check if VoicePageIntegration is available
+            if (typeof VoicePageIntegration !== 'undefined') {
+                updateStatus('✅ VoicePageIntegration class available');
+                initializeVoicePageIntegration();
+            } else {
+                updateStatus('❌ VoicePageIntegration class not found');
+            }
+        });
+    </script>
+</body>
+</html>

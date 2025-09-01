@@ -114,7 +114,9 @@ class MemoryLayerManager:
         if config_errors:
             self.logger.warning(f"Configuration validation errors: {config_errors}")
         
-        self.logger.info("Memory Layer Manager initialized")
+        self.logger.info(f"Memory Layer Manager initialized with config: storage={self.config.enable_database_storage}, "
+                        f"context_retrieval={self.config.enable_context_retrieval}, "
+                        f"tool_analytics={self.config.enable_tool_analytics}")
     
     def _get_session(self) -> Session:
         """Get database session"""
@@ -600,6 +602,85 @@ class MemoryLayerManager:
         except Exception as e:
             self._log_error('get_user_conversation_history', e)
             return []
+        
+        finally:
+            if session:
+                self._close_session(session)
+    
+    def cleanup_user_session_data(self, user_id: str, session_id: Optional[str] = None) -> CleanupResult:
+        """
+        Clean up memory data for a specific user session (called on logout).
+        
+        Args:
+            user_id: User ID to clean up data for
+            session_id: Optional specific session ID to clean up
+            
+        Returns:
+            CleanupResult with details of cleanup operation
+        """
+        start_time = time.time()
+        session = None
+        result = CleanupResult()
+        
+        try:
+            session = self._get_session()
+            
+            # Build base query for user
+            base_query_filter = EnhancedChatHistory.user_id == user_id
+            
+            # If specific session provided, filter by session too
+            if session_id:
+                base_query_filter = and_(base_query_filter, EnhancedChatHistory.session_id == session_id)
+            
+            # Clean up user's conversation data (keep recent conversations but clean old ones)
+            # Only clean conversations older than 1 hour for logout cleanup
+            conversation_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+            
+            old_conversations = session.query(EnhancedChatHistory).filter(
+                and_(
+                    base_query_filter,
+                    EnhancedChatHistory.created_at < conversation_cutoff
+                )
+            )
+            result.conversations_cleaned = old_conversations.count()
+            old_conversations.delete()
+            
+            # Clean up user's context cache entries (only by user_id since no session_id field exists)
+            user_cache_entries = session.query(MemoryContextCache).filter(
+                MemoryContextCache.user_id == user_id
+            )
+            # Note: MemoryContextCache doesn't have session_id field, so we can't filter by it
+            
+            result.context_entries_cleaned = user_cache_entries.count()
+            user_cache_entries.delete()
+            
+            # Clean up old tool usage metrics (older than 24 hours)
+            # Note: ToolUsageMetrics doesn't have user_id field, so we clean by age only
+            metrics_cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+            old_metrics = session.query(ToolUsageMetrics).filter(
+                ToolUsageMetrics.created_at < metrics_cutoff
+            )
+            result.tool_metrics_cleaned = old_metrics.count()
+            old_metrics.delete()
+            
+            session.commit()
+            
+            result.cleanup_duration = time.time() - start_time
+            
+            if self.config.log_memory_operations:
+                self.logger.info(f"User logout cleanup completed for user {user_id} in {result.cleanup_duration:.3f}s: "
+                               f"{result.conversations_cleaned} conversations, "
+                               f"{result.context_entries_cleaned} cache entries, "
+                               f"{result.tool_metrics_cleaned} tool metrics")
+            
+            return result
+            
+        except Exception as e:
+            if session:
+                session.rollback()
+            self._log_error('cleanup_user_session_data', e)
+            result.errors.append(str(e))
+            return result
         
         finally:
             if session:

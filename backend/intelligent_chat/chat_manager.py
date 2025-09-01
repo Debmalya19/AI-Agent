@@ -65,14 +65,11 @@ class ChatManager(BaseChatManager):
         self.context_retriever = context_retriever
         self.response_renderer = response_renderer
         
-        # Initialize memory layer integration
-        self.memory_manager = memory_manager or (MemoryLayerManager() if MemoryLayerManager else None)
+        # Initialize memory layer integration - use provided instance to avoid duplicates
+        self.memory_manager = memory_manager
         
-        # Only auto-create context engine if requested and available
-        if context_engine is None and auto_create_context_engine and ContextRetrievalEngine:
-            self.context_engine = ContextRetrievalEngine()
-        else:
-            self.context_engine = context_engine
+        # Use provided context engine to avoid duplicates
+        self.context_engine = context_engine
         
         # LLM and Agent integration
         self.llm = llm

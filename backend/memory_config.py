@@ -85,6 +85,12 @@ class PerformanceConfig:
     enable_background_cleanup: bool = True
     cleanup_worker_threads: int = 2
     memory_usage_check_interval: int = 300  # seconds
+    
+    # Intelligent chat orchestrator priority settings
+    prioritize_intelligent_chat: bool = True
+    intelligent_chat_cache_size: int = 100
+    intelligent_chat_priority_weight: float = 0.9
+    context_retrieval_max_results: int = 5
 
 
 @dataclass
@@ -236,7 +242,11 @@ class MemoryConfig:
                 'enable_query_optimization': self.performance.enable_query_optimization,
                 'enable_background_cleanup': self.performance.enable_background_cleanup,
                 'cleanup_worker_threads': self.performance.cleanup_worker_threads,
-                'memory_usage_check_interval': self.performance.memory_usage_check_interval
+                'memory_usage_check_interval': self.performance.memory_usage_check_interval,
+                'prioritize_intelligent_chat': self.performance.prioritize_intelligent_chat,
+                'intelligent_chat_cache_size': self.performance.intelligent_chat_cache_size,
+                'intelligent_chat_priority_weight': self.performance.intelligent_chat_priority_weight,
+                'context_retrieval_max_results': self.performance.context_retrieval_max_results
             },
             'security': {
                 'encrypt_sensitive_data': self.security.encrypt_sensitive_data,

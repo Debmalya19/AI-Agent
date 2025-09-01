@@ -27,9 +27,9 @@ class EnhancedRAGOrchestrator:
         # Legacy context memory for backward compatibility
         self.context_memory = context_memory
         
-        # Memory layer components
-        self.memory_manager = memory_manager or MemoryLayerManager()
-        self.context_engine = context_engine or ContextRetrievalEngine()
+        # Memory layer components - use provided instances to avoid duplicates
+        self.memory_manager = memory_manager
+        self.context_engine = context_engine
         self.analytics = analytics or ToolUsageAnalytics()
         
         # Performance tracking
@@ -266,28 +266,29 @@ class EnhancedRAGOrchestrator:
         """Get a summary of relevant context for a query using memory layer"""
         try:
             # Get enhanced context from memory layer
-            enhanced_context = self.context_engine.get_relevant_context(query, user_id, limit=3)
-            
-            if not enhanced_context:
-                # Fallback to legacy context
-                recent_context = self.context_memory.get_recent_context(query, limit=2)
-                if not recent_context:
-                    return ""
+            if self.context_engine:
+                enhanced_context = self.context_engine.get_relevant_context(query, user_id, limit=3)
                 
-                summary = "Context from recent conversations:\n"
-                for ctx in recent_context:
-                    summary += f"- {ctx['user_query']}: {ctx['response'][:100]}...\n"
-                return summary
+                if enhanced_context:
+                    # Format enhanced context
+                    summary = "Relevant context from conversation history:\n"
+                    for ctx in enhanced_context:
+                        if ctx.context_type == "user_message":
+                            summary += f"- Previous question: {ctx.content[:100]}...\n"
+                        elif ctx.context_type == "bot_response":
+                            summary += f"- Previous answer: {ctx.content[:100]}...\n"
+                    return summary
             
-            # Format enhanced context
-            summary = "Relevant context from conversation history:\n"
-            for ctx in enhanced_context:
-                if ctx.context_type == "user_message":
-                    summary += f"- Previous question: {ctx.content[:100]}...\n"
-                elif ctx.context_type == "bot_response":
-                    summary += f"- Previous answer: {ctx.content[:100]}...\n"
+            # Fallback to legacy context
+            if self.context_memory:
+                recent_context = self.context_memory.get_recent_context(query, limit=2)
+                if recent_context:
+                    summary = "Context from recent conversations:\n"
+                    for ctx in recent_context:
+                        summary += f"- {ctx['user_query']}: {ctx['response'][:100]}...\n"
+                    return summary
             
-            return summary
+            return ""
             
         except Exception as e:
             self.logger.error(f"Context summary error: {e}")
@@ -296,6 +297,10 @@ class EnhancedRAGOrchestrator:
     def _get_enhanced_context(self, query: str, user_id: str) -> List[Dict[str, Any]]:
         """Get context from enhanced memory layer"""
         try:
+            if not self.context_engine:
+                self.logger.debug("Context engine not available, skipping enhanced context")
+                return []
+                
             context_entries = self.context_engine.get_relevant_context(query, user_id, limit=3)
             
             results = []
@@ -320,6 +325,10 @@ class EnhancedRAGOrchestrator:
     def _get_legacy_context(self, query: str) -> List[Dict[str, Any]]:
         """Get context from legacy memory for backward compatibility"""
         try:
+            if not self.context_memory:
+                self.logger.debug("Legacy context memory not available, skipping legacy context")
+                return []
+                
             recent_context = self.context_memory.get_recent_context(query, limit=2)
             
             results = []
@@ -378,14 +387,15 @@ class EnhancedRAGOrchestrator:
         """Store search context in memory layer for future use"""
         try:
             # Store in legacy memory for backward compatibility
-            self.context_memory.add_context(f"query_{hash(query)}", {
-                'query': query,
-                'results_count': len(results),
-                'timestamp': datetime.now()
-            }, ttl=3600)
+            if self.context_memory:
+                self.context_memory.add_context(f"query_{hash(query)}", {
+                    'query': query,
+                    'results_count': len(results),
+                    'timestamp': datetime.now()
+                }, ttl=3600)
             
             # Store enhanced context in memory layer
-            if results:
+            if self.context_engine and results:
                 context_data = {
                     'query': query,
                     'results_summary': [
@@ -427,40 +437,50 @@ class EnhancedRAGOrchestrator:
                                user_id: str = "default") -> List[str]:
         """Get tool recommendations using analytics"""
         try:
-            recommendations = self.analytics.get_tool_recommendations(
-                query=query,
-                available_tools=available_tools,
-                max_recommendations=len(available_tools)
-            )
-            
-            # Extract tool names in order of confidence
-            recommended_tools = [rec.tool_name for rec in recommendations]
-            
-            # Add any tools not in recommendations
-            for tool in available_tools:
-                if tool not in recommended_tools:
-                    recommended_tools.append(tool)
-            
-            self.logger.info(f"Tool recommendations for query: {recommended_tools[:3]}")
-            return recommended_tools
+            if self.analytics:
+                recommendations = self.analytics.get_tool_recommendations(
+                    query=query,
+                    available_tools=available_tools,
+                    max_recommendations=len(available_tools)
+                )
+                
+                # Extract tool names in order of confidence
+                recommended_tools = [rec.tool_name for rec in recommendations]
+                
+                # Add any tools not in recommendations
+                for tool in available_tools:
+                    if tool not in recommended_tools:
+                        recommended_tools.append(tool)
+                
+                self.logger.info(f"Tool recommendations for query: {recommended_tools[:3]}")
+                return recommended_tools
             
         except Exception as e:
             self.logger.error(f"Error getting tool recommendations: {e}")
-            # Fallback to legacy tool selection
-            query_type = analyze_query_type(query)
-            return self.context_memory.get_tool_usage_pattern(query_type)
+        
+        # Fallback to legacy tool selection or simple ordering
+        try:
+            if self.context_memory:
+                query_type = analyze_query_type(query)
+                return self.context_memory.get_tool_usage_pattern(query_type)
+        except Exception:
+            pass
+        
+        # Final fallback - return tools as-is
+        return available_tools
     
     def record_tool_usage(self, tool_name: str, query: str, success: bool, 
                          response_quality: float, response_time: Optional[float] = None):
         """Record tool usage for analytics"""
         try:
-            self.analytics.record_tool_usage(
-                tool_name=tool_name,
-                query=query,
-                success=success,
-                response_quality=response_quality,
-                response_time=response_time
-            )
+            if self.analytics:
+                self.analytics.record_tool_usage(
+                    tool_name=tool_name,
+                    query=query,
+                    success=success,
+                    response_quality=response_quality,
+                    response_time=response_time
+                )
             
         except Exception as e:
             self.logger.error(f"Error recording tool usage: {e}")
@@ -470,24 +490,26 @@ class EnhancedRAGOrchestrator:
                          response_quality_score: float = 0.8):
         """Store conversation in memory layer"""
         try:
-            conversation = ConversationEntryDTO(
-                session_id=session_id,
-                user_id=user_id,
-                user_message=user_message,
-                bot_response=bot_response,
-                tools_used=tools_used,
-                tool_performance={tool: 0.8 for tool in tools_used},  # Default performance
-                context_used=[],
-                response_quality_score=response_quality_score,
-                timestamp=datetime.now()
-            )
-            
-            success = self.memory_manager.store_conversation(conversation)
-            if success:
-                self.logger.info(f"Stored conversation for user {user_id}")
+            if self.memory_manager:
+                conversation = ConversationEntryDTO(
+                    session_id=session_id,
+                    user_id=user_id,
+                    user_message=user_message,
+                    bot_response=bot_response,
+                    tools_used=tools_used,
+                    tool_performance={tool: 0.8 for tool in tools_used},  # Default performance
+                    context_used=[],
+                    response_quality_score=response_quality_score,
+                    timestamp=datetime.now()
+                )
+                
+                success = self.memory_manager.store_conversation(conversation)
+                if success:
+                    self.logger.info(f"Stored conversation for user {user_id}")
             
             # Also store in legacy memory for backward compatibility
-            self.context_memory.add_conversation(user_message, bot_response, tools_used)
+            if self.context_memory:
+                self.context_memory.add_conversation(user_message, bot_response, tools_used)
             
         except Exception as e:
             self.logger.error(f"Error storing conversation: {e}")
@@ -497,9 +519,17 @@ class EnhancedRAGOrchestrator:
         try:
             stats = {
                 'operation_times': {},
-                'memory_stats': self.memory_manager.get_memory_stats().to_dict(),
-                'cache_stats': self.context_engine.get_cache_stats()
+                'memory_stats': {},
+                'cache_stats': {}
             }
+            
+            # Get memory stats if available
+            if self.memory_manager:
+                stats['memory_stats'] = self.memory_manager.get_memory_stats().to_dict()
+            
+            # Get cache stats if available
+            if self.context_engine and hasattr(self.context_engine, 'get_cache_stats'):
+                stats['cache_stats'] = self.context_engine.get_cache_stats()
             
             # Calculate average operation times
             for op, times in self._operation_times.items():
