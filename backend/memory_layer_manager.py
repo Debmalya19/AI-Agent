@@ -610,78 +610,91 @@ class MemoryLayerManager:
     def cleanup_user_session_data(self, user_id: str, session_id: Optional[str] = None) -> CleanupResult:
         """
         Clean up memory data for a specific user session (called on logout).
-        
+
         Args:
             user_id: User ID to clean up data for
             session_id: Optional specific session ID to clean up
-            
+
         Returns:
             CleanupResult with details of cleanup operation
         """
         start_time = time.time()
         session = None
         result = CleanupResult()
-        
+
         try:
             session = self._get_session()
-            
-            # Build base query for user
-            base_query_filter = EnhancedChatHistory.user_id == user_id
-            
+
+            # Clean up user's conversation data
+            conversation_query = session.query(EnhancedChatHistory).filter(
+                EnhancedChatHistory.user_id == user_id
+            )
+
             # If specific session provided, filter by session too
             if session_id:
-                base_query_filter = and_(base_query_filter, EnhancedChatHistory.session_id == session_id)
-            
-            # Clean up user's conversation data (keep recent conversations but clean old ones)
-            # Only clean conversations older than 1 hour for logout cleanup
-            conversation_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
-            
-            old_conversations = session.query(EnhancedChatHistory).filter(
-                and_(
-                    base_query_filter,
-                    EnhancedChatHistory.created_at < conversation_cutoff
+                conversation_query = conversation_query.filter(
+                    EnhancedChatHistory.session_id == session_id
                 )
+
+            # For logout cleanup, only clean conversations older than 1 hour
+            # to preserve recent conversation context
+            conversation_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+            old_conversations = conversation_query.filter(
+                EnhancedChatHistory.created_at < conversation_cutoff
             )
             result.conversations_cleaned = old_conversations.count()
             old_conversations.delete()
-            
-            # Clean up user's context cache entries (only by user_id since no session_id field exists)
-            user_cache_entries = session.query(MemoryContextCache).filter(
+
+            # Clean up user's context cache entries
+            # MemoryContextCache has user_id field but no session_id field
+            cache_query = session.query(MemoryContextCache).filter(
                 MemoryContextCache.user_id == user_id
             )
-            # Note: MemoryContextCache doesn't have session_id field, so we can't filter by it
-            
-            result.context_entries_cleaned = user_cache_entries.count()
-            user_cache_entries.delete()
-            
-            # Clean up old tool usage metrics (older than 24 hours)
-            # Note: ToolUsageMetrics doesn't have user_id field, so we clean by age only
+
+            # For session-specific cleanup, we can only filter by user_id
+            # since MemoryContextCache doesn't have session_id field
+            result.context_entries_cleaned = cache_query.count()
+            cache_query.delete()
+
+            # Clean up tool usage metrics
+            # ToolUsageMetrics doesn't have user_id or session_id fields
+            # So we clean by age only (older than 24 hours)
             metrics_cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
             old_metrics = session.query(ToolUsageMetrics).filter(
                 ToolUsageMetrics.created_at < metrics_cutoff
             )
             result.tool_metrics_cleaned = old_metrics.count()
             old_metrics.delete()
-            
+
             session.commit()
-            
+
             result.cleanup_duration = time.time() - start_time
-            
+
             if self.config.log_memory_operations:
-                self.logger.info(f"User logout cleanup completed for user {user_id} in {result.cleanup_duration:.3f}s: "
-                               f"{result.conversations_cleaned} conversations, "
-                               f"{result.context_entries_cleaned} cache entries, "
-                               f"{result.tool_metrics_cleaned} tool metrics")
-            
+                cleanup_details = []
+                if result.conversations_cleaned > 0:
+                    cleanup_details.append(f"{result.conversations_cleaned} conversations")
+                if result.context_entries_cleaned > 0:
+                    cleanup_details.append(f"{result.context_entries_cleaned} cache entries")
+                if result.tool_metrics_cleaned > 0:
+                    cleanup_details.append(f"{result.tool_metrics_cleaned} tool metrics")
+
+                if cleanup_details:
+                    self.logger.info(f"User logout cleanup completed for user {user_id} in {result.cleanup_duration:.3f}s: "
+                                   f"{', '.join(cleanup_details)}")
+                else:
+                    self.logger.info(f"User logout cleanup completed for user {user_id} in {result.cleanup_duration:.3f}s: "
+                                   "No data to clean")
+
             return result
-            
+
         except Exception as e:
             if session:
                 session.rollback()
             self._log_error('cleanup_user_session_data', e)
             result.errors.append(str(e))
             return result
-        
+
         finally:
             if session:
                 self._close_session(session)

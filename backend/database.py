@@ -22,8 +22,10 @@ try:
         connect_args={"connect_timeout": 5}  # 5 second timeout
     )
 except Exception as e:
-    print(f"Warning: Failed to create database engine: {e}")
-    print("Database functionality will be limited")
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"Failed to create database engine: {e}")
+    logger.warning("Database functionality will be limited")
     engine = None
 
 # Create session factory
@@ -48,6 +50,8 @@ def get_db():
 # Initialize database function
 def init_db():
     """Initialize database by creating all tables"""
-    print("Creating database tables...")
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("Creating database tables...")
     Base.metadata.create_all(bind=engine)
-    print("Database tables created successfully.")
+    logger.info("Database tables created successfully.")

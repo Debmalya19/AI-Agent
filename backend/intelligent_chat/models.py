@@ -3,7 +3,7 @@ Data models and interfaces for the intelligent chat UI system.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Any, Optional
 from abc import ABC, abstractmethod
@@ -86,7 +86,7 @@ class ChatResponse:
     confidence_score: float = 0.0
     execution_time: float = 0.0
     ui_hints: Dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(default_factory=datetime.now)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass

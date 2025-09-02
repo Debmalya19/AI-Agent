@@ -210,7 +210,7 @@ class PrivacyUtils:
                 dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
                 fuzzed = self._fuzz_timestamp(dt)
                 return fuzzed.isoformat()
-            except:
+            except Exception:
                 return timestamp
         
         return timestamp

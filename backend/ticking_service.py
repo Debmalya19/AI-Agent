@@ -3,7 +3,7 @@ Ticking Service - Business logic for ticket management
 """
 
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from backend.models import Ticket, TicketComment, TicketActivity, TicketStatus, TicketPriority, TicketCategory
@@ -72,10 +72,10 @@ class TickingService:
             
         old_status = ticket.status
         ticket.status = new_status
-        ticket.updated_at = datetime.utcnow()
+        ticket.updated_at = datetime.now(timezone.utc)
         
         if new_status == TicketStatus.RESOLVED:
-            ticket.resolved_at = datetime.utcnow()
+            ticket.resolved_at = datetime.now(timezone.utc)
             
         self.db.commit()
         
@@ -94,7 +94,7 @@ class TickingService:
             return False
             
         ticket.assigned_agent_id = agent_id
-        ticket.updated_at = datetime.utcnow()
+        ticket.updated_at = datetime.now(timezone.utc)
         self.db.commit()
         
         # Log activity
@@ -179,7 +179,7 @@ class TicketContextRetriever:
     def get_customer_context(self, user_id: int) -> Dict[str, Any]:
         """Get customer context for ticket creation"""
         
-        from models import Customer, Order
+        from backend.models import Customer, Order
         
         customer = self.db.query(Customer).filter(Customer.id == user_id).first()
         if not customer:

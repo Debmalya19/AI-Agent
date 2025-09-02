@@ -64,7 +64,7 @@ class ResponseRenderer(BaseResponseRenderer):
             try:
                 content_type = self.detect_content_type(content)
                 content_type_value = content_type.value
-            except:
+            except Exception:
                 content_type_value = None
             
             raise RenderingError(
@@ -500,7 +500,7 @@ class ResponseRenderer(BaseResponseRenderer):
                 import json
                 parsed = json.loads(content)
                 return json.dumps(parsed, indent=2, ensure_ascii=False)
-            except:
+            except Exception:
                 return content
         
         return content.strip()

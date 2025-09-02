@@ -135,7 +135,7 @@ def scrape_bt_website(query: str, max_pages: int = 5) -> str:
                 contexts = context_memory.retrieve_context(query, "system", 1)
                 if contexts:
                     cached_result = contexts[0].content
-            except:
+            except Exception:
                 cached_result = None
         
         if cached_result:
@@ -529,7 +529,7 @@ def create_ticket_tool(query: str, user_id: Optional[Union[int, str]] = None) ->
             # Try to get customer details from the User table if we have a numeric ID
             if processed_user_id:
                 try:
-                    from models import User
+                    from backend.models import User
                     user = db.query(User).filter(User.user_id == processed_user_id).first()
                     if user:
                         customer_info = f"Customer ID: {processed_user_id}\nCustomer Email: {user.email if hasattr(user, 'email') else 'N/A'}\n"
@@ -611,7 +611,7 @@ This ticket was automatically created based on the customer's chat interaction w
                 # Rollback the failed transaction
                 try:
                     db.rollback()
-                except:
+                except Exception:
                     pass
                 
                 # Update metadata to reflect this

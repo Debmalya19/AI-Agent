@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, JSON, Enum, Boolean
 from sqlalchemy.orm import relationship
 from backend.database import Base
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 
 # Memory layer models are imported directly where needed to avoid circular imports
@@ -68,8 +68,8 @@ class Ticket(Base):
     assigned_agent_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     resolved_at = Column(DateTime, nullable=True)
     
     # Additional fields
@@ -90,8 +90,8 @@ class TicketComment(Base):
     author_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
     comment = Column(Text, nullable=False)
     is_internal = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
     # Relationships
     ticket = relationship("Ticket", back_populates="comments")
     author = relationship("Customer")
@@ -104,7 +104,7 @@ class TicketActivity(Base):
     activity_type = Column(String(50), nullable=False)  # status_change, comment_added, assigned, etc.
     description = Column(Text, nullable=False)
     performed_by_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     ticket = relationship("Ticket", back_populates="activities")
@@ -118,7 +118,7 @@ class Order(Base):
     customer_id = Column(Integer, ForeignKey("customers.customer_id"))
     order_date = Column(DateTime)
     amount = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     customer = relationship("Customer", back_populates="orders")
 
@@ -130,7 +130,7 @@ class SupportIntent(Base):
     intent_name = Column(String(255))
     description = Column(Text)
     category = Column(String(100))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     responses = relationship("SupportResponse", back_populates="intent")
 
@@ -141,8 +141,8 @@ class SupportResponse(Base):
     intent_id = Column(String(50), ForeignKey("support_intents.intent_id"))
     response_text = Column(Text)
     response_type = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
     intent = relationship("SupportIntent", back_populates="responses")
 
 class ChatHistory(Base):
@@ -154,7 +154,7 @@ class ChatHistory(Base):
     bot_response = Column(Text)
     tools_used = Column(JSON)
     sources = Column(JSON)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class User(Base):
     __tablename__ = "users"
@@ -167,8 +167,8 @@ class User(Base):
     full_name = Column(String(255))
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     sessions = relationship("UserSession", back_populates="user")
     voice_settings = relationship("VoiceSettings", back_populates="user", uselist=False)
@@ -181,9 +181,9 @@ class UserSession(Base):
     session_id = Column(String(255), unique=True, index=True, nullable=False)
     user_id = Column(String(50), ForeignKey("users.user_id"), nullable=False)
     token_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     expires_at = Column(DateTime, nullable=False)
-    last_accessed = Column(DateTime, default=datetime.utcnow)
+    last_accessed = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
     
     user = relationship("User", back_populates="sessions")
@@ -202,8 +202,8 @@ class VoiceSettings(Base):
     language = Column(String(10), default="en-US", nullable=False)
     microphone_sensitivity = Column(Float, default=0.5, nullable=False)
     noise_cancellation = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     
     # Relationship
     user = relationship("User", back_populates="voice_settings")
@@ -222,7 +222,7 @@ class VoiceAnalytics(Base):
     accuracy_score = Column(Float)
     error_message = Column(Text)
     analytics_metadata = Column(JSON)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     # Relationship
     user = relationship("User", back_populates="voice_analytics")

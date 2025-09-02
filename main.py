@@ -491,27 +491,9 @@ async def cleanup_memory_task():
         # Wait for next cleanup interval (convert hours to seconds)
         await asyncio.sleep(memory_config.retention.cleanup_interval_hours * 3600)
 
-# Background cleanup task (now handled in lifespan)
-async def cleanup_memory_task():
-    """Background task to clean up old memory entries"""
-    while True:
-        try:
-            # Perform memory cleanup
-            if memory_manager:
-                # Use memory manager's cleanup functionality
-                # This would typically clean up old conversations, expired sessions, etc.
-                logger.info("Running memory cleanup task...")
-                # Add actual cleanup logic here based on your memory manager's API
-        except Exception as e:
-            logger.error(f"Memory cleanup task error: {e}")
-        
-        # Wait for next cleanup interval (convert hours to seconds)
-        await asyncio.sleep(memory_config.retention.cleanup_interval_hours * 3600)
+# Duplicate cleanup_memory_task function removed - using the one above
 
 # Startup logic moved to lifespan function above
-        
-        logger.info("Application startup completed successfully")
-# Old startup/shutdown code removed - now handled by lifespan function
 
 # Learning and insights endpoints
 @app.get("/learning/insights")
@@ -1503,10 +1485,6 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
 
 # Duplicate logout endpoint removed - using the enhanced one above with memory cleanup
-        
-    except Exception as e:
-        logger.error(f"Logout error: {e}")
-        raise HTTPException(status_code=500, detail="Logout failed")
 
 # Get current user info
 @app.get("/me")

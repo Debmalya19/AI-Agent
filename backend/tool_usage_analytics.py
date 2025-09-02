@@ -741,5 +741,5 @@ class ToolUsageAnalytics:
         if hasattr(self, 'db_session') and self.db_session:
             try:
                 self.db_session.close()
-            except:
+            except Exception:
                 pass

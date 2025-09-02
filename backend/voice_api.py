@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Cookie, Depends
 from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any, List
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from backend.database import get_db
 from backend.models import User, UserSession, VoiceSettings as VoiceSettingsDB, VoiceAnalytics as VoiceAnalyticsDB
@@ -37,7 +37,7 @@ def get_current_user(session_token: str = Cookie(None), db: Session = Depends(ge
         raise HTTPException(status_code=401, detail="Invalid or expired session")
     
     # Update last accessed time
-    user_session.last_accessed = datetime.utcnow()
+    user_session.last_accessed = datetime.now(timezone.utc)
     db.commit()
     
     return user_session.user_id
@@ -234,7 +234,7 @@ async def update_voice_settings(
             if settings_update.noise_cancellation is not None:
                 voice_settings_db.noise_cancellation = settings_update.noise_cancellation
             
-            voice_settings_db.updated_at = datetime.utcnow()
+            voice_settings_db.updated_at = datetime.now(timezone.utc)
             
         else:
             # Create new settings with defaults, then apply updates
@@ -735,7 +735,7 @@ async def get_voice_production_config(
         return {
             "success": True,
             "config": config,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -778,7 +778,7 @@ async def get_voice_system_metrics(
         return {
             "success": True,
             "metrics": metrics,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except HTTPException:

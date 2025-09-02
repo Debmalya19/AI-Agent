@@ -8,7 +8,7 @@ import sys
 import os
 import hashlib
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -114,7 +114,7 @@ class ChatManager(BaseChatManager):
             cached_response = response_cache.get_response(message, context_hash)
             if cached_response:
                 # Update timestamp for cached response
-                cached_response.timestamp = datetime.now()
+                cached_response.timestamp = datetime.now(timezone.utc)
                 cached_response.ui_hints["cached"] = True
                 return cached_response
             
@@ -210,7 +210,7 @@ class ChatManager(BaseChatManager):
                     "tools_count": len(tools_used),
                     "cached": False
                 },
-                timestamp=datetime.now()
+                timestamp=datetime.now(timezone.utc)
             )
             
             # Store conversation in memory layer with learning updates
@@ -244,7 +244,7 @@ class ChatManager(BaseChatManager):
                 await self._store_conversation_in_memory(
                     user_id, session_id, message, error_response, [], {}, []
                 )
-            except:
+            except Exception:
                 pass  # Don't fail on storage error
             
             # Update session state even for errors
@@ -325,9 +325,9 @@ class ChatManager(BaseChatManager):
             self._active_sessions[session_key] = {
                 "user_id": user_id,
                 "session_id": session_id,
-                "created_at": datetime.now(),
+                "created_at": datetime.now(timezone.utc),
                 "message_count": 0,
-                "last_activity": datetime.now(),
+                "last_activity": datetime.now(timezone.utc),
                 "conversation_history": []  # Track conversation within session
             }
     
@@ -347,7 +347,7 @@ class ChatManager(BaseChatManager):
                             content=msg["content"],
                             source=f"session_{session_id}",
                             relevance_score=1.0,  # High relevance for same session
-                            timestamp=msg.get("timestamp", datetime.now()),
+                            timestamp=msg.get("timestamp", datetime.now(timezone.utc)),
                             context_type=msg["type"],
                             metadata={"session_id": session_id, "recent": True}
                         ))
@@ -617,7 +617,7 @@ class ChatManager(BaseChatManager):
         if session_key in self._active_sessions:
             session = self._active_sessions[session_key]
             session["message_count"] += 1
-            session["last_activity"] = datetime.now()
+            session["last_activity"] = datetime.now(timezone.utc)
             session["last_message"] = message
             session["last_response"] = response.content
             session["total_processing_time"] = session.get("total_processing_time", 0.0) + response.execution_time
@@ -631,14 +631,14 @@ class ChatManager(BaseChatManager):
             session["conversation_history"].append({
                 "type": "user_message",
                 "content": message,
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(timezone.utc)
             })
             
             # Add bot response
             session["conversation_history"].append({
                 "type": "bot_response", 
                 "content": response.content,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "tools_used": response.tools_used,
                 "confidence_score": response.confidence_score
             })
@@ -680,7 +680,7 @@ class ChatManager(BaseChatManager):
     
     async def cleanup_inactive_sessions(self, max_age_hours: int = 24) -> int:
         """Clean up inactive sessions older than max_age_hours."""
-        cutoff_time = datetime.now() - timedelta(hours=max_age_hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
         inactive_sessions = []
         
         for session_key, session_data in self._active_sessions.items():
@@ -739,7 +739,7 @@ class ChatManager(BaseChatManager):
                 "simplified": True,
                 "reason": "resource_constraints"
             },
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
     
     def _cache_response_if_appropriate(self, message: str, context_hash: str, response: ChatResponse) -> None:
@@ -770,7 +770,7 @@ class ChatManager(BaseChatManager):
                         content=f"Based on similar queries, the {tool_recommendation.tool_name} tool has been successful with {tool_recommendation.confidence_score:.1%} confidence. {tool_recommendation.reason}",
                         source="tool_learning",
                         relevance_score=tool_recommendation.confidence_score,
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                         context_type="tool_usage",  # Use valid context type
                         metadata={
                             "tool_name": tool_recommendation.tool_name,
@@ -836,7 +836,7 @@ class ChatManager(BaseChatManager):
                     content=f"Successful tool combinations for this user: {', '.join(successful_tool_patterns)}",
                     source="tool_pattern_learning",
                     relevance_score=0.8,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                     context_type="tool_usage",  # Use valid context type
                     metadata={
                         "successful_tools": successful_tool_patterns,
