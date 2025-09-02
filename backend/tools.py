@@ -159,7 +159,7 @@ def scrape_bt_website(query: str, max_pages: int = 5) -> str:
                 search_query = f"site:{base_url} {query}"
                 from langchain_community.tools import DuckDuckGoSearchRun
                 search = DuckDuckGoSearchRun()
-                search_results = search.run(search_query)
+                search_results = search.invoke({"query": search_query})
                 
                 if search_results and len(search_results) > 100:
                     # Extract and clean the content
@@ -250,7 +250,7 @@ def bt_website_search(query: str) -> str:
         search_query = f"site:bt.com {query}"
         from langchain_community.tools import DuckDuckGoSearchRun
         search = DuckDuckGoSearchRun()
-        results = search.run(search_query)
+        results = search.invoke({"query": search_query})
         
         if not results:
             return "I couldn't find specific information about that on BT.com. Let me try a different approach."
@@ -428,7 +428,7 @@ def intelligent_tool_orchestrator(query: str) -> str:
             try:
                 from langchain_community.tools import DuckDuckGoSearchRun
                 search = DuckDuckGoSearchRun()
-                web_results = search.run(f"BT {query} 2024")
+                web_results = search.invoke({"query": f"BT {query} 2024"})
                 
                 if web_results and len(web_results) > 100:
                     comprehensive_answer.append(f"\n🔍 **Additional Web Information:**")
@@ -696,7 +696,7 @@ save_tool = save_text_to_file
 def search(query: str) -> str:
     """Search the web for information"""
     search_engine = DuckDuckGoSearchRun()
-    return search_engine.run(query)
+    return search_engine.invoke({"query": query})
 
 search_tool = search
 
@@ -705,7 +705,7 @@ def wikipedia(query: str) -> str:
     """Search Wikipedia for general information and context"""
     api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100)
     wiki_search = WikipediaQueryRun(api_wrapper=api_wrapper)
-    return wiki_search.run(query)
+    return wiki_search.invoke({"query": query})
 
 wiki_tool = wikipedia
 

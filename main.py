@@ -46,7 +46,7 @@ from backend.intelligent_chat.chat_manager import ChatManager
 from backend.intelligent_chat.tool_orchestrator import ToolOrchestrator
 from backend.intelligent_chat.context_retriever import ContextRetriever
 from backend.intelligent_chat.response_renderer import ResponseRenderer
-from backend.intelligent_chat.models import ChatResponse as IntelligentChatResponse, UIState
+from backend.intelligent_chat.models import ChatResponse as IntelligentChatResponse, ContentType, UIState
 
 # Voice assistant imports
 from backend.voice_api import voice_router
