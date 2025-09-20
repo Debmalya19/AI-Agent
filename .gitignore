@@ -3,32 +3,26 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Environment
+# Environment variables
 .env
-.venv
-env/
-venv/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-
-# Logs
-*.log
 
 # Database
 *.db
 *.sqlite3
 
-# Cache
+# Configuration files with sensitive data
+config/twitter_config.json
+
+# Cache and temp files
 .cache/
 .pytest_cache/
 
-# Build
-dist/
-build/
-*.egg-info/
+# IDE specific files
+.vscode/
+.idea/
 
-# Local config
-config/twitter_config.json
+# Migration files
+backend/migrations/
+
+# Logs
+*.log
