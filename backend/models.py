@@ -25,6 +25,7 @@ class TicketCategory(enum.Enum):
     GENERAL = "general"
     FEATURE_REQUEST = "feature_request"
     BUG_REPORT = "bug_report"
+    SOCIAL_MEDIA = "social_media"
 
 class KnowledgeEntry(Base):
     __tablename__ = "knowledge_entries"

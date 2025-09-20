@@ -48,6 +48,9 @@ from backend.intelligent_chat.context_retriever import ContextRetriever
 from backend.intelligent_chat.response_renderer import ResponseRenderer
 from backend.intelligent_chat.models import ChatResponse as IntelligentChatResponse, ContentType, UIState
 
+# Ticket handling imports
+from backend.ticket_chat_handler import TicketChatHandler
+
 # Voice assistant imports
 from backend.voice_api import voice_router
 
@@ -1082,6 +1085,17 @@ async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(N
                 
                 if tools_used:
                     logger.info(f"Inferred tools from response content: {tools_used}")
+        
+        # Try ticket-related queries first
+        ticket_handler = TicketChatHandler()
+        ticket_response = ticket_handler.handle_ticket_query(chat_request.query, user_id)
+        
+        if ticket_response:
+            summary = ticket_response['response']
+            tools_used.append('TicketHandler')
+            tool_performance['TicketHandler'] = 1.0
+            if 'ticket_info' in ticket_response:
+                context_used.append(f"ticket_{ticket_response['ticket_info']['ticket_id']}")
         
         # If still no tools used, manually trigger appropriate tools based on query content
         if not tools_used:
