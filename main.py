@@ -1408,7 +1408,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
             stored_hash = user.password_hash
 
             # Debugging logs
-            logger.info(f"🔑 Raw entered password: {password}")
+            # logger.info(f"🔑 Raw entered password: {password}")    # Removed to avoid logging sensitive data
             logger.info(f"🔑 Stored hash in DB: {stored_hash}")
 
             # --- Password Validation ---
