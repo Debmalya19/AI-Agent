@@ -1,0 +1,42 @@
+{
+    "twitter": {
+        "api_key": "${TWITTER_API_KEY}",
+        "api_key_secret": "${TWITTER_API_SECRET}",
+        "access_token": "${TWITTER_ACCESS_TOKEN}",
+        "access_token_secret": "${TWITTER_ACCESS_SECRET}",
+        "bearer_token": "${TWITTER_BEARER_TOKEN}",
+        "webhook": {
+            "url": "https://your-domain.com/api/v1/webhook/twitter",
+            "environment": "production",
+            "security": {
+                "verify_token": "${TWITTER_WEBHOOK_VERIFY_TOKEN}",
+                "signature_version": "2"
+            }
+        },
+        "account": {
+            "handle": "your_twitter_handle",
+            "id": "your_twitter_id",
+            "auto_respond": true,
+            "response_templates": {
+                "ticket_created": "Thanks for reaching out! We've created ticket #{ticket_id} to help you. We'll keep you updated on the progress.",
+                "general_reply": "Hi! For faster assistance, please include your customer ID in your message."
+            }
+        },
+        "monitoring": {
+            "check_interval_seconds": 60,
+            "include_retweets": false,
+            "include_replies": true,
+            "keywords": [
+                "help",
+                "issue",
+                "problem",
+                "broken",
+                "not working",
+                "error",
+                "fail",
+                "bug",
+                "complaint"
+            ]
+        }
+    }
+}
