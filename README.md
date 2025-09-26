@@ -1,5 +1,3 @@
-<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/4556be25-1dc5-4912-a0a6-d0e4d507a6a7" /># AI Agent Customer Support System
-
 **© 2025 Debmalya Koner. All rights reserved.**
 
 ## Overview
@@ -57,7 +55,7 @@ A comprehensive AI-powered customer support system built with FastAPI and Google
 
 ## 🏗️ System Architecture
 
-<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/09bfcc9c-903e-47f4-8a1c-839829d391a6" />
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/4556be25-1dc5-4912-a0a6-d0e4d507a6a7" />
 
 
 ### Core Components
