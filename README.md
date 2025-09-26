@@ -1,5 +1,3 @@
-# AI Agent Customer Support System
-
 **© 2025 Debmalya Koner. All rights reserved.**
 
 ## Overview
@@ -56,6 +54,9 @@ A comprehensive AI-powered customer support system built with FastAPI and Google
 - **Voice Data Storage**: Voice interaction logs and analytics
 
 ## 🏗️ System Architecture
+
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/4556be25-1dc5-4912-a0a6-d0e4d507a6a7" />
+
 
 ### Core Components
 
