@@ -1,0 +1,402 @@
+================================================================================
+DATABASE MIGRATION REPORT
+================================================================================
+Migration ID: 20250926_153022
+Start Time: 2025-09-26 15:30:22.923530
+End Time: 2025-09-26 15:30:23.500810
+Duration: 0.58 seconds
+
+SUMMARY:
+  Total Tables: 39
+  Successful Tables: 38
+  Failed Tables: 1
+  Total Records: 119
+  Migrated Records: 108
+  Success Rate: 90.76%
+  Rollback Available: Yes
+
+TABLE RESULTS:
+  knowledge_entries:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  customers:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  users:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  user_sessions:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  voice_settings:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  voice_analytics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  tickets:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  ticket_comments:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  ticket_activities:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  orders:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  support_intents:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  support_responses:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  chat_history:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_users:
+    Status: SUCCESS
+    Records: 16/16 (100.0%)
+    Duration: 0.12s
+    Errors: 0
+
+  unified_user_sessions:
+    Status: SUCCESS
+    Records: 79/79 (100.0%)
+    Duration: 0.06s
+    Errors: 0
+
+  unified_tickets:
+    Status: FAILED
+    Records: 0/11 (0.0%)
+    Duration: 0.04s
+    Errors: 12
+      - Batch 1 failed: (psycopg2.errors.InvalidTextRepresentation) invalid input value for enum ticketstatus: "PENDING"
+LINE 1: ...ling Question', 'Question about monthly charges', 'PENDING',...
+                                                             ^
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id__0) ... 3414 characters truncated ... gs__10)s, %(ticket_metadata__10)s, %(legacy_backend_ticket_id__10)s, %(legacy_admin_ticket_id__10)s)]
+[parameters: {'updated_at__0': datetime.datetime(2025, 9, 18, 15, 19, 7, 805015), 'resolved_at__0': None, 'legacy_admin_ticket_id__0': None, 'legacy_backend_ticket_id__0': None, 'ticket_metadata__0': None, 'id__0': 1, 'description__0': 'User cannot login to the system', 'ticket_id__0': None, 'category__0': 'TECHNICAL', 'priority__0': 'HIGH', 'customer_id__0': 14, 'assigned_agent_id__0': None, 'created_at__0': datetime.datetime(2025, 9, 18, 15, 19, 7, 805011), 'tags__0': None, 'status__0': 'OPEN', 'title__0': 'Login Issue', 'updated_at__1': datetime.datetime(2025, 9, 18, 15, 19, 7, 805017), 'resolved_at__1': None, 'legacy_admin_ticket_id__1': None, 'legacy_backend_ticket_id__1': None, 'ticket_metadata__1': None, 'id__1': 2, 'description__1': 'Question about monthly charges', 'ticket_id__1': None, 'category__1': 'BILLING', 'priority__1': 'MEDIUM', 'customer_id__1': 14, 'assigned_agent_id__1': None, 'created_at__1': datetime.datetime(2025, 9, 18, 15, 19, 7, 805016), 'tags__1': None, 'status__1': 'PENDING', 'title__1': 'Billing Question', 'updated_at__2': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'resolved_at__2': None, 'legacy_admin_ticket_id__2': None, 'legacy_backend_ticket_id__2': None, 'ticket_metadata__2': None, 'id__2': 3, 'description__2': 'Request for new dashboard feature', 'ticket_id__2': None, 'category__2': 'GENERAL', 'priority__2': 'LOW', 'customer_id__2': 14, 'assigned_agent_id__2': None, 'created_at__2': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'tags__2': None, 'status__2': 'RESOLVED', 'title__2': 'Feature Request', 'updated_at__3': datetime.datetime(2025, 9, 18, 15, 45, 29, 246549), 'resolved_at__3': None ... 76 parameters truncated ... 'status__7': 'OPEN', 'title__7': 'Account Suspension', 'updated_at__8': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at__8': None, 'legacy_admin_ticket_id__8': None, 'legacy_backend_ticket_id__8': None, 'ticket_metadata__8': None, 'id__8': 9, 'description__8': 'Need to export all my data for compliance purposes.', 'ticket_id__8': None, 'category__8': 'GENERAL', 'priority__8': 'MEDIUM', 'customer_id__8': 2, 'assigned_agent_id__8': None, 'created_at__8': datetime.datetime(2025, 9, 18, 15, 45, 29, 244934), 'tags__8': None, 'status__8': 'PENDING', 'title__8': 'Data Export Request', 'updated_at__9': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at__9': None, 'legacy_admin_ticket_id__9': None, 'legacy_backend_ticket_id__9': None, 'ticket_metadata__9': None, 'id__9': 10, 'description__9': 'The mobile application keeps crashing on startup.', 'ticket_id__9': None, 'category__9': 'TECHNICAL', 'priority__9': 'HIGH', 'customer_id__9': 4, 'assigned_agent_id__9': None, 'created_at__9': datetime.datetime(2025, 9, 18, 15, 45, 29, 244964), 'tags__9': None, 'status__9': 'OPEN', 'title__9': 'Mobile App Crashes', 'updated_at__10': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at__10': None, 'legacy_admin_ticket_id__10': None, 'legacy_backend_ticket_id__10': None, 'ticket_metadata__10': None, 'id__10': 11, 'description__10': 'Requesting a refund for the premium subscription.', 'ticket_id__10': None, 'category__10': 'BILLING', 'priority__10': 'MEDIUM', 'customer_id__10': 12, 'assigned_agent_id__10': None, 'created_at__10': datetime.datetime(2025, 9, 18, 15, 45, 29, 244997), 'tags__10': None, 'status__10': 'CLOSED', 'title__10': 'Refund Request'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+      - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 1, 'ticket_id': None, 'title': 'Login Issue', 'description': 'User cannot login to the system', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805011), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805015), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+      - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 2, 'ticket_id': None, 'title': 'Billing Question', 'description': 'Question about monthly charges', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805016), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805017), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+      ... and 9 more errors
+
+  unified_ticket_comments:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_ticket_activities:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_chat_sessions:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_chat_messages:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_performance_metrics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_customer_satisfaction:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_voice_settings:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_voice_analytics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_knowledge_entries:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_orders:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_support_intents:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_support_responses:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_chat_history:
+    Status: SUCCESS
+    Records: 12/12 (100.0%)
+    Duration: 0.05s
+    Errors: 0
+
+  diagnostic_error_logs:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  enhanced_chat_history:
+    Status: SUCCESS
+    Records: 1/1 (100.0%)
+    Duration: 0.03s
+    Errors: 0
+
+  memory_context_cache:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  tool_usage_metrics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  conversation_summaries:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  memory_configuration:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  memory_health_metrics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  enhanced_user_sessions:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  data_processing_consent:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  data_subject_rights:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+OVERALL ERRORS:
+  - Batch 1 failed: (psycopg2.errors.InvalidTextRepresentation) invalid input value for enum ticketstatus: "PENDING"
+LINE 1: ...ling Question', 'Question about monthly charges', 'PENDING',...
+                                                             ^
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id__0) ... 3414 characters truncated ... gs__10)s, %(ticket_metadata__10)s, %(legacy_backend_ticket_id__10)s, %(legacy_admin_ticket_id__10)s)]
+[parameters: {'updated_at__0': datetime.datetime(2025, 9, 18, 15, 19, 7, 805015), 'resolved_at__0': None, 'legacy_admin_ticket_id__0': None, 'legacy_backend_ticket_id__0': None, 'ticket_metadata__0': None, 'id__0': 1, 'description__0': 'User cannot login to the system', 'ticket_id__0': None, 'category__0': 'TECHNICAL', 'priority__0': 'HIGH', 'customer_id__0': 14, 'assigned_agent_id__0': None, 'created_at__0': datetime.datetime(2025, 9, 18, 15, 19, 7, 805011), 'tags__0': None, 'status__0': 'OPEN', 'title__0': 'Login Issue', 'updated_at__1': datetime.datetime(2025, 9, 18, 15, 19, 7, 805017), 'resolved_at__1': None, 'legacy_admin_ticket_id__1': None, 'legacy_backend_ticket_id__1': None, 'ticket_metadata__1': None, 'id__1': 2, 'description__1': 'Question about monthly charges', 'ticket_id__1': None, 'category__1': 'BILLING', 'priority__1': 'MEDIUM', 'customer_id__1': 14, 'assigned_agent_id__1': None, 'created_at__1': datetime.datetime(2025, 9, 18, 15, 19, 7, 805016), 'tags__1': None, 'status__1': 'PENDING', 'title__1': 'Billing Question', 'updated_at__2': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'resolved_at__2': None, 'legacy_admin_ticket_id__2': None, 'legacy_backend_ticket_id__2': None, 'ticket_metadata__2': None, 'id__2': 3, 'description__2': 'Request for new dashboard feature', 'ticket_id__2': None, 'category__2': 'GENERAL', 'priority__2': 'LOW', 'customer_id__2': 14, 'assigned_agent_id__2': None, 'created_at__2': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'tags__2': None, 'status__2': 'RESOLVED', 'title__2': 'Feature Request', 'updated_at__3': datetime.datetime(2025, 9, 18, 15, 45, 29, 246549), 'resolved_at__3': None ... 76 parameters truncated ... 'status__7': 'OPEN', 'title__7': 'Account Suspension', 'updated_at__8': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at__8': None, 'legacy_admin_ticket_id__8': None, 'legacy_backend_ticket_id__8': None, 'ticket_metadata__8': None, 'id__8': 9, 'description__8': 'Need to export all my data for compliance purposes.', 'ticket_id__8': None, 'category__8': 'GENERAL', 'priority__8': 'MEDIUM', 'customer_id__8': 2, 'assigned_agent_id__8': None, 'created_at__8': datetime.datetime(2025, 9, 18, 15, 45, 29, 244934), 'tags__8': None, 'status__8': 'PENDING', 'title__8': 'Data Export Request', 'updated_at__9': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at__9': None, 'legacy_admin_ticket_id__9': None, 'legacy_backend_ticket_id__9': None, 'ticket_metadata__9': None, 'id__9': 10, 'description__9': 'The mobile application keeps crashing on startup.', 'ticket_id__9': None, 'category__9': 'TECHNICAL', 'priority__9': 'HIGH', 'customer_id__9': 4, 'assigned_agent_id__9': None, 'created_at__9': datetime.datetime(2025, 9, 18, 15, 45, 29, 244964), 'tags__9': None, 'status__9': 'OPEN', 'title__9': 'Mobile App Crashes', 'updated_at__10': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at__10': None, 'legacy_admin_ticket_id__10': None, 'legacy_backend_ticket_id__10': None, 'ticket_metadata__10': None, 'id__10': 11, 'description__10': 'Requesting a refund for the premium subscription.', 'ticket_id__10': None, 'category__10': 'BILLING', 'priority__10': 'MEDIUM', 'customer_id__10': 12, 'assigned_agent_id__10': None, 'created_at__10': datetime.datetime(2025, 9, 18, 15, 45, 29, 244997), 'tags__10': None, 'status__10': 'CLOSED', 'title__10': 'Refund Request'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 1, 'ticket_id': None, 'title': 'Login Issue', 'description': 'User cannot login to the system', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805011), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805015), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 2, 'ticket_id': None, 'title': 'Billing Question', 'description': 'Question about monthly charges', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805016), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805017), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 3, 'ticket_id': None, 'title': 'Feature Request', 'description': 'Request for new dashboard feature', 'status': 'RESOLVED', 'priority': 'LOW', 'category': 'GENERAL', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 4, 'ticket_id': None, 'title': 'Login Issues', 'description': 'Unable to login to the system. Getting authentication errors.', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 2, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244688), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246549), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 5, 'ticket_id': None, 'title': 'Billing Question', 'description': 'Need clarification on the latest invoice charges.', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 4, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244787), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246552), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 6, 'ticket_id': None, 'title': 'Feature Request: Dark Mode', 'description': 'Would like to request a dark mode theme for the application.', 'status': 'OPEN', 'priority': 'LOW', 'category': 'FEATURE_REQUEST', 'customer_id': 12, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244833), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246553), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 7, 'ticket_id': None, 'title': 'Password Reset Not Working', 'description': 'The password reset email is not being received.', 'status': 'RESOLVED', 'priority': 'MEDIUM', 'category': 'TECHNICAL', 'customer_id': 13, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244868), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246554), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 8, 'ticket_id': None, 'title': 'Account Suspension', 'description': 'My account has been suspended without notice. Need immediate assistance.', 'status': 'OPEN', 'priority': 'CRITICAL', 'category': 'ACCOUNT', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244901), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 9, 'ticket_id': None, 'title': 'Data Export Request', 'description': 'Need to export all my data for compliance purposes.', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'GENERAL', 'customer_id': 2, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244934), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 10, 'ticket_id': None, 'title': 'Mobile App Crashes', 'description': 'The mobile application keeps crashing on startup.', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 4, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244964), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 11, 'ticket_id': None, 'title': 'Refund Request', 'description': 'Requesting a refund for the premium subscription.', 'status': 'CLOSED', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 12, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244997), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Batch 1 failed: (psycopg2.errors.InvalidTextRepresentation) invalid input value for enum ticketstatus: "PENDING"
+LINE 1: ...ling Question', 'Question about monthly charges', 'PENDING',...
+                                                             ^
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id__0) ... 3414 characters truncated ... gs__10)s, %(ticket_metadata__10)s, %(legacy_backend_ticket_id__10)s, %(legacy_admin_ticket_id__10)s)]
+[parameters: {'updated_at__0': datetime.datetime(2025, 9, 18, 15, 19, 7, 805015), 'resolved_at__0': None, 'legacy_admin_ticket_id__0': None, 'legacy_backend_ticket_id__0': None, 'ticket_metadata__0': None, 'id__0': 1, 'description__0': 'User cannot login to the system', 'ticket_id__0': None, 'category__0': 'TECHNICAL', 'priority__0': 'HIGH', 'customer_id__0': 14, 'assigned_agent_id__0': None, 'created_at__0': datetime.datetime(2025, 9, 18, 15, 19, 7, 805011), 'tags__0': None, 'status__0': 'OPEN', 'title__0': 'Login Issue', 'updated_at__1': datetime.datetime(2025, 9, 18, 15, 19, 7, 805017), 'resolved_at__1': None, 'legacy_admin_ticket_id__1': None, 'legacy_backend_ticket_id__1': None, 'ticket_metadata__1': None, 'id__1': 2, 'description__1': 'Question about monthly charges', 'ticket_id__1': None, 'category__1': 'BILLING', 'priority__1': 'MEDIUM', 'customer_id__1': 14, 'assigned_agent_id__1': None, 'created_at__1': datetime.datetime(2025, 9, 18, 15, 19, 7, 805016), 'tags__1': None, 'status__1': 'PENDING', 'title__1': 'Billing Question', 'updated_at__2': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'resolved_at__2': None, 'legacy_admin_ticket_id__2': None, 'legacy_backend_ticket_id__2': None, 'ticket_metadata__2': None, 'id__2': 3, 'description__2': 'Request for new dashboard feature', 'ticket_id__2': None, 'category__2': 'GENERAL', 'priority__2': 'LOW', 'customer_id__2': 14, 'assigned_agent_id__2': None, 'created_at__2': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'tags__2': None, 'status__2': 'RESOLVED', 'title__2': 'Feature Request', 'updated_at__3': datetime.datetime(2025, 9, 18, 15, 45, 29, 246549), 'resolved_at__3': None ... 76 parameters truncated ... 'status__7': 'OPEN', 'title__7': 'Account Suspension', 'updated_at__8': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at__8': None, 'legacy_admin_ticket_id__8': None, 'legacy_backend_ticket_id__8': None, 'ticket_metadata__8': None, 'id__8': 9, 'description__8': 'Need to export all my data for compliance purposes.', 'ticket_id__8': None, 'category__8': 'GENERAL', 'priority__8': 'MEDIUM', 'customer_id__8': 2, 'assigned_agent_id__8': None, 'created_at__8': datetime.datetime(2025, 9, 18, 15, 45, 29, 244934), 'tags__8': None, 'status__8': 'PENDING', 'title__8': 'Data Export Request', 'updated_at__9': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at__9': None, 'legacy_admin_ticket_id__9': None, 'legacy_backend_ticket_id__9': None, 'ticket_metadata__9': None, 'id__9': 10, 'description__9': 'The mobile application keeps crashing on startup.', 'ticket_id__9': None, 'category__9': 'TECHNICAL', 'priority__9': 'HIGH', 'customer_id__9': 4, 'assigned_agent_id__9': None, 'created_at__9': datetime.datetime(2025, 9, 18, 15, 45, 29, 244964), 'tags__9': None, 'status__9': 'OPEN', 'title__9': 'Mobile App Crashes', 'updated_at__10': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at__10': None, 'legacy_admin_ticket_id__10': None, 'legacy_backend_ticket_id__10': None, 'ticket_metadata__10': None, 'id__10': 11, 'description__10': 'Requesting a refund for the premium subscription.', 'ticket_id__10': None, 'category__10': 'BILLING', 'priority__10': 'MEDIUM', 'customer_id__10': 12, 'assigned_agent_id__10': None, 'created_at__10': datetime.datetime(2025, 9, 18, 15, 45, 29, 244997), 'tags__10': None, 'status__10': 'CLOSED', 'title__10': 'Refund Request'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 1, 'ticket_id': None, 'title': 'Login Issue', 'description': 'User cannot login to the system', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805011), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805015), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 2, 'ticket_id': None, 'title': 'Billing Question', 'description': 'Question about monthly charges', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805016), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805017), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 3, 'ticket_id': None, 'title': 'Feature Request', 'description': 'Request for new dashboard feature', 'status': 'RESOLVED', 'priority': 'LOW', 'category': 'GENERAL', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'updated_at': datetime.datetime(2025, 9, 18, 15, 19, 7, 805018), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 4, 'ticket_id': None, 'title': 'Login Issues', 'description': 'Unable to login to the system. Getting authentication errors.', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 2, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244688), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246549), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 5, 'ticket_id': None, 'title': 'Billing Question', 'description': 'Need clarification on the latest invoice charges.', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 4, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244787), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246552), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 6, 'ticket_id': None, 'title': 'Feature Request: Dark Mode', 'description': 'Would like to request a dark mode theme for the application.', 'status': 'OPEN', 'priority': 'LOW', 'category': 'FEATURE_REQUEST', 'customer_id': 12, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244833), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246553), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 7, 'ticket_id': None, 'title': 'Password Reset Not Working', 'description': 'The password reset email is not being received.', 'status': 'RESOLVED', 'priority': 'MEDIUM', 'category': 'TECHNICAL', 'customer_id': 13, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244868), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246554), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 8, 'ticket_id': None, 'title': 'Account Suspension', 'description': 'My account has been suspended without notice. Need immediate assistance.', 'status': 'OPEN', 'priority': 'CRITICAL', 'category': 'ACCOUNT', 'customer_id': 14, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244901), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 9, 'ticket_id': None, 'title': 'Data Export Request', 'description': 'Need to export all my data for compliance purposes.', 'status': 'PENDING', 'priority': 'MEDIUM', 'category': 'GENERAL', 'customer_id': 2, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244934), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246555), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 10, 'ticket_id': None, 'title': 'Mobile App Crashes', 'description': 'The mobile application keeps crashing on startup.', 'status': 'OPEN', 'priority': 'HIGH', 'category': 'TECHNICAL', 'customer_id': 4, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244964), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Row insertion failed: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block
+
+[SQL: INSERT INTO unified_tickets (id, ticket_id, title, description, status, priority, category, customer_id, assigned_agent_id, created_at, updated_at, resolved_at, tags, ticket_metadata, legacy_backend_ticket_id, legacy_admin_ticket_id) VALUES (%(id)s, %(ticket_id)s, %(title)s, %(description)s, %(status)s, %(priority)s, %(category)s, %(customer_id)s, %(assigned_agent_id)s, %(created_at)s, %(updated_at)s, %(resolved_at)s, %(tags)s, %(ticket_metadata)s, %(legacy_backend_ticket_id)s, %(legacy_admin_ticket_id)s)]
+[parameters: {'id': 11, 'ticket_id': None, 'title': 'Refund Request', 'description': 'Requesting a refund for the premium subscription.', 'status': 'CLOSED', 'priority': 'MEDIUM', 'category': 'BILLING', 'customer_id': 12, 'assigned_agent_id': None, 'created_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 244997), 'updated_at': datetime.datetime(2025, 9, 18, 15, 45, 29, 246556), 'resolved_at': None, 'tags': None, 'ticket_metadata': None, 'legacy_backend_ticket_id': None, 'legacy_admin_ticket_id': None}]
+(Background on this error at: https://sqlalche.me/e/20/2j85)
+  - Table unified_tickets has low success rate: 0.00%
+
+BACKUP INFORMATION:
+  Backup Path: migration_backups\sqlite_backup_20250926_153022.db
+  Rollback Script: migration_backups/rollback_20250926_153022.sql
+
+================================================================================

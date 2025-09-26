@@ -1,0 +1,279 @@
+================================================================================
+DATABASE MIGRATION REPORT
+================================================================================
+Migration ID: 20250926_152742
+Start Time: 2025-09-26 15:27:42.925939
+End Time: 2025-09-26 15:27:43.620236
+Duration: 0.69 seconds
+
+SUMMARY:
+  Total Tables: 39
+  Successful Tables: 34
+  Failed Tables: 5
+  Total Records: 119
+  Migrated Records: 0
+  Success Rate: 0.00%
+  Rollback Available: Yes
+
+TABLE RESULTS:
+  knowledge_entries:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  customers:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  users:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  user_sessions:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  voice_settings:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  voice_analytics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  tickets:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  ticket_comments:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  ticket_activities:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  orders:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  support_intents:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  support_responses:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  chat_history:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_users:
+    Status: FAILED
+    Records: 0/16 (0.0%)
+    Duration: 0.17s
+    Errors: 1
+      - Table unified_users does not exist in PostgreSQL
+
+  unified_user_sessions:
+    Status: FAILED
+    Records: 0/79 (0.0%)
+    Duration: 0.01s
+    Errors: 1
+      - Table unified_user_sessions does not exist in PostgreSQL
+
+  unified_tickets:
+    Status: FAILED
+    Records: 0/11 (0.0%)
+    Duration: 0.00s
+    Errors: 1
+      - Table unified_tickets does not exist in PostgreSQL
+
+  unified_ticket_comments:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_ticket_activities:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_chat_sessions:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_chat_messages:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_performance_metrics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_customer_satisfaction:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_voice_settings:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_voice_analytics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_knowledge_entries:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_orders:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_support_intents:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_support_responses:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  unified_chat_history:
+    Status: FAILED
+    Records: 0/12 (0.0%)
+    Duration: 0.00s
+    Errors: 1
+      - Table unified_chat_history does not exist in PostgreSQL
+
+  diagnostic_error_logs:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  enhanced_chat_history:
+    Status: FAILED
+    Records: 0/1 (0.0%)
+    Duration: 0.00s
+    Errors: 1
+      - Table enhanced_chat_history does not exist in PostgreSQL
+
+  memory_context_cache:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  tool_usage_metrics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  conversation_summaries:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  memory_configuration:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  memory_health_metrics:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  enhanced_user_sessions:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  data_processing_consent:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+  data_subject_rights:
+    Status: SUCCESS
+    Records: 0/0 (100.0%)
+    Duration: 0.00s
+    Errors: 0
+
+OVERALL ERRORS:
+  - Table unified_users does not exist in PostgreSQL
+  - Table unified_user_sessions does not exist in PostgreSQL
+  - Table unified_tickets does not exist in PostgreSQL
+  - Table unified_chat_history does not exist in PostgreSQL
+  - Table enhanced_chat_history does not exist in PostgreSQL
+  - Table unified_users does not exist in PostgreSQL
+  - Table unified_users has low success rate: 0.00%
+  - Table unified_user_sessions does not exist in PostgreSQL
+  - Table unified_user_sessions has low success rate: 0.00%
+  - Table unified_tickets does not exist in PostgreSQL
+  - Table unified_tickets has low success rate: 0.00%
+  - Table unified_chat_history does not exist in PostgreSQL
+  - Table unified_chat_history has low success rate: 0.00%
+  - Table enhanced_chat_history does not exist in PostgreSQL
+  - Table enhanced_chat_history has low success rate: 0.00%
+
+BACKUP INFORMATION:
+  Backup Path: migration_backups\sqlite_backup_20250926_152742.db
+  Rollback Script: migration_backups/rollback_20250926_152742.sql
+
+================================================================================

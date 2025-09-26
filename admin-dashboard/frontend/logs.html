@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="css/modern-dashboard.css">
+    <style>
+        .log-viewer {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .log-entry {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #333;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .log-entry:hover {
+            background-color: #2d2d30;
+        }
+        
+        .log-entry.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border-left: 4px solid #f44336;
+        }
+        
+        .log-entry.warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            border-left: 4px solid #ff9800;
+        }
+        
+        .log-entry.info {
+            background-color: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196f3;
+        }
+        
+        .log-entry.debug {
+            background-color: rgba(156, 39, 176, 0.1);
+            border-left: 4px solid #9c27b0;
+        }
+        
+        .log-timestamp {
+            color: #569cd6;
+            font-weight: 500;
+        }
+        
+        .log-level {
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 0 0.5rem;
+        }
+        
+        .log-level.error {
+            color: #f44336;
+        }
+        
+        .log-level.warning {
+            color: #ff9800;
+        }
+        
+        .log-level.info {
+            color: #2196f3;
+        }
+        
+        .log-level.debug {
+            color: #9c27b0;
+        }
+        
+        .log-message {
+            color: #d4d4d4;
+        }
+        
+        .log-search-highlight {
+            background-color: #ffeb3b;
+            color: #000;
+            padding: 0.1rem 0.2rem;
+            border-radius: 3px;
+        }
+        
+        .filter-controls {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .real-time-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .real-time-indicator.active .status-dot {
+            background-color: #28a745;
+            animation: pulse 2s infinite;
+        }
+        
+        .real-time-indicator.inactive .status-dot {
+            background-color: #6c757d;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .log-stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        
+        .export-dropdown .dropdown-menu {
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Dashboard</h3>
+                <span class="badge">v2.0</span>
+            </div>
+            <div class="sidebar-user">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=667eea&color=fff&size=50" alt="User" class="user-avatar">
+                <div class="user-info">
+                    <h6 id="user-name">Admin User</h6>
+                    <span id="user-role" class="badge">Administrator</span>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="index.html" id="nav-dashboard">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="tickets.html" id="nav-tickets">
+                        <i class="bi bi-ticket-perforated"></i> Support Tickets
+                    </a>
+                </li>
+                <li>
+                    <a href="users.html" id="nav-users">
+                        <i class="bi bi-people"></i> User Management
+                    </a>
+                </li>
+                <li>
+                    <a href="integration.html" id="nav-integration">
+                        <i class="bi bi-link-45deg"></i> AI Integration
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.html" id="nav-settings">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="logs.html" class="active" id="nav-logs">
+                        <i class="bi bi-file-text"></i> System Logs
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <div class="top-nav">
+                <button id="sidebar-toggle" class="btn btn-outline-secondary btn-sm d-lg-none">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="global-search" placeholder="Search logs...">
+                </div>
+                <div class="top-nav-right">
+                    <div class="notification">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="username">Admin</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="nav-profile">Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="nav-logout-dropdown">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Wrapper -->
+            <div class="content-wrapper">
+                <!-- Content Header -->
+                <div class="content-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 id="page-title">
+                                <i class="bi bi-file-text"></i>
+                                System Logs
+                            </h1>
+                            <nav class="breadcrumb">
+                                <!-- Breadcrumbs will be populated by navigation.js -->
+                            </nav>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div class="real-time-indicator inactive" id="real-time-status">
+                                <span class="status-dot"></span>
+                                <span class="status-text">Real-time: Off</span>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btn-toggle-realtime">
+                                <i class="bi bi-play-circle"></i> Start Real-time
+                            </button>
+                            <div class="dropdown export-dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" id="export-json"><i class="bi bi-filetype-json"></i> Export as JSON</a></li>
+                                    <li><a class="dropdown-item" href="#" id="export-csv"><i class="bi bi-filetype-csv"></i> Export as CSV</a></li>
+                                    <li><a class="dropdown-item" href="#" id="export-txt"><i class="bi bi-filetype-txt"></i> Export as TXT</a></li>
+                                </ul>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="btn-clear-logs">
+                                <i class="bi bi-trash"></i> Clear Logs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Container -->
+                <div id="alert-container"></div>
+
+                <!-- Log Statistics -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card log-stats-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 id="total-logs" class="mb-0">0</h3>
+                                        <p class="mb-0">Total Logs</p>
+                                    </div>
+                                    <i class="bi bi-file-text display-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 id="error-logs" class="mb-0 text-danger">0</h3>
+                                        <p class="mb-0">Errors</p>
+                                    </div>
+                                    <i class="bi bi-exclamation-triangle display-6 text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 id="warning-logs" class="mb-0 text-warning">0</h3>
+                                        <p class="mb-0">Warnings</p>
+                                    </div>
+                                    <i class="bi bi-exclamation-circle display-6 text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 id="info-logs" class="mb-0 text-info">0</h3>
+                                        <p class="mb-0">Info</p>
+                                    </div>
+                                    <i class="bi bi-info-circle display-6 text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <div class="row g-3">
+                        <div class="col-lg-2 col-md-4">
+                            <label for="log-level-filter" class="form-label">Log Level</label>
+                            <select class="form-select" id="log-level-filter">
+                                <option value="">All Levels</option>
+                                <option value="error">Error</option>
+                                <option value="warning">Warning</option>
+                                <option value="info">Info</option>
+                                <option value="debug">Debug</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4">
+                            <label for="category-filter" class="form-label">Category</label>
+                            <select class="form-select" id="category-filter">
+                                <option value="">All Categories</option>
+                                <option value="auth">Authentication</option>
+                                <option value="api">API</option>
+                                <option value="database">Database</option>
+                                <option value="integration">Integration</option>
+                                <option value="system">System</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4">
+                            <label for="date-from" class="form-label">From Date</label>
+                            <input type="datetime-local" class="form-control" id="date-from">
+                        </div>
+                        <div class="col-lg-2 col-md-4">
+                            <label for="date-to" class="form-label">To Date</label>
+                            <input type="datetime-local" class="form-control" id="date-to">
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <label for="log-search" class="form-label">Search Logs</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="log-search" placeholder="Search in log messages...">
+                                <button class="btn btn-outline-secondary" type="button" id="btn-search">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-1 col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-secondary w-100" id="btn-clear-filters">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Viewer -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Log Entries</h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="text-muted small" id="log-count">Showing 0 entries</span>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary" id="btn-scroll-top">
+                                    <i class="bi bi-arrow-up"></i> Top
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="btn-scroll-bottom">
+                                    <i class="bi bi-arrow-down"></i> Bottom
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="log-viewer" id="log-viewer" style="height: 600px; overflow-y: auto;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status" id="loading-spinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 mb-0 text-muted">Loading logs...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-refresh-logs">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-auto-scroll" data-auto-scroll="false">
+                                    <i class="bi bi-arrow-down-circle"></i> Auto-scroll
+                                </button>
+                            </div>
+                            <div class="pagination-controls">
+                                <nav aria-label="Log pagination">
+                                    <ul class="pagination pagination-sm mb-0" id="log-pagination">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" id="prev-page">Previous</a>
+                                        </li>
+                                        <li class="page-item active">
+                                            <a class="page-link" href="#" id="current-page">1</a>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" id="next-page">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear Logs Confirmation Modal -->
+    <div class="modal fade" id="clearLogsModal" tabindex="-1" aria-labelledby="clearLogsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clearLogsModalLabel">Clear System Logs</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action will permanently delete all system logs. This cannot be undone.
+                    </div>
+                    <p>Are you sure you want to clear all system logs?</p>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirm-clear-logs">
+                        <label class="form-check-label" for="confirm-clear-logs">
+                            I understand that this action cannot be undone
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-clear-logs-btn" disabled>Clear All Logs</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="alert alert-danger d-none" id="login-error"></div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <!-- Enhanced Authentication System -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/auth-error-handler.js"></script>
+    <script src="js/api-connectivity-checker.js"></script>
+    <script src="js/admin-auth-service.js"></script>
+    
+    <!-- Legacy API Support -->
+    <script src="js/unified_api.js"></script>
+    <script src="js/api.js"></script>
+    
+    <!-- Navigation System -->
+    <script src="js/navigation.js"></script>
+    
+    <!-- UI Feedback System -->
+    <script src="js/ui-feedback.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/logs.js"></script>
+    
+    <!-- Simple Auth Fix - Override complex authentication -->
+    <script src="js/simple-auth-fix.js"></script>
+</body>
+</html>

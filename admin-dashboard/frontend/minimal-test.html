@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Admin Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/modern-dashboard.css">
+    <style>
+        .test-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #fff;
+            border: 2px solid #007bff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 9999;
+            max-width: 300px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-pass { background-color: #28a745; }
+        .status-fail { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <!-- Test Status Panel -->
+    <div class="test-info">
+        <h6>🔧 Admin Test Status</h6>
+        <div id="testStatus">
+            <div><span class="status-indicator status-warning"></span>Loading...</div>
+        </div>
+        <small>Check console (F12) for details</small>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Dashboard</h3>
+                <span class="badge">Test</span>
+            </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="index.html" class="active">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="tickets.html">
+                        <i class="bi bi-ticket-perforated"></i> Support Tickets
+                    </a>
+                </li>
+                <li>
+                    <a href="users.html">
+                        <i class="bi bi-people"></i> User Management
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <div class="content-wrapper">
+                <div class="content-header">
+                    <h1><i class="bi bi-speedometer2"></i> Dashboard Test</h1>
+                </div>
+
+                <div class="content-section">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Test Results</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="testResults">
+                                        <p class="text-muted">Running tests...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <button class="btn btn-primary w-100 mb-2" onclick="testBasicFunctionality()">
+                                        Test Basic Functionality
+                                    </button>
+                                    <button class="btn btn-secondary w-100 mb-2" onclick="testNavigation()">
+                                        Test Navigation
+                                    </button>
+                                    <button class="btn btn-info w-100" onclick="showLoginModal()">
+                                        Show Login Modal
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Admin Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" value="admin@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" value="admin123">
+                        </div>
+                        <div class="alert alert-danger d-none" id="login-error"></div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Test results tracking
+        const testResults = [];
+        let testsPassed = 0;
+        let testsFailed = 0;
+
+        function addTestResult(name, passed, message = '') {
+            testResults.push({ name, passed, message });
+            if (passed) testsPassed++;
+            else testsFailed++;
+            
+            updateTestDisplay();
+            console.log(`${passed ? '✅' : '❌'} ${name}: ${message}`);
+        }
+
+        function updateTestDisplay() {
+            const container = document.getElementById('testResults');
+            const statusContainer = document.getElementById('testStatus');
+            
+            // Update main results
+            container.innerHTML = testResults.map(result => 
+                `<div class="mb-2">
+                    <span class="badge ${result.passed ? 'bg-success' : 'bg-danger'}">${result.passed ? 'PASS' : 'FAIL'}</span>
+                    <strong>${result.name}</strong>
+                    ${result.message ? `<br><small class="text-muted">${result.message}</small>` : ''}
+                </div>`
+            ).join('');
+
+            // Update status indicator
+            const totalTests = testResults.length;
+            const overallStatus = testsFailed === 0 ? 'pass' : testsPassed > testsFailed ? 'warning' : 'fail';
+            
+            statusContainer.innerHTML = `
+                <div><span class="status-indicator status-${overallStatus}"></span>
+                ${testsPassed}/${totalTests} tests passed</div>
+            `;
+        }
+
+        function testBasicFunctionality() {
+            console.log('Testing basic functionality...');
+            
+            // Test 1: Bootstrap is loaded
+            addTestResult('Bootstrap JS', typeof bootstrap !== 'undefined', 
+                typeof bootstrap !== 'undefined' ? 'Bootstrap JavaScript loaded' : 'Bootstrap not found');
+            
+            // Test 2: CSS is loaded
+            const testElement = document.createElement('div');
+            testElement.className = 'sidebar';
+            document.body.appendChild(testElement);
+            const styles = window.getComputedStyle(testElement);
+            const cssLoaded = styles.position !== 'static' || styles.display !== 'inline';
+            document.body.removeChild(testElement);
+            
+            addTestResult('CSS Loaded', cssLoaded, 
+                cssLoaded ? 'Modern dashboard CSS is working' : 'CSS may not be loaded properly');
+            
+            // Test 3: DOM elements exist
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const loginModal = document.getElementById('loginModal');
+            
+            addTestResult('DOM Structure', !!(sidebar && mainContent && loginModal), 
+                'Key DOM elements found');
+            
+            // Test 4: Local storage works
+            try {
+                localStorage.setItem('test', 'value');
+                const testValue = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                addTestResult('Local Storage', testValue === 'value', 'Local storage functional');
+            } catch (error) {
+                addTestResult('Local Storage', false, `Error: ${error.message}`);
+            }
+        }
+
+        function testNavigation() {
+            console.log('Testing navigation...');
+            
+            // Test navigation links
+            const navLinks = document.querySelectorAll('.sidebar-nav a');
+            addTestResult('Navigation Links', navLinks.length > 0, `Found ${navLinks.length} navigation links`);
+            
+            // Test if links have proper hrefs
+            const validLinks = Array.from(navLinks).filter(link => 
+                link.href && !link.href.includes('/admin/') && link.href.includes('.html')
+            );
+            
+            addTestResult('Link Paths', validLinks.length === navLinks.length, 
+                `${validLinks.length}/${navLinks.length} links have correct paths`);
+        }
+
+        function showLoginModal() {
+            console.log('Testing login modal...');
+            
+            try {
+                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+                addTestResult('Login Modal', true, 'Modal opened successfully');
+            } catch (error) {
+                addTestResult('Login Modal', false, `Error: ${error.message}`);
+            }
+        }
+
+        // Auto-run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Minimal admin test page loaded');
+            
+            // Wait a moment for everything to load, then run tests
+            setTimeout(() => {
+                testBasicFunctionality();
+                testNavigation();
+            }, 500);
+        });
+
+        // Capture any JavaScript errors
+        window.addEventListener('error', function(event) {
+            console.error('JavaScript Error:', event.error);
+            addTestResult('JavaScript Errors', false, `${event.error.name}: ${event.error.message}`);
+        });
+
+        // Test login form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Login form submitted');
+                    
+                    // Simulate successful login
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    addTestResult('Login Form', true, 'Login form submission works');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

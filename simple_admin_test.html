@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Admin Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .status-pass { background-color: #d4edda; color: #155724; }
+        .status-fail { background-color: #f8d7da; color: #721c24; }
+        .status-warning { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Admin Dashboard Test</h1>
+        <p>Testing if the admin dashboard can be accessed and loaded properly.</p>
+        
+        <div id="results"></div>
+        
+        <div class="mt-4">
+            <h3>Direct Links to Test:</h3>
+            <div class="list-group">
+                <a href="admin-dashboard/frontend/index.html" class="list-group-item list-group-item-action" target="_blank">
+                    🏠 Admin Dashboard (index.html)
+                </a>
+                <a href="admin-dashboard/frontend/tickets.html" class="list-group-item list-group-item-action" target="_blank">
+                    🎫 Tickets Page
+                </a>
+                <a href="admin-dashboard/frontend/users.html" class="list-group-item list-group-item-action" target="_blank">
+                    👥 Users Page
+                </a>
+                <a href="admin-dashboard/frontend/settings.html" class="list-group-item list-group-item-action" target="_blank">
+                    ⚙️ Settings Page
+                </a>
+                <a href="debug_admin_page.html" class="list-group-item list-group-item-action" target="_blank">
+                    🔧 Debug Tool
+                </a>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h3>What to Check:</h3>
+            <ul>
+                <li><strong>Page Loads:</strong> Does the page load without errors?</li>
+                <li><strong>Styling:</strong> Does the page have proper modern dashboard styling?</li>
+                <li><strong>Navigation:</strong> Does the sidebar navigation appear?</li>
+                <li><strong>Console Errors:</strong> Check browser console (F12) for JavaScript errors</li>
+                <li><strong>Network Errors:</strong> Check Network tab for failed resource loading</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function addResult(message, status) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status status-${status}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        // Test basic functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            addResult('✅ Simple test page loaded successfully', 'pass');
+            
+            // Test if we can access the admin dashboard files
+            fetch('admin-dashboard/frontend/index.html', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        addResult('✅ Admin dashboard index.html is accessible', 'pass');
+                    } else {
+                        addResult(`❌ Admin dashboard index.html returned HTTP ${response.status}`, 'fail');
+                    }
+                })
+                .catch(error => {
+                    addResult(`❌ Cannot access admin dashboard: ${error.message}`, 'fail');
+                });
+            
+            // Test CSS file
+            fetch('admin-dashboard/frontend/css/modern-dashboard.css', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        addResult('✅ Modern dashboard CSS is accessible', 'pass');
+                    } else {
+                        addResult(`❌ Modern dashboard CSS returned HTTP ${response.status}`, 'fail');
+                    }
+                })
+                .catch(error => {
+                    addResult(`❌ Cannot access CSS file: ${error.message}`, 'fail');
+                });
+            
+            // Test JavaScript file
+            fetch('admin-dashboard/frontend/js/dashboard.js', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        addResult('✅ Dashboard JavaScript is accessible', 'pass');
+                    } else {
+                        addResult(`❌ Dashboard JavaScript returned HTTP ${response.status}`, 'fail');
+                    }
+                })
+                .catch(error => {
+                    addResult(`❌ Cannot access JavaScript file: ${error.message}`, 'fail');
+                });
+        });
+    </script>
+</body>
+</html>

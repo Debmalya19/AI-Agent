@@ -1,0 +1,336 @@
+{
+  "migration_id": "20250926_154426",
+  "execution_time": "2025-09-26T15:44:32.132723",
+  "overall_success": false,
+  "migration_summary": {
+    "total_tables": 0,
+    "successful_tables": 0,
+    "failed_tables": 0,
+    "total_records": 0,
+    "migrated_records": 0,
+    "migration_success": false
+  },
+  "validation_summary": {
+    "data_integrity_valid": false,
+    "table_comparisons": 39,
+    "integrity_checks": {
+      "foreign_keys_checked": 34,
+      "integrity_issues": 0,
+      "all_constraints_valid": true
+    }
+  },
+  "functionality_summary": {
+    "all_tests_passed": false,
+    "test_categories": {
+      "database_connection": {
+        "success": false,
+        "message": "Database connection test failed: cannot import name 'get_db_session' from 'backend.database' (C:\\ai-agent\\ai-agent\\backend\\database.py)"
+      },
+      "model_operations": {
+        "success": false,
+        "message": "Model operations test failed: cannot import name 'get_db_session' from 'backend.database' (C:\\ai-agent\\ai-agent\\backend\\database.py)"
+      },
+      "authentication": {
+        "success": false,
+        "message": "Authentication tests failed: ERROR: not found: C:\\ai-agent\\ai-agent\\tests\\test_postgresql_migration.py::test_authentication_functionality\n(no name 'C:\\\\ai-agent\\\\ai-agent\\\\tests\\\\test_postgresql_migration.py::test_authentication_functionality' in any of [<Module test_postgresql_migration.py>])\n\n"
+      },
+      "admin_dashboard": {
+        "success": false,
+        "message": "Admin dashboard tests failed: ERROR: not found: C:\\ai-agent\\ai-agent\\tests\\test_postgresql_migration.py::test_admin_dashboard_functionality\n(no name 'C:\\\\ai-agent\\\\ai-agent\\\\tests\\\\test_postgresql_migration.py::test_admin_dashboard_functionality' in any of [<Module test_postgresql_migration.py>])\n\n"
+      }
+    }
+  },
+  "detailed_results": {
+    "migration_report": {
+      "success": false,
+      "error": "'DatabaseMigrator' object has no attribute 'migrate_database'",
+      "total_tables": 0,
+      "successful_tables": 0,
+      "failed_tables": 0,
+      "total_records": 0,
+      "migrated_records": 0
+    },
+    "validation_results": {
+      "overall_success": false,
+      "table_comparisons": {
+        "conversation_summaries": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_support_responses": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "data_subject_rights": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "memory_configuration": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "customers": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_support_intents": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "memory_health_metrics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "ticket_activities": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "tickets": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_chat_history": {
+          "sqlite_count": 12,
+          "postgresql_count": 0,
+          "match": false,
+          "difference": 12
+        },
+        "unified_ticket_activities": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_performance_metrics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "memory_context_cache": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "ticket_comments": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_voice_analytics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "voice_settings": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_chat_messages": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "enhanced_chat_history": {
+          "sqlite_count": 1,
+          "postgresql_count": 0,
+          "match": false,
+          "difference": 1
+        },
+        "unified_orders": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "tool_usage_metrics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_ticket_comments": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_voice_settings": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "user_sessions": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "users": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_tickets": {
+          "sqlite_count": 11,
+          "postgresql_count": 0,
+          "match": false,
+          "difference": 11
+        },
+        "unified_customer_satisfaction": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_chat_sessions": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "support_intents": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "support_responses": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "knowledge_entries": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_user_sessions": {
+          "sqlite_count": 79,
+          "postgresql_count": 0,
+          "match": false,
+          "difference": 79
+        },
+        "voice_analytics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "data_processing_consent": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "chat_history": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "diagnostic_error_logs": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_users": {
+          "sqlite_count": 16,
+          "postgresql_count": 0,
+          "match": false,
+          "difference": 16
+        },
+        "orders": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_knowledge_entries": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "enhanced_user_sessions": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        }
+      },
+      "integrity_checks": {
+        "foreign_keys_checked": 34,
+        "integrity_issues": 0,
+        "all_constraints_valid": true
+      },
+      "errors": [
+        "Table unified_chat_history: SQLite has 12 records, PostgreSQL has 0",
+        "Table enhanced_chat_history: SQLite has 1 records, PostgreSQL has 0",
+        "Table unified_tickets: SQLite has 11 records, PostgreSQL has 0",
+        "Table unified_user_sessions: SQLite has 79 records, PostgreSQL has 0",
+        "Table unified_users: SQLite has 16 records, PostgreSQL has 0"
+      ]
+    },
+    "test_results": {
+      "overall_success": false,
+      "test_categories": {
+        "database_connection": {
+          "success": false,
+          "message": "Database connection test failed: cannot import name 'get_db_session' from 'backend.database' (C:\\ai-agent\\ai-agent\\backend\\database.py)"
+        },
+        "model_operations": {
+          "success": false,
+          "message": "Model operations test failed: cannot import name 'get_db_session' from 'backend.database' (C:\\ai-agent\\ai-agent\\backend\\database.py)"
+        },
+        "authentication": {
+          "success": false,
+          "message": "Authentication tests failed: ERROR: not found: C:\\ai-agent\\ai-agent\\tests\\test_postgresql_migration.py::test_authentication_functionality\n(no name 'C:\\\\ai-agent\\\\ai-agent\\\\tests\\\\test_postgresql_migration.py::test_authentication_functionality' in any of [<Module test_postgresql_migration.py>])\n\n"
+        },
+        "admin_dashboard": {
+          "success": false,
+          "message": "Admin dashboard tests failed: ERROR: not found: C:\\ai-agent\\ai-agent\\tests\\test_postgresql_migration.py::test_admin_dashboard_functionality\n(no name 'C:\\\\ai-agent\\\\ai-agent\\\\tests\\\\test_postgresql_migration.py::test_admin_dashboard_functionality' in any of [<Module test_postgresql_migration.py>])\n\n"
+        }
+      },
+      "errors": [
+        "Database connection test failed: cannot import name 'get_db_session' from 'backend.database' (C:\\ai-agent\\ai-agent\\backend\\database.py)",
+        "Model operations test failed: cannot import name 'get_db_session' from 'backend.database' (C:\\ai-agent\\ai-agent\\backend\\database.py)",
+        "Authentication tests failed: ERROR: not found: C:\\ai-agent\\ai-agent\\tests\\test_postgresql_migration.py::test_authentication_functionality\n(no name 'C:\\\\ai-agent\\\\ai-agent\\\\tests\\\\test_postgresql_migration.py::test_authentication_functionality' in any of [<Module test_postgresql_migration.py>])\n\n",
+        "Admin dashboard tests failed: ERROR: not found: C:\\ai-agent\\ai-agent\\tests\\test_postgresql_migration.py::test_admin_dashboard_functionality\n(no name 'C:\\\\ai-agent\\\\ai-agent\\\\tests\\\\test_postgresql_migration.py::test_admin_dashboard_functionality' in any of [<Module test_postgresql_migration.py>])\n\n"
+      ]
+    }
+  },
+  "recommendations": [
+    "Investigate data integrity issues and fix inconsistencies",
+    "Fix application functionality issues before deploying to production"
+  ]
+}

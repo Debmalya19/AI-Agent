@@ -1,0 +1,205 @@
+/* Admin Dashboard Styles */
+
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Sidebar Styles */
+#sidebar {
+    min-height: 100vh;
+    background-color: #212529;
+    padding-top: 20px;
+}
+
+#sidebar .nav-link {
+    color: #adb5bd;
+    padding: 0.5rem 1rem;
+    margin: 0.2rem 0;
+    border-radius: 0.25rem;
+}
+
+#sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar .nav-link.active {
+    color: #fff;
+    background-color: #0d6efd;
+}
+
+#sidebar .sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+/* Content Styles */
+main {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 0.75rem 1.25rem;
+}
+
+/* Status Indicator */
+.status-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #6c757d;
+}
+
+.status-indicator.online {
+    background-color: #28a745;
+}
+
+.status-indicator.offline {
+    background-color: #dc3545;
+}
+
+.status-indicator.warning {
+    background-color: #ffc107;
+}
+
+/* Table Styles */
+.table th {
+    border-top: none;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badge Styles */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+.badge-status-open {
+    background-color: #28a745;
+}
+
+.badge-status-pending {
+    background-color: #ffc107;
+}
+
+.badge-status-resolved {
+    background-color: #6c757d;
+}
+
+.badge-priority-low {
+    background-color: #28a745;
+}
+
+.badge-priority-medium {
+    background-color: #ffc107;
+}
+
+.badge-priority-high {
+    background-color: #dc3545;
+}
+
+/* Button Styles */
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Form Styles */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* Login Styles */
+.login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Animation */
+.fade-in {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    #sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        padding: 48px 0 0;
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    }
+}
+
+/* Integration Status Page */
+#content-integration .card {
+    transition: all 0.3s ease;
+}
+
+#content-integration .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard Cards */
+.card.bg-primary, .card.bg-success, .card.bg-warning, .card.bg-danger {
+    transition: all 0.3s ease;
+}
+
+.card.bg-primary:hover, .card.bg-success:hover, .card.bg-warning:hover, .card.bg-danger:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Ticket Status Colors */
+.status-open {
+    color: #28a745;
+}
+
+.status-pending {
+    color: #ffc107;
+}
+
+.status-resolved {
+    color: #6c757d;
+}
+
+.priority-low {
+    color: #28a745;
+}
+
+.priority-medium {
+    color: #ffc107;
+}
+
+.priority-high {
+    color: #dc3545;
+}

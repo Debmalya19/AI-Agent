@@ -1,0 +1,290 @@
+/* Support Dashboard Styles */
+
+/* Main Layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.sidebar {
+    min-height: 100vh;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 1rem;
+    margin: 0.2rem 0;
+    border-radius: 0.25rem;
+    transition: all 0.3s;
+}
+
+.sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar .nav-link i {
+    margin-right: 0.5rem;
+}
+
+/* Section Display */
+.section-content {
+    display: none;
+}
+
+.section-content.active {
+    display: block;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.25rem;
+}
+
+.card-title {
+    margin-bottom: 0;
+    color: #495057;
+}
+
+/* Stats Cards */
+.icon-shape {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    font-size: 1.5rem;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.status-success {
+    background-color: #28a745;
+}
+
+.status-indicator.status-warning {
+    background-color: #ffc107;
+}
+
+.status-indicator.status-danger {
+    background-color: #dc3545;
+}
+
+.status-indicator.status-info {
+    background-color: #17a2b8;
+}
+
+.status-indicator.status-secondary {
+    background-color: #6c757d;
+}
+
+/* Ticket Status Badges */
+.badge-ticket-status {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 0.25rem;
+}
+
+.badge-open {
+    background-color: #cfe2ff;
+    color: #0d6efd;
+}
+
+.badge-in-progress {
+    background-color: #fff3cd;
+    color: #ffc107;
+}
+
+.badge-pending {
+    background-color: #d1e7dd;
+    color: #198754;
+}
+
+.badge-resolved {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+.badge-closed {
+    background-color: #e2e3e5;
+    color: #6c757d;
+}
+
+/* Ticket Priority Badges */
+.badge-priority {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 0.25rem;
+}
+
+.badge-low {
+    background-color: #d1e7dd;
+    color: #198754;
+}
+
+.badge-medium {
+    background-color: #fff3cd;
+    color: #ffc107;
+}
+
+.badge-high {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+.badge-critical {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Tables */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 500;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+/* Charts */
+.chart-container {
+    position: relative;
+    height: 250px;
+}
+
+/* Ticket Details */
+.ticket-details-header {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ticket-details-body {
+    padding: 1.5rem;
+}
+
+.ticket-details-footer {
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ticket-property {
+    margin-bottom: 1rem;
+}
+
+.ticket-property-label {
+    font-weight: 500;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.ticket-property-value {
+    font-weight: 400;
+}
+
+.ticket-description {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.ticket-comments {
+    margin-top: 1.5rem;
+}
+
+.comment {
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    background-color: #f8f9fa;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.comment-author {
+    font-weight: 500;
+}
+
+.comment-time {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.comment-body {
+    color: #212529;
+}
+
+/* AI Agent Integration */
+#ai-agent-status {
+    display: inline-flex;
+    align-items: center;
+}
+
+#ai-agent-status::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+#ai-agent-status.connected::before {
+    background-color: #28a745;
+}
+
+#ai-agent-status.disconnected::before {
+    background-color: #dc3545;
+}
+
+#ai-agent-status.connecting::before {
+    background-color: #ffc107;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .stats-card h2 {
+        font-size: 1.5rem;
+    }
+    
+    .icon-shape {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.25rem;
+    }
+}

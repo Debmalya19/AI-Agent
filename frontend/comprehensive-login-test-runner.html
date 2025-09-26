@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Login Test Runner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .test-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-results {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .test-section-header {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-section-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .test-section.expanded .test-section-content {
+            display: block;
+        }
+        
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-passed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-running {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-pending {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .error-details {
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+        }
+        
+        .browser-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .browser-info h4 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Comprehensive Login Test Suite</h1>
+        <p>Testing authentication functionality across browsers and scenarios</p>
+    </div>
+
+    <div class="browser-info">
+        <h4>Browser Information</h4>
+        <div id="browser-details">Loading browser information...</div>
+    </div>
+
+    <div class="test-controls">
+        <h3>Test Controls</h3>
+        <button id="run-all-tests" class="btn">Run All Tests</button>
+        <button id="run-browser-tests" class="btn">Browser Compatibility</button>
+        <button id="run-auth-tests" class="btn">Authentication Flow</button>
+        <button id="run-session-tests" class="btn">Session Management</button>
+        <button id="run-error-tests" class="btn">Error Handling</button>
+        <button id="clear-results" class="btn btn-danger">Clear Results</button>
+        <button id="export-results" class="btn btn-success">Export Results</button>
+        
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="progress-text">Ready to run tests</div>
+    </div>
+
+    <div class="test-results">
+        <h3>Test Results</h3>
+        
+        <div class="summary-stats" id="summary-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-tests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passed-tests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failed-tests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="success-rate">0%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+
+        <div id="test-sections">
+            <!-- Test sections will be populated here -->
+        </div>
+    </div>
+
+    <!-- Include required JavaScript files -->
+    <script src="../admin-dashboard/frontend/js/auth-error-handler.js"></script>
+    <script src="../admin-dashboard/frontend/js/api-connectivity-checker.js"></script>
+    <script src="../admin-dashboard/frontend/js/session-manager.js"></script>
+    <script src="../admin-dashboard/frontend/js/admin-auth-service.js"></script>
+    <script src="comprehensive-login-test-suite.js"></script>
+
+    <script>
+        class TestRunner {
+            constructor() {
+                this.testSuite = null;
+                this.isRunning = false;
+                this.currentResults = null;
+                
+                this.initializeUI();
+                this.setupEventListeners();
+                this.displayBrowserInfo();
+            }
+
+            initializeUI() {
+                // Initialize test sections
+                const sections = [
+                    { id: 'browser-compatibility', title: 'Browser Compatibility Tests', icon: '🌐' },
+                    { id: 'authentication-flow', title: 'Authentication Flow Tests', icon: '🔐' },
+                    { id: 'session-management', title: 'Session Management Tests', icon: '📝' },
+                    { id: 'error-handling', title: 'Error Handling Tests', icon: '⚠️' }
+                ];
+
+                const sectionsContainer = document.getElementById('test-sections');
+                sectionsContainer.innerHTML = sections.map(section => `
+                    <div class="test-section" id="section-${section.id}">
+                        <div class="test-section-header" onclick="this.parentElement.classList.toggle('expanded')">
+                            <span>${section.icon} ${section.title}</span>
+                            <span class="test-status status-pending">Pending</span>
+                        </div>
+                        <div class="test-section-content" id="content-${section.id}">
+                            <p>No tests run yet</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            setupEventListeners() {
+                document.getElementById('run-all-tests').addEventListener('click', () => this.runAllTests());
+                document.getElementById('run-browser-tests').addEventListener('click', () => this.runBrowserTests());
+                document.getElementById('run-auth-tests').addEventListener('click', () => this.runAuthTests());
+                document.getElementById('run-session-tests').addEventListener('click', () => this.runSessionTests());
+                document.getElementById('run-error-tests').addEventListener('click', () => this.runErrorTests());
+                document.getElementById('clear-results').addEventListener('click', () => this.clearResults());
+                document.getElementById('export-results').addEventListener('click', () => this.exportResults());
+            }
+
+            displayBrowserInfo() {
+                const browserDetails = document.getElementById('browser-details');
+                const info = {
+                    'User Agent': navigator.userAgent,
+                    'Platform': navigator.platform,
+                    'Language': navigator.language,
+                    'Cookies Enabled': navigator.cookieEnabled ? 'Yes' : 'No',
+                    'Online': navigator.onLine ? 'Yes' : 'No',
+                    'Local Storage': typeof localStorage !== 'undefined' ? 'Supported' : 'Not Supported',
+                    'Session Storage': typeof sessionStorage !== 'undefined' ? 'Supported' : 'Not Supported',
+                    'Fetch API': typeof fetch !== 'undefined' ? 'Supported' : 'Not Supported'
+                };
+
+                browserDetails.innerHTML = Object.entries(info)
+                    .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                    .join('<br>');
+            }
+
+            async runAllTests() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.updateProgress(0, 'Initializing test suite...');
+                this.disableButtons();
+
+                try {
+                    this.testSuite = new ComprehensiveLoginTestSuite();
+                    this.updateProgress(10, 'Running comprehensive tests...');
+                    
+                    const results = await this.testSuite.runAllTests();
+                    this.currentResults = results;
+                    
+                    this.updateProgress(100, 'Tests completed');
+                    this.displayResults(results);
+                    this.updateSummaryStats(results.summary);
+                    
+                } catch (error) {
+                    this.updateProgress(0, `Test execution failed: ${error.message}`);
+                    console.error('Test execution error:', error);
+                } finally {
+                    this.isRunning = false;
+                    this.enableButtons();
+                }
+            }
+
+            async runBrowserTests() {
+                await this.runSpecificTestSuite('browser', 'Browser Compatibility');
+            }
+
+            async runAuthTests() {
+                await this.runSpecificTestSuite('auth', 'Authentication Flow');
+            }
+
+            async runSessionTests() {
+                await this.runSpecificTestSuite('session', 'Session Management');
+            }
+
+            async runErrorTests() {
+                await this.runSpecificTestSuite('error', 'Error Handling');
+            }
+
+            async runSpecificTestSuite(type, name) {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.updateProgress(0, `Running ${name} tests...`);
+                this.disableButtons();
+
+                try {
+                    this.testSuite = new ComprehensiveLoginTestSuite();
+                    
+                    let results;
+                    switch (type) {
+                        case 'browser':
+                            await this.testSuite.runBrowserCompatibilityTests();
+                            results = { browserCompatibility: this.testSuite.testResults.browserCompatibility };
+                            break;
+                        case 'auth':
+                            await this.testSuite.runAuthenticationFlowTests();
+                            results = { authenticationFlow: this.testSuite.testResults.authenticationFlow };
+                            break;
+                        case 'session':
+                            await this.testSuite.runSessionManagementTests();
+                            results = { sessionManagement: this.testSuite.testResults.sessionManagement };
+                            break;
+                        case 'error':
+                            await this.testSuite.runErrorHandlingTests();
+                            results = { errorHandling: this.testSuite.testResults.errorHandling };
+                            break;
+                    }
+                    
+                    this.updateProgress(100, `${name} tests completed`);
+                    this.displayPartialResults(results, type);
+                    
+                } catch (error) {
+                    this.updateProgress(0, `${name} tests failed: ${error.message}`);
+                    console.error(`${name} test error:`, error);
+                } finally {
+                    this.isRunning = false;
+                    this.enableButtons();
+                }
+            }
+
+            displayResults(results) {
+                this.displayTestSection('browser-compatibility', results.browserCompatibility, 'Browser Compatibility');
+                this.displayTestSection('authentication-flow', results.authenticationFlow, 'Authentication Flow');
+                this.displayTestSection('session-management', results.sessionManagement, 'Session Management');
+                this.displayTestSection('error-handling', results.errorHandling, 'Error Handling');
+            }
+
+            displayPartialResults(results, type) {
+                const sectionMap = {
+                    'browser': 'browser-compatibility',
+                    'auth': 'authentication-flow',
+                    'session': 'session-management',
+                    'error': 'error-handling'
+                };
+
+                const sectionId = sectionMap[type];
+                const sectionData = Object.values(results)[0];
+                const sectionTitle = type.charAt(0).toUpperCase() + type.slice(1) + ' Tests';
+
+                this.displayTestSection(sectionId, sectionData, sectionTitle);
+            }
+
+            displayTestSection(sectionId, testData, sectionTitle) {
+                const section = document.getElementById(`section-${sectionId}`);
+                const content = document.getElementById(`content-${sectionId}`);
+                const header = section.querySelector('.test-section-header .test-status');
+
+                if (!testData || Object.keys(testData).length === 0) {
+                    content.innerHTML = '<p>No test data available</p>';
+                    header.className = 'test-status status-pending';
+                    header.textContent = 'No Data';
+                    return;
+                }
+
+                const testItems = Object.entries(testData);
+                const passedTests = testItems.filter(([_, result]) => 
+                    result && (result.success !== false && result.supported !== false)
+                ).length;
+                const totalTests = testItems.length;
+
+                // Update section header status
+                const allPassed = passedTests === totalTests;
+                header.className = `test-status ${allPassed ? 'status-passed' : 'status-failed'}`;
+                header.textContent = `${passedTests}/${totalTests} Passed`;
+
+                // Generate test items HTML
+                const testItemsHTML = testItems.map(([testName, result]) => {
+                    const isSuccess = result && (result.success !== false && result.supported !== false);
+                    const statusClass = isSuccess ? 'status-passed' : 'status-failed';
+                    const statusText = isSuccess ? 'PASSED' : 'FAILED';
+
+                    let detailsHTML = '';
+                    if (!isSuccess && result && result.error) {
+                        detailsHTML = `<div class="error-details">Error: ${result.error}</div>`;
+                    } else if (result && typeof result === 'object') {
+                        const details = Object.entries(result)
+                            .filter(([key, _]) => key !== 'success' && key !== 'supported' && key !== 'error')
+                            .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+                            .join(', ');
+                        if (details) {
+                            detailsHTML = `<div class="error-details">${details}</div>`;
+                        }
+                    }
+
+                    return `
+                        <div class="test-item">
+                            <span>${testName}</span>
+                            <span class="test-status ${statusClass}">${statusText}</span>
+                        </div>
+                        ${detailsHTML}
+                    `;
+                }).join('');
+
+                content.innerHTML = testItemsHTML || '<p>No test results</p>';
+                
+                // Expand section if there are failures
+                if (!allPassed) {
+                    section.classList.add('expanded');
+                }
+            }
+
+            updateSummaryStats(summary) {
+                if (!summary) return;
+
+                document.getElementById('total-tests').textContent = summary.totalTests || 0;
+                document.getElementById('passed-tests').textContent = summary.passedTests || 0;
+                document.getElementById('failed-tests').textContent = summary.failedTests || 0;
+                document.getElementById('success-rate').textContent = summary.successRate || '0%';
+            }
+
+            updateProgress(percentage, message) {
+                const progressFill = document.getElementById('progress-fill');
+                const progressText = document.getElementById('progress-text');
+                
+                progressFill.style.width = `${percentage}%`;
+                progressText.textContent = message;
+            }
+
+            disableButtons() {
+                const buttons = document.querySelectorAll('.btn');
+                buttons.forEach(btn => btn.disabled = true);
+            }
+
+            enableButtons() {
+                const buttons = document.querySelectorAll('.btn');
+                buttons.forEach(btn => btn.disabled = false);
+            }
+
+            clearResults() {
+                this.currentResults = null;
+                this.updateSummaryStats({ totalTests: 0, passedTests: 0, failedTests: 0, successRate: '0%' });
+                this.updateProgress(0, 'Ready to run tests');
+                
+                // Clear all test sections
+                const sections = ['browser-compatibility', 'authentication-flow', 'session-management', 'error-handling'];
+                sections.forEach(sectionId => {
+                    const section = document.getElementById(`section-${sectionId}`);
+                    const content = document.getElementById(`content-${sectionId}`);
+                    const header = section.querySelector('.test-section-header .test-status');
+                    
+                    content.innerHTML = '<p>No tests run yet</p>';
+                    header.className = 'test-status status-pending';
+                    header.textContent = 'Pending';
+                    section.classList.remove('expanded');
+                });
+            }
+
+            exportResults() {
+                if (!this.currentResults) {
+                    alert('No test results to export. Please run tests first.');
+                    return;
+                }
+
+                const dataStr = JSON.stringify(this.currentResults, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `login-test-results-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize test runner when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new TestRunner();
+        });
+    </script>
+</body>
+</html>

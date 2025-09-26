@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/modern-dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Dashboard</h3>
+                <span class="badge bg-primary">v1.0</span>
+            </div>
+            <div class="sidebar-user">
+                <img src="https://via.placeholder.com/50" alt="User" class="user-avatar">
+                <div class="user-info">
+                    <h6 id="user-name">Loading...</h6>
+                    <span id="user-role" class="badge bg-secondary">Loading...</span>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="index.html" id="nav-dashboard">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="tickets.html" id="nav-tickets">
+                        <i class="bi bi-ticket-perforated"></i> Support Tickets
+                    </a>
+                </li>
+                <li>
+                    <a href="users.html" id="nav-users">
+                        <i class="bi bi-people"></i> User Management
+                    </a>
+                </li>
+                <li>
+                    <a href="integration.html" id="nav-integration">
+                        <i class="bi bi-link-45deg"></i> AI Integration
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.html" class="active" id="nav-settings">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="logs.html" id="nav-logs">
+                        <i class="bi bi-file-text"></i> System Logs
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <div class="top-nav">
+                <button id="sidebar-toggle" class="btn btn-sm">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="top-nav-right">
+                    <div class="notification">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="username">Admin</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="nav-profile"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="nav-logout-dropdown"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                <div class="content-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 id="page-title"><i class="bi bi-gear"></i> Settings</h1>
+                            <nav class="breadcrumb">
+                                <!-- Breadcrumbs will be populated by navigation.js -->
+                            </nav>
+                        </div>
+                        <div class="settings-actions">
+                            <div class="settings-search">
+                                <div class="search-box">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" id="settings-search" placeholder="Search settings..." class="form-control">
+                                </div>
+                            </div>
+                            <div class="settings-quick-actions">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-import-settings">
+                                    <i class="bi bi-upload"></i> Import
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-export-settings">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Container -->
+                <div id="alert-container"></div>
+
+                <!-- Settings Tabs -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="settings-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">General</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance" type="button" role="tab" aria-controls="appearance" aria-selected="false">Appearance</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab" aria-controls="notifications" aria-selected="false">Notifications</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab" aria-controls="security" aria-selected="false">Security</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab" aria-controls="advanced" aria-selected="false">Advanced</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="settings-tab-content">
+                            <!-- General Settings -->
+                            <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                                <form id="general-settings-form">
+                                    <div class="mb-3">
+                                        <label for="site-title" class="form-label">Site Title</label>
+                                        <input type="text" class="form-control" id="site-title" value="Admin Dashboard">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="site-description" class="form-label">Site Description</label>
+                                        <textarea class="form-control" id="site-description" rows="2">Admin dashboard for managing support tickets and users</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="admin-email" class="form-label">Admin Email</label>
+                                        <input type="email" class="form-control" id="admin-email" value="admin@example.com">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="timezone" class="form-label">Timezone</label>
+                                        <select class="form-select" id="timezone">
+                                            <option value="UTC">UTC</option>
+                                            <option value="America/New_York">Eastern Time (US & Canada)</option>
+                                            <option value="America/Chicago">Central Time (US & Canada)</option>
+                                            <option value="America/Denver">Mountain Time (US & Canada)</option>
+                                            <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                                            <option value="Europe/London">London</option>
+                                            <option value="Europe/Paris">Paris</option>
+                                            <option value="Asia/Tokyo">Tokyo</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="date-format" class="form-label">Date Format</label>
+                                        <select class="form-select" id="date-format">
+                                            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save General Settings</button>
+                                </form>
+                            </div>
+                            
+                            <!-- Appearance Settings -->
+                            <div class="tab-pane fade" id="appearance" role="tabpanel" aria-labelledby="appearance-tab">
+                                <form id="appearance-settings-form">
+                                    <div class="mb-3">
+                                        <label for="theme" class="form-label">Theme</label>
+                                        <select class="form-select" id="theme">
+                                            <option value="light">Light</option>
+                                            <option value="dark">Dark</option>
+                                            <option value="auto">Auto (follow system)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="primary-color" class="form-label">Primary Color</label>
+                                        <input type="color" class="form-control form-control-color" id="primary-color" value="#0d6efd">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sidebar-position" class="form-label">Sidebar Position</label>
+                                        <select class="form-select" id="sidebar-position">
+                                            <option value="left">Left</option>
+                                            <option value="right">Right</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="font-size" class="form-label">Font Size</label>
+                                        <select class="form-select" id="font-size">
+                                            <option value="small">Small</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="large">Large</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="show-animations" checked>
+                                        <label class="form-check-label" for="show-animations">Enable animations</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Appearance Settings</button>
+                                </form>
+                            </div>
+                            
+                            <!-- Notifications Settings -->
+                            <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+                                <form id="notifications-settings-form">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="email-notifications" checked>
+                                        <label class="form-check-label" for="email-notifications">Email Notifications</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Notification Events</label>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="notify-new-ticket" checked>
+                                            <label class="form-check-label" for="notify-new-ticket">New ticket created</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="notify-ticket-update" checked>
+                                            <label class="form-check-label" for="notify-ticket-update">Ticket updated</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="notify-ticket-comment" checked>
+                                            <label class="form-check-label" for="notify-ticket-comment">New comment on ticket</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="notify-user-register">
+                                            <label class="form-check-label" for="notify-user-register">New user registration</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="notify-sync-complete">
+                                            <label class="form-check-label" for="notify-sync-complete">Integration sync completed</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="browser-notifications" checked>
+                                        <label class="form-check-label" for="browser-notifications">Browser Notifications</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="notification-sound" class="form-label">Notification Sound</label>
+                                        <select class="form-select" id="notification-sound">
+                                            <option value="none">None</option>
+                                            <option value="default" selected>Default</option>
+                                            <option value="bell">Bell</option>
+                                            <option value="chime">Chime</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Notification Settings</button>
+                                </form>
+                            </div>
+                            
+                            <!-- Security Settings -->
+                            <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                                <form id="security-settings-form">
+                                    <div class="mb-3">
+                                        <label for="session-timeout" class="form-label">Session Timeout (minutes)</label>
+                                        <input type="number" class="form-control" id="session-timeout" value="30" min="5" max="1440">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="password-policy" class="form-label">Password Policy</label>
+                                        <select class="form-select" id="password-policy">
+                                            <option value="low">Low - Minimum 6 characters</option>
+                                            <option value="medium" selected>Medium - Minimum 8 characters with numbers</option>
+                                            <option value="high">High - Minimum 10 characters with numbers, symbols, and mixed case</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="force-password-change" checked>
+                                        <label class="form-check-label" for="force-password-change">Force password change every 90 days</label>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="two-factor-auth">
+                                        <label class="form-check-label" for="two-factor-auth">Enable two-factor authentication</label>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="log-failed-attempts" checked>
+                                        <label class="form-check-label" for="log-failed-attempts">Log failed login attempts</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="login-attempts" class="form-label">Max Failed Login Attempts</label>
+                                        <input type="number" class="form-control" id="login-attempts" value="5" min="1" max="10">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Security Settings</button>
+                                </form>
+                            </div>
+                            
+                            <!-- Advanced Settings -->
+                            <div class="tab-pane fade" id="advanced" role="tabpanel" aria-labelledby="advanced-tab">
+                                <form id="advanced-settings-form">
+                                    <div class="mb-3">
+                                        <label for="log-level" class="form-label">Log Level</label>
+                                        <select class="form-select" id="log-level">
+                                            <option value="error">Error</option>
+                                            <option value="warning">Warning</option>
+                                            <option value="info" selected>Info</option>
+                                            <option value="debug">Debug</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="cache-lifetime" class="form-label">Cache Lifetime (minutes)</label>
+                                        <input type="number" class="form-control" id="cache-lifetime" value="60" min="0" max="1440">
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="enable-api" checked>
+                                        <label class="form-check-label" for="enable-api">Enable API access</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pagination-limit" class="form-label">Items Per Page</label>
+                                        <input type="number" class="form-control" id="pagination-limit" value="25" min="5" max="100">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="backup-frequency" class="form-label">Database Backup Frequency</label>
+                                        <select class="form-select" id="backup-frequency">
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly" selected>Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="never">Never</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="maintenance-mode">
+                                        <label class="form-check-label" for="maintenance-mode">Enable maintenance mode</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Advanced Settings</button>
+                                </form>
+                                <hr>
+                                <h5 class="mt-4 mb-3">System Management</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card h-100 system-management-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-trash display-6 text-warning mb-3"></i>
+                                                <h6 class="fw-bold">Clear Cache</h6>
+                                                <p class="text-muted small mb-3">Clear system cache to improve performance</p>
+                                                <button id="btn-clear-cache" class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-trash me-1"></i> Clear Cache
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card h-100 system-management-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-download display-6 text-info mb-3"></i>
+                                                <h6 class="fw-bold">Database Backup</h6>
+                                                <p class="text-muted small mb-3">Create a backup of the database</p>
+                                                <button id="btn-backup-now" class="btn btn-info btn-sm">
+                                                    <i class="bi bi-download me-1"></i> Backup Now
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card h-100 system-management-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-upload display-6 text-success mb-3"></i>
+                                                <h6 class="fw-bold">Restore Backup</h6>
+                                                <p class="text-muted small mb-3">Restore from a backup file</p>
+                                                <button id="btn-restore-backup" class="btn btn-success btn-sm">
+                                                    <i class="bi bi-upload me-1"></i> Restore
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-6">
+                                        <div class="card h-100 system-management-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-arrow-counterclockwise display-6 text-danger mb-3"></i>
+                                                <h6 class="fw-bold">Reset Settings</h6>
+                                                <p class="text-muted small mb-3">Reset all settings to default values</p>
+                                                <button id="btn-reset-settings" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset to Default
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100 system-management-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-text display-6 text-primary mb-3"></i>
+                                                <h6 class="fw-bold">Settings Management</h6>
+                                                <p class="text-muted small mb-3">Import or export settings configuration</p>
+                                                <div class="d-flex gap-2 justify-content-center">
+                                                    <button id="btn-import-settings-card" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-upload me-1"></i> Import
+                                                    </button>
+                                                    <button id="btn-export-settings-card" class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-download me-1"></i> Export
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="login-modal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Login Required</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="login-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="login-password" required>
+                        </div>
+                        <div id="login-error" class="alert alert-danger d-none"></div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Confirmation Modal -->
+    <div class="modal fade" id="backup-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-download me-2"></i>Create Database Backup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This will create a complete backup of the database including all settings, users, and tickets.</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        The backup file will be downloaded to your computer.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" id="confirm-backup">
+                        <i class="bi bi-download me-2"></i>Create Backup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Modal -->
+    <div class="modal fade" id="restore-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload me-2"></i>Restore Database Backup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This will replace all current data with the backup data. This action cannot be undone.
+                    </div>
+                    <div class="mb-3">
+                        <label for="backup-file" class="form-label">Select Backup File</label>
+                        <input type="file" class="form-control" id="backup-file" accept=".sql,.db,.backup">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirm-restore" disabled>
+                        <i class="bi bi-upload me-2"></i>Restore Backup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Settings Modal -->
+    <div class="modal fade" id="import-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload me-2"></i>Import Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Import settings from a previously exported configuration file.
+                    </div>
+                    <div class="mb-3">
+                        <label for="settings-file" class="form-label">Select Settings File</label>
+                        <input type="file" class="form-control" id="settings-file" accept=".json">
+                        <div class="form-text">Only JSON files exported from this dashboard are supported.</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="merge-settings" checked>
+                            <label class="form-check-label" for="merge-settings">
+                                Merge with existing settings (unchecked will replace all settings)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-import" disabled>
+                        <i class="bi bi-upload me-2"></i>Import Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Settings Confirmation Modal -->
+    <div class="modal fade" id="reset-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-arrow-counterclockwise me-2"></i>Reset Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This will reset all settings to their default values. This action cannot be undone.
+                    </div>
+                    <p>Are you sure you want to proceed? All your custom configurations will be lost.</p>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirm-reset-checkbox">
+                            <label class="form-check-label" for="confirm-reset-checkbox">
+                                I understand that this action cannot be undone
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-reset" disabled>
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Default
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .settings-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .settings-search {
+            max-width: 300px;
+        }
+        
+        .settings-search .search-box {
+            position: relative;
+        }
+        
+        .settings-search .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            z-index: 2;
+        }
+        
+        .settings-quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .settings-quick-actions .btn {
+            white-space: nowrap;
+        }
+        
+        /* Enhanced tab styling */
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 8px 8px 0 0;
+            margin-right: 4px;
+            padding: 12px 20px;
+            font-weight: 500;
+            color: var(--gray-600);
+            transition: all 0.2s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            background-color: var(--gray-100);
+            color: var(--primary-color);
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: white;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        /* Enhanced form styling */
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Enhanced button styling */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* System management cards */
+        .system-management-card {
+            transition: all 0.2s ease;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .system-management-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+        
+        .system-management-card .display-6 {
+            font-size: 2.5rem;
+        }
+        
+        /* Loading states */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        /* Search highlighting */
+        .search-highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .settings-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            
+            .settings-search {
+                max-width: 100%;
+            }
+            
+            .settings-quick-actions {
+                justify-content: center;
+            }
+        }
+        
+        .settings-search .search-box input {
+            padding-left: 40px;
+        }
+        
+        .tab-pane .mb-3[style*="display: none"],
+        .tab-pane .form-check[style*="display: none"] {
+            transition: opacity 0.3s ease;
+        }
+        
+        .system-management-cards .card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .system-management-cards .card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .system-management-cards .display-6 {
+            font-size: 2.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-search {
+                max-width: 100%;
+                margin-top: 1rem;
+            }
+            
+            .content-header .d-flex {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Enhanced Authentication System -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/auth-error-handler.js"></script>
+    <script src="js/api-connectivity-checker.js"></script>
+    <script src="js/admin-auth-service.js"></script>
+    
+    <!-- Legacy API Support -->
+    <script src="js/unified_api.js"></script>
+    <script src="js/api.js"></script>
+    
+    <!-- Navigation System -->
+    <script src="js/navigation.js"></script>
+    
+    <!-- UI Feedback System -->
+    <script src="js/ui-feedback.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
+    
+    <!-- Simple Auth Fix - Override complex authentication -->
+    <script src="js/simple-auth-fix.js"></script>
+</body>
+</html>

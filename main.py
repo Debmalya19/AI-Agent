@@ -4,7 +4,6 @@ from typing import Optional, Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
-import bcrypt
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.tools import Tool
 from backend.tools import (
@@ -16,7 +15,8 @@ from backend.customer_db_tool import get_customer_orders
 import os
 import json
 import asyncio
-from fastapi import FastAPI, HTTPException, Request, Response, status, Cookie, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, Response, status, Cookie, Form, BackgroundTasks, Depends
+from sqlalchemy.orm import Session
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -26,8 +26,14 @@ import secrets
 # Removed unused pandas import
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.schema import Document
-from backend.database import SessionLocal, get_db, init_db
-from backend.models import KnowledgeEntry, ChatHistory, SupportIntent, SupportResponse, User, UserSession
+from backend.database import SessionLocal, get_db
+# Import unified authentication components
+from backend.unified_auth import auth_service, get_current_user_flexible, AuthenticatedUser
+from backend.unified_models import (
+    UnifiedUser, UnifiedUserSession, UnifiedChatHistory, 
+    UnifiedKnowledgeEntry, UnifiedSupportIntent, UnifiedSupportResponse,
+    UserRole
+)
 from backend.db_utils import search_knowledge_entries, get_knowledge_entries, save_chat_history, get_chat_history
 from backend.enhanced_rag_orchestrator import search_with_priority
 import logging
@@ -51,6 +57,21 @@ from backend.intelligent_chat.models import ChatResponse as IntelligentChatRespo
 # Voice assistant imports
 from backend.voice_api import voice_router
 
+# Data synchronization imports
+from backend.data_sync_integration import startup_data_sync, shutdown_data_sync, include_sync_router
+
+# Admin dashboard integration imports
+from backend.admin_frontend_integration import setup_admin_frontend_integration
+from backend.admin_api_proxy import setup_admin_api_proxy
+from backend.admin_auth_proxy import setup_admin_auth_proxy
+
+# Comprehensive error handling imports
+from backend.comprehensive_error_integration import (
+    setup_comprehensive_error_handling, initialize_error_monitoring,
+    log_login_attempt, log_admin_access_attempt
+)
+from backend.error_monitoring_endpoints import error_monitoring_router
+
 # Tool imports (moved from middle of file)
 from backend.tools import set_shared_memory_manager
 
@@ -61,29 +82,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def validate_configuration():
-    """Validate that all required configuration is present"""
-    required_vars = []
-    missing_vars = []
-    
-    # Check for required environment variables
-    for var in required_vars:
-        if not os.getenv(var):
-            missing_vars.append(var)
-    
-    if missing_vars:
-        error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
-        logger.error(error_msg)
-        raise ValueError(error_msg)
-    
-    logger.info("Configuration validation passed")
-
-# Validate configuration on import
-try:
-    validate_configuration()
-except Exception as e:
-    logger.error(f"Configuration validation failed: {e}")
-    # You can choose to raise the error or continue with warnings
+# Configuration validation is now handled by the unified configuration system
+# This ensures comprehensive validation of all components including unified authentication
 
 
 
@@ -114,7 +114,7 @@ except Exception as e:
 def rag_tool_func(query: str) -> str:
     """RAG tool using database knowledge base"""
     try:
-        # Use the enhanced RAG orchestrator for database search
+        # Use the enhanced RAG orchestrator for unified database search
         results = search_with_priority(query, max_results=3)
         
         if not results:
@@ -143,10 +143,10 @@ def rag_tool_func(query: str) -> str:
 
 # Define exact knowledge lookup using database
 def exact_knowledge_lookup(query: str) -> str:
-    """Perform exact lookup in database knowledge base"""
+    """Perform exact lookup in unified database knowledge base"""
     try:
         with SessionLocal() as db:
-            # Search for exact matches in knowledge entries
+            # Search for exact matches in unified knowledge entries
             entries = search_knowledge_entries(db, query)
             
             if not entries:
@@ -165,14 +165,14 @@ def support_knowledge_tool_func(query: str) -> str:
     """Fetch support response from the customer support knowledge base"""
     try:
         with SessionLocal() as db:
-            # Search support intents and responses
-            intents = db.query(SupportIntent).all()
+            # Search unified support intents and responses
+            intents = db.query(UnifiedSupportIntent).all()
             
             # First try exact intent matching
             for intent in intents:
                 if intent.intent_name.lower() in query.lower():
-                    response = db.query(SupportResponse).filter(
-                        SupportResponse.intent_id == intent.intent_id
+                    response = db.query(UnifiedSupportResponse).filter(
+                        UnifiedSupportResponse.intent_id == intent.intent_id
                     ).first()
                     
                     if response:
@@ -229,15 +229,15 @@ def support_knowledge_tool_func(query: str) -> str:
             
             # Return the best match if score is high enough
             if best_match and best_score >= 1.5:
-                response = db.query(SupportResponse).filter(
-                    SupportResponse.intent_id == best_match.intent_id
+                response = db.query(UnifiedSupportResponse).filter(
+                    UnifiedSupportResponse.intent_id == best_match.intent_id
                 ).first()
                 
                 if response:
                     return response.response_text
             
-            # If still no match, try searching knowledge entries
-            entries = db.query(KnowledgeEntry).all()
+            # If still no match, try searching unified knowledge entries
+            entries = db.query(UnifiedKnowledgeEntry).all()
             for entry in entries:
                 if any(word in entry.title.lower() for word in query_lower.split()):
                     return entry.content
@@ -392,71 +392,193 @@ except Exception as e:
     logger.error(f"Failed to initialize intelligent chat UI components: {e}")
     intelligent_chat_manager = None
 
-# Lifespan function for FastAPI
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Manage application lifespan events"""
-    # Startup
+# Import unified startup system
+from backend.unified_startup import create_unified_app, get_app_manager
+from backend.unified_config import get_config_manager
+
+# Create unified FastAPI application
+app = create_unified_app()
+
+# Include authentication routes
+from backend.auth_routes import auth_router, admin_auth_router
+from backend.admin_routes import admin_router, ticket_router
+from backend.diagnostic_endpoints import diagnostic_router
+app.include_router(auth_router)
+app.include_router(admin_auth_router)
+app.include_router(admin_router)
+app.include_router(ticket_router)
+app.include_router(diagnostic_router)
+
+# Add specific admin dashboard login endpoint for compatibility
+@app.post("/admin/auth/login")
+async def admin_dashboard_login_compatibility(
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    """
+    Admin dashboard login endpoint with multiple format compatibility
+    Handles various request formats from the admin dashboard frontend
+    """
     try:
-        logger.info("Starting AI Agent Customer Support application...")
+        # Get request body
+        body = await request.body()
+        content_type = request.headers.get("content-type", "")
         
-        # Initialize database tables
-        try:
-            init_db()
-            logger.info("✅ Database tables initialized successfully")
-        except Exception as db_error:
-            logger.error(f"❌ Database initialization failed: {db_error}")
-            logger.warning("Application will continue but registration/login may not work")
-        
-        # Log configuration status
-        if llm:
-            logger.info("✅ LLM (Gemini) is available")
+        # Parse request data based on content type
+        if content_type.startswith("application/json"):
+            try:
+                data = json.loads(body)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid JSON format")
         else:
-            logger.warning("⚠️ LLM is not available")
+            # Handle form data or other formats
+            form_data = await request.form()
+            data = dict(form_data)
         
-        if agent_executor:
-            logger.info("✅ Agent executor is available")
-        else:
-            logger.warning("⚠️ Agent executor is not available")
+        # Extract credentials with multiple field name support
+        email = data.get('email') or data.get('username') or data.get('user')
+        password = data.get('password') or data.get('pass')
         
-        if memory_manager:
-            logger.info("✅ Memory manager is available")
-        else:
-            logger.warning("⚠️ Memory manager is not available")
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email and password are required")
         
-        # Start background cleanup task
-        if memory_config.retention.auto_cleanup_enabled:
-            asyncio.create_task(cleanup_memory_task())
-            logger.info("Memory cleanup background task started")
+        # Use the unified authentication service
+        from backend.unified_auth import auth_service
         
-        logger.info("🚀 AI Agent Customer Support application started successfully!")
+        # Authenticate user
+        user = auth_service.authenticate_user(email, password, db)
+        if not user:
+            logger.warning(f"Failed admin login attempt for: {email}")
+            raise HTTPException(status_code=401, detail="Invalid username or password")
         
+        # Verify admin privileges
+        if not user.is_admin:
+            logger.warning(f"Non-admin user attempted admin login: {user.username}")
+            raise HTTPException(status_code=403, detail="Admin privileges required")
+        
+        # Check if user is active
+        if not user.is_active:
+            logger.warning(f"Admin login attempt for inactive user: {user.username}")
+            raise HTTPException(status_code=403, detail="Account is disabled")
+        
+        # Create session
+        session_token = auth_service.create_user_session(user, db, request)
+        
+        # Set session cookie
+        from backend.unified_auth import SessionManager
+        SessionManager.set_session_cookie(response, session_token)
+        
+        # Log successful admin login
+        logger.info(f"Successful admin login for user: {user.username} (ID: {user.user_id})")
+        
+        # Return response in format expected by admin dashboard
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "Login successful",
+                "token": session_token,
+                "access_token": session_token,
+                "user": {
+                    "id": user.user_id,
+                    "username": user.username,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "role": user.role.value if user.role else "admin",
+                    "is_admin": user.is_admin,
+                    "is_active": user.is_active
+                },
+                "redirect_url": "/admin",
+                "expires_in": 3600 * 8,  # 8 hours
+                "token_type": "bearer"
+            },
+            status_code=200
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Startup error: {e}")
+        logger.error(f"Admin dashboard login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+# Get configuration for conditional features
+config_manager = get_config_manager()
+config = config_manager.config
+
+# Serve admin dashboard HTML files at /admin/ before mounting static files
+@app.get("/admin/")
+async def admin_dashboard_root():
+    """Serve the main admin dashboard index.html"""
+    return FileResponse("admin-dashboard/frontend/index.html")
+
+@app.get("/admin/{filename}")
+async def admin_dashboard_files(filename: str):
+    """Serve specific admin dashboard HTML files"""
+    import os
+    from fastapi import HTTPException
     
-    yield
+    # List of allowed admin dashboard HTML files
+    allowed_files = [
+        "index.html", "tickets.html", "users.html", "settings.html", 
+        "integration.html", "logs.html", "register.html", "debug.html",
+        "auth-test.html", "admin-dashboard-test.html", "minimal-test.html",
+        "test-admin-functionality.html", "test-all-pages-functionality.html",
+        "test-dashboard-functionality.html", "test-login-fix.html",
+        "test-simple-login.html", "test-session-manager.html",
+        "test-session-manager-browser.html"
+    ]
     
-    # Shutdown
-    logger.info("Shutting down AI Agent Customer Support application...")
+    # Check if the requested file is allowed
+    if filename not in allowed_files:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Construct the file path
+    file_path = f"admin-dashboard/frontend/{filename}"
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(file_path)
 
-# FastAPI app setup with lifespan
-app = FastAPI(
-    title="AI Agent Customer Support", 
-    version="1.0.0",
-    lifespan=lifespan
-)
+@app.get("/admin/admin/{filename}")
+async def admin_subdirectory_files(filename: str):
+    """Serve admin dashboard HTML files from the admin subdirectory"""
+    import os
+    from fastapi import HTTPException
+    
+    # List of allowed admin subdirectory HTML files
+    allowed_files = [
+        "register.html", "support-dashboard.html"
+    ]
+    
+    # Check if the requested file is allowed
+    if filename not in allowed_files:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Construct the file path
+    file_path = f"admin-dashboard/frontend/admin/{filename}"
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(file_path)
 
-# Allow CORS for local frontend testing
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Mount static files - order is important for proper route resolution
+# Root-level mounts for admin dashboard static files (for compatibility with relative paths)
+app.mount("/css", StaticFiles(directory="admin-dashboard/frontend/css"), name="admin_css")
+app.mount("/js", StaticFiles(directory="admin-dashboard/frontend/js"), name="admin_js")
 
-# Include voice assistant router
-app.include_router(voice_router)
+# Main application static files
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+# Admin dashboard files (maintains existing functionality)
+app.mount("/admin", StaticFiles(directory="admin-dashboard/frontend"), name="admin")
+
+# Middleware and routers are now handled by the unified startup system
+# This ensures proper initialization order and configuration management
+# All authentication components use the unified authentication system
 
 # Background task for memory cleanup
 async def cleanup_memory_task():
@@ -497,23 +619,12 @@ async def cleanup_memory_task():
 
 # Learning and insights endpoints
 @app.get("/learning/insights")
-async def get_learning_insights(session_token: str = Cookie(None)):
+async def get_learning_insights(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Get learning insights for the current user"""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-
-        # Get user ID from session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            user_id = user_session.user_id
+        user_id = current_user.user_id
 
         # Get learning insights from intelligent chat manager
         if intelligent_chat_manager:
@@ -529,23 +640,12 @@ async def get_learning_insights(session_token: str = Cookie(None)):
         raise HTTPException(status_code=500, detail="Failed to get learning insights")
 
 @app.get("/learning/conversation-patterns")
-async def get_conversation_patterns(session_token: str = Cookie(None)):
+async def get_conversation_patterns(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Get conversation patterns and recommendations for the current user"""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-
-        # Get user ID from session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            user_id = user_session.user_id
+        user_id = current_user.user_id
 
         # Get conversation patterns from memory manager
         if memory_manager:
@@ -600,8 +700,7 @@ async def get_conversation_patterns(session_token: str = Cookie(None)):
 
 # Data lake endpoints removed - data_lake folder was deleted as it was unused
 
-# Serve frontend static files
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# Static file serving is now handled by the unified startup system
 
 @app.get("/")
 async def root():
@@ -639,31 +738,71 @@ async def voice_page_integration_js():
 async def voice_assistant_test_page():
     return FileResponse("frontend/voice-assistant-test.html")
 
+@app.get("/analytics-dashboard.html")
+async def analytics_dashboard_page():
+    return FileResponse("frontend/analytics-dashboard.html")
+
+@app.get("/admin-diagnostic-tools.html")
+async def admin_diagnostic_tools_page():
+    return FileResponse("frontend/admin-diagnostic-tools.html")
+
+# Redirect common admin dashboard URLs to the correct paths for backward compatibility
+@app.get("/tickets.html")
+async def redirect_tickets():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/tickets.html", status_code=301)
+
+@app.get("/users.html")
+async def redirect_users():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/users.html", status_code=301)
+
+@app.get("/settings.html")
+async def redirect_settings():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/settings.html", status_code=301)
+
+@app.get("/integration.html")
+async def redirect_integration():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/integration.html", status_code=301)
+
+@app.get("/logs.html")
+async def redirect_logs():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/logs.html", status_code=301)
+
+
+
 # Removed test-fixes.html endpoint - file not found
 
-# Authentication endpoints
+# Legacy authentication helper removed - all authentication now uses unified system
+# Use get_current_user_flexible dependency for all authentication needs
+
+# Authentication endpoints - Updated to use unified authentication system
 @app.post("/logout")
-async def logout(response: Response, session_token: str = Cookie(None)):
-    """Logout endpoint to invalidate user session and clean up memory data"""
+async def logout(
+    request: Request,
+    response: Response, 
+    session_token: str = Cookie(None),
+    db: Session = Depends(get_db)
+):
+    """Logout endpoint using unified authentication system with memory cleanup"""
     try:
         user_id = None
         session_id = None
         
         if session_token:
-            # Invalidate the session in the database
-            with SessionLocal() as db:
-                user_session = db.query(UserSession).filter(
-                    UserSession.session_id == session_token
-                ).first()
-                
-                if user_session:
-                    user_id = user_session.user_id
-                    session_id = user_session.session_id
-                    
-                    user_session.is_active = False
-                    user_session.logout_time = datetime.now(timezone.utc)
-                    db.commit()
-                    logger.info(f"User session {session_token} logged out successfully")
+            # Get user info before invalidating session for memory cleanup
+            from backend.unified_auth import auth_service
+            user = auth_service.get_user_from_session(session_token, db)
+            if user:
+                user_id = user.id
+                session_id = session_token
+            
+            # Invalidate the session using unified auth service
+            auth_service.invalidate_session(session_token, db)
+            logger.info(f"User session {session_token} logged out successfully")
         
         # Clean up user memory data on logout
         if user_id and memory_manager:
@@ -704,56 +843,65 @@ class RegisterRequest(PydanticBaseModel):
     password: str
 
 @app.post("/register")
-async def register_user(register_request: RegisterRequest):
-    """Register a new user"""
+async def register_user(
+    register_request: RegisterRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    """Register a new user using unified authentication system"""
     try:
         logger.info(f"Registration attempt for user_id: {register_request.user_id}, username: {register_request.username}, email: {register_request.email}")
-        with SessionLocal() as db:
-            # Check if user_id already exists
-            existing_user_by_id = db.query(User).filter(User.user_id == register_request.user_id).first()
-            if existing_user_by_id:
+        
+        from backend.unified_auth import auth_service
+        from backend.unified_models import UnifiedUser, UserRole
+        
+        # Check if user already exists in unified system
+        existing_user = db.query(UnifiedUser).filter(
+            (UnifiedUser.user_id == register_request.user_id) |
+            (UnifiedUser.username == register_request.username) |
+            (UnifiedUser.email == register_request.email)
+        ).first()
+        
+        if existing_user:
+            if existing_user.user_id == register_request.user_id:
                 raise HTTPException(status_code=400, detail="User ID already exists")
-            
-            # Check if username already exists
-            existing_user_by_username = db.query(User).filter(User.username == register_request.username).first()
-            if existing_user_by_username:
+            elif existing_user.username == register_request.username:
                 raise HTTPException(status_code=400, detail="Username already exists")
-            
-            # Check if email already exists
-            existing_user_by_email = db.query(User).filter(User.email == register_request.email).first()
-            if existing_user_by_email:
+            else:
                 raise HTTPException(status_code=400, detail="Email already exists")
-            
-            # Hash the password
-            password_hash = hashlib.sha256(register_request.password.encode()).hexdigest()
-            
-            # Create new user
-            new_user = User(
-                user_id=register_request.user_id,
-                username=register_request.username,
-                email=register_request.email,
-                full_name=register_request.full_name,
-                password_hash=password_hash,
-                is_active=True,
-                is_admin=False
-            )
-            
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-            
-            logger.info(f"New user registered successfully: {register_request.user_id}")
-            
-            return JSONResponse(
-                content={
-                    "message": "User registered successfully",
-                    "user_id": new_user.user_id,
-                    "username": new_user.username,
-                    "email": new_user.email
-                },
-                status_code=201
-            )
-            
+        
+        # Hash the password using unified auth service
+        password_hash = auth_service.hash_password(register_request.password)
+        
+        # Create new unified user
+        new_user = UnifiedUser(
+            user_id=register_request.user_id,
+            username=register_request.username,
+            email=register_request.email,
+            full_name=register_request.full_name,
+            password_hash=password_hash,
+            role=UserRole.CUSTOMER,
+            is_active=True,
+            is_admin=False
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        logger.info(f"New user registered successfully: {register_request.user_id}")
+        
+        return JSONResponse(
+            content={
+                "message": "User registered successfully",
+                "user_id": new_user.user_id,
+                "username": new_user.username,
+                "email": new_user.email
+            },
+            status_code=201
+        )
+        
     except HTTPException as he:
         logger.error(f"Registration HTTP error: {he.detail}")
         raise
@@ -762,53 +910,32 @@ async def register_user(register_request: RegisterRequest):
         raise HTTPException(status_code=500, detail="Registration failed")
 
 @app.get("/me")
-async def get_current_user(session_token: str = Cookie(None)):
-    """Get current user information from session"""
+async def get_current_user_info(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
+    """Get current user information using unified authentication system"""
     try:
-        if not session_token:
-            return JSONResponse(
-                content={"authenticated": False, "message": "No session token"},
-                status_code=401
-            )
+        return JSONResponse(
+            content={
+                "authenticated": True,
+                "user_id": current_user.user_id,
+                "username": current_user.username,
+                "email": current_user.email,
+                "full_name": current_user.full_name,
+                "role": current_user.role.value,
+                "is_admin": current_user.is_admin,
+                "session_id": current_user.session_id
+            },
+            status_code=200
+        )
         
-        # Check if session is valid
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                return JSONResponse(
-                    content={"authenticated": False, "message": "Invalid session"},
-                    status_code=401
-                )
-            
-            # Get user information
-            user = db.query(User).filter(User.user_id == user_session.user_id).first()
-            
-            if not user:
-                return JSONResponse(
-                    content={"authenticated": False, "message": "User not found"},
-                    status_code=401
-                )
-            
-            return JSONResponse(
-                content={
-                    "authenticated": True,
-                    "user_id": user.user_id,
-                    "username": user.username,
-                    "email": user.email,
-                    "session_id": session_token
-                },
-                status_code=200
-            )
-            
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Get current user error: {e}")
         return JSONResponse(
-            content={"authenticated": False, "message": "Session check failed"},
-            status_code=500
+            content={"authenticated": False, "message": "Authentication failed"},
+            status_code=401
         )
 
 # Request model for chat input
@@ -830,25 +957,15 @@ class ChatResponse(PydanticBaseModel):
 # API endpoints
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(chat_request: ChatRequest, session_token: str = Cookie(None)):
+async def chat_endpoint(
+    chat_request: ChatRequest, 
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     start_time = time.time()
-    user_id = None
+    user_id = current_user.user_id  # Use user_id (string) instead of id (int)
+    session_token = current_user.session_id
     
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-
-        # Get user ID from session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            user_id = user_session.user_id
 
         # Try intelligent chat manager first, fallback to legacy agent executor
         if intelligent_chat_manager:
@@ -1380,171 +1497,133 @@ async def health_check():
 # Database initialization endpoint
 @app.post("/init-db")
 async def initialize_database():
-    """Initialize database tables if they don't exist"""
+    """Initialize unified database tables if they don't exist"""
     try:
-        from database import init_db
+        # Database initialization is now handled by the unified startup system
+        # This endpoint is kept for manual initialization if needed
+        from backend.database import init_db
         init_db()
-        return {"message": "Database initialized successfully"}
+        
+        logger.info("Unified database tables initialized successfully")
+        return {"message": "Unified database initialized successfully"}
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
         raise HTTPException(status_code=500, detail=f"Database initialization failed: {e}")
 
-# Login endpoint with proper user ID and password validation
+# Login endpoint using unified authentication system
 @app.post("/login")
-async def login(username: str = Form(...), password: str = Form(...)):
+async def login(
+    username: str = Form(...), 
+    password: str = Form(...),
+    request: Request = None,
+    db: Session = Depends(get_db)
+):
+    """Login endpoint using unified authentication system with comprehensive error handling"""
+    from backend.unified_auth import auth_service
+    from backend.unified_models import UnifiedChatHistory
+    from backend.auth_error_handler import get_auth_error_handler, auth_error_context
+    
+    auth_handler = get_auth_error_handler()
+    
+    # Check if account is locked before attempting authentication
+    if username and auth_handler.is_account_locked(username):
+        await auth_handler.log_security_event({
+            'event_type': 'rate_limit_exceeded',
+            'user_identifier': username,
+            'ip_address': request.client.host if request and request.client else None,
+            'success': False,
+            'security_level': 'high'
+        })
+        raise HTTPException(
+            status_code=423, 
+            detail="Account temporarily locked due to multiple failed login attempts"
+        )
+    
     try:
-        if not username or not password:
-            raise HTTPException(status_code=400, detail="User ID and password required")
-
-        with SessionLocal() as db:
-            user = db.query(User).filter(
-                User.user_id == username,
-                User.is_active == True
-            ).first()
-
+        async with auth_error_context(
+            user_identifier=username,
+            request=request,
+            auth_type="login"
+        ):
+            if not username or not password:
+                raise HTTPException(status_code=400, detail="Username and password required")
+            
+            # Authenticate user using unified auth service
+            user = auth_service.authenticate_user(username, password, db)
+            
             if not user:
                 raise HTTPException(status_code=401, detail="Invalid user ID or password")
 
-            stored_hash = user.password_hash
-
-            # Debugging logs
-            logger.info(f"🔑 Raw entered password: {password}")
-            logger.info(f"🔑 Stored hash in DB: {stored_hash}")
-
-            # --- Password Validation ---
-            valid_password = False
-
-            # Case 1: bcrypt stored
-            if stored_hash.startswith("$2b$") or stored_hash.startswith("$2a$"):
-                valid_password = bcrypt.checkpw(password.encode(), stored_hash.encode())
-
-            # Case 2: SHA-256 stored
-            else:
-                entered_hash = hashlib.sha256(password.encode()).hexdigest()
-                logger.info(f"🔑 Entered SHA256 hash: {entered_hash}")
-                valid_password = (entered_hash == stored_hash)
-
-            if not valid_password:
-                raise HTTPException(status_code=401, detail="Invalid user ID or password")
-
-            # --- Session handling ---
-            session_token = secrets.token_urlsafe(32)
-            expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
-            token_hash = hashlib.sha256(session_token.encode()).hexdigest()
-
-            user_session = UserSession(
-                session_id=session_token,   # ❗️Consider storing only token_hash
-                token_hash=token_hash,
-                user_id=user.user_id,
-                created_at=datetime.now(timezone.utc),
-                expires_at=expires_at,
-                last_accessed=datetime.now(timezone.utc),
-                is_active=True
+            # Create session using unified auth service
+            session_token = auth_service.create_user_session(user, db, request)
+            
+            # Log successful authentication
+            await auth_handler.log_successful_auth(
+                user_identifier=username,
+                user_id=user.id,
+                session_id=session_token,
+                request=request,
+                auth_type="login"
             )
-            db.add(user_session)
-            db.commit()
-
-            login_entry = ChatHistory(
+            
+            # Log successful login in chat history
+            login_entry = UnifiedChatHistory(
                 session_id=session_token,
                 user_message="login",
-                bot_response=f"User {user.username} ({user.user_id}) logged in successfully"
+                bot_response=f"User {user.username} ({user.user_id}) logged in successfully",
+                user_id=user.id
             )
             db.add(login_entry)
             db.commit()
 
-            db.refresh(user)
+            # Create response with session cookie
+            response = JSONResponse({
+                "access_token": session_token,
+                "token_type": "bearer",
+                "expires_in": 86400,
+                "user": {
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "role": user.role.value if user.role else "customer",
+                    "is_admin": user.is_admin
+                }
+            })
+            
+            response.set_cookie(
+                key="session_token",
+                value=session_token,
+                httponly=True,
+                max_age=86400,
+                secure=False,  # Set to True in production with HTTPS
+                samesite="lax"
+            )
 
-        response = JSONResponse({
-            "access_token": session_token,
-            "token_type": "bearer",
-            "expires_in": 86400,
-            "user": {
-                "user_id": user.user_id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name
-            }
-        })
-        response.set_cookie(
-            key="session_token",
-            value=session_token,
-            httponly=True,
-            max_age=86400,
-            secure=False,  # ✅ change to True in production
-            samesite="lax"
-        )
+            logger.info(f"Successful login for user: {username}")
+            return response
 
-        return response
-
-    except HTTPException:
+    except HTTPException as http_exc:
+        # HTTPExceptions are handled by the auth_error_context
         raise
     except Exception as e:
-        logger.error(f"Login error: {e}")
+        # Unexpected errors are also handled by auth_error_context
+        logger.error(f"Unexpected login error: {e}")
         raise HTTPException(status_code=500, detail="Login failed")
 
 
 
 # Duplicate logout endpoint removed - using the enhanced one above with memory cleanup
 
-# Get current user info
-@app.get("/me")
-async def get_current_user(session_token: str = Cookie(None)):
-    """Get current user information from session"""
-    try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="No active session")
-        
-        # Get user info from session
-        with SessionLocal() as db:
-            # First, get the user session to find the user_id
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            # Then get the actual user information
-            user = db.query(User).filter(
-                User.user_id == user_session.user_id,
-                User.is_active == True
-            ).first()
-            
-            if not user:
-                raise HTTPException(status_code=401, detail="User not found")
-        
-        return {
-            "user": {
-                "user_id": user.user_id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name
-            },
-            "authenticated": True
-        }
-        
-    except Exception as e:
-        logger.error(f"Get user error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get user info")
+# Duplicate /me endpoint removed - using unified authentication system above
 
 # Memory layer endpoints
 @app.get("/memory/stats")
-async def get_memory_stats(session_token: str = Cookie(None)):
+async def get_memory_stats(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Get memory system statistics for monitoring"""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Validate session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
         
         # Get memory statistics
         stats = memory_manager.get_memory_stats()
@@ -1568,23 +1647,13 @@ async def get_memory_stats(session_token: str = Cookie(None)):
         raise HTTPException(status_code=500, detail=f"Failed to get memory stats: {e}")
 
 @app.get("/memory/user-history")
-async def get_user_memory_history(session_token: str = Cookie(None), limit: int = 50):
+async def get_user_memory_history(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible),
+    limit: int = 50
+):
     """Get conversation history for the current user"""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Get user ID from session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            user_id = user_session.user_id
+        user_id = current_user.user_id
         
         # Get user conversation history
         conversations = memory_manager.get_user_conversation_history(user_id, limit)
@@ -1615,21 +1684,15 @@ async def get_user_memory_history(session_token: str = Cookie(None), limit: int 
         raise HTTPException(status_code=500, detail=f"Failed to get user history: {e}")
 
 @app.post("/memory/cleanup")
-async def trigger_memory_cleanup(background_tasks: BackgroundTasks, session_token: str = Cookie(None)):
+async def trigger_memory_cleanup(
+    background_tasks: BackgroundTasks,
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Manually trigger memory cleanup"""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Validate session (admin check could be added here)
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
+        # Admin check could be added here if needed
+        # if not current_user.is_admin:
+        #     raise HTTPException(status_code=403, detail="Admin access required")
         
         # Add cleanup task to background
         def run_cleanup():
@@ -1700,23 +1763,13 @@ async def get_memory_health():
 # Intelligent Chat UI specific endpoints
 
 @app.get("/chat/status")
-async def get_chat_status(session_token: str = Cookie(None)):
+async def get_chat_status(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Get real-time tool execution updates and chat system status."""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Validate session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            user_id = user_session.user_id
+        user_id = current_user.user_id
+        session_token = current_user.session_id
         
         # Get chat system status
         status_info = {
@@ -1771,26 +1824,13 @@ async def get_chat_status(session_token: str = Cookie(None)):
 
 @app.get("/chat/context")
 async def get_conversation_context(
-    session_token: str = Cookie(None), 
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible),
     limit: int = 10,
     include_metadata: bool = False
 ):
     """Get conversation context for the current user."""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Validate session and get user ID
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            user_id = user_session.user_id
+        user_id = current_user.user_id
         
         # Get context using intelligent chat manager if available
         context_entries = []
@@ -1849,21 +1889,11 @@ async def get_conversation_context(
         raise HTTPException(status_code=500, detail=f"Failed to get conversation context: {e}")
 
 @app.get("/chat/tools")
-async def get_available_tools(session_token: str = Cookie(None)):
+async def get_available_tools(
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Get information about available tools and their current status."""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Validate session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
         
         # Get available tools information
         available_tools = []
@@ -1952,26 +1982,16 @@ async def get_available_tools(session_token: str = Cookie(None)):
         raise HTTPException(status_code=500, detail=f"Failed to get tools information: {e}")
 
 @app.get("/chat/ui-state/{session_id}")
-async def get_ui_state(session_id: str, session_token: str = Cookie(None)):
+async def get_ui_state(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user_flexible)
+):
     """Get current UI state for a specific session."""
     try:
-        if not session_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-        
-        # Validate session
-        with SessionLocal() as db:
-            user_session = db.query(UserSession).filter(
-                UserSession.session_id == session_token,
-                UserSession.is_active == True
-            ).first()
-            
-            if not user_session:
-                raise HTTPException(status_code=401, detail="Invalid session")
-            
-            # Verify session_id matches or user has access
-            if session_id != session_token:
-                # Could add additional authorization logic here
-                pass
+        # Verify session_id matches or user has access
+        if session_id != current_user.session_id:
+            # Could add additional authorization logic here
+            pass
         
         # Get UI state from intelligent chat manager if available
         ui_state_data = {

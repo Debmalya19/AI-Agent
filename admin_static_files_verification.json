@@ -1,0 +1,188 @@
+{
+  "css_files": {
+    "modern-dashboard.css": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\css\\modern-dashboard.css",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "admin.css": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\css\\admin.css",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "styles.css": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\css\\styles.css",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "support.css": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\css\\support.css",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    }
+  },
+  "js_files": {
+    "session-manager.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\session-manager.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "auth-error-handler.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\auth-error-handler.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "api-connectivity-checker.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\api-connectivity-checker.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "admin-auth-service.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\admin-auth-service.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "unified_api.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\unified_api.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "api.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\api.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "navigation.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\navigation.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "ui-feedback.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\ui-feedback.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "auth.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\auth.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "dashboard.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\dashboard.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "integration.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\integration.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "main.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\main.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    },
+    "simple-auth-fix.js": {
+      "path": "ai-agent\\admin-dashboard\\frontend\\js\\simple-auth-fix.js",
+      "exists": false,
+      "permissions": {
+        "readable": false,
+        "size": 0,
+        "error": "File does not exist"
+      },
+      "syntax": null
+    }
+  },
+  "summary": {
+    "total_files": 17,
+    "verified_files": 0,
+    "missing_files": 17,
+    "syntax_errors": 0,
+    "permission_errors": 17
+  },
+  "errors": [
+    "Directory missing: ai-agent\\admin-dashboard\\frontend",
+    "Directory missing: ai-agent\\admin-dashboard\\frontend\\css",
+    "Directory missing: ai-agent\\admin-dashboard\\frontend\\js"
+  ]
+}

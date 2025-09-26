@@ -5,6 +5,7 @@ persistent conversation memory, context caching, and tool analytics.
 """
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, Float, JSON, Boolean, Index
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID, ARRAY
 from sqlalchemy.orm import relationship
 from backend.database import Base
 from datetime import datetime, timezone, timedelta
@@ -24,20 +25,20 @@ class EnhancedChatHistory(Base):
     user_message = Column(Text, nullable=True)  # Made nullable for encrypted storage
     bot_response = Column(Text, nullable=True)  # Made nullable for encrypted storage
     # Encrypted fields for sensitive data
-    user_message_encrypted = Column(JSON)  # Encrypted user message with metadata
-    bot_response_encrypted = Column(JSON)  # Encrypted bot response with metadata
-    tools_used = Column(JSON)  # List of tool names used
-    tool_performance = Column(JSON)  # Dict of tool_name -> performance metrics
-    context_used = Column(JSON)  # List of context entries used
+    user_message_encrypted = Column(JSONB)  # Encrypted user message with metadata (PostgreSQL optimized)
+    bot_response_encrypted = Column(JSONB)  # Encrypted bot response with metadata (PostgreSQL optimized)
+    tools_used = Column(JSONB)  # List of tool names used (PostgreSQL optimized)
+    tool_performance = Column(JSONB)  # Dict of tool_name -> performance metrics (PostgreSQL optimized)
+    context_used = Column(JSONB)  # List of context entries used (PostgreSQL optimized)
     response_quality_score = Column(Float)  # Quality score for the response
-    semantic_features = Column(JSON)  # Extracted semantic features for similarity
+    semantic_features = Column(JSONB)  # Extracted semantic features for similarity (PostgreSQL optimized)
     # Security and privacy fields
     data_classification = Column(String(50), default="internal")  # public, internal, confidential, restricted
     retention_policy = Column(String(100))  # Retention policy identifier
-    deleted_at = Column(DateTime)  # Soft delete timestamp
-    anonymized_at = Column(DateTime)  # Anonymization timestamp
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    deleted_at = Column(TIMESTAMP(timezone=True))  # Soft delete timestamp (PostgreSQL optimized)
+    anonymized_at = Column(TIMESTAMP(timezone=True))  # Anonymization timestamp (PostgreSQL optimized)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships - commented out to avoid circular reference issues
     # context_cache_entries = relationship("MemoryContextCache", 
@@ -75,15 +76,15 @@ class MemoryContextCache(Base):
     id = Column(Integer, primary_key=True, index=True)
     cache_key = Column(String(255), unique=True, nullable=False, index=True)
     user_id = Column(String(50), index=True)
-    context_data = Column(JSON, nullable=True)  # The actual context content (unencrypted)
-    context_data_encrypted = Column(JSON)  # Encrypted context data with metadata
+    context_data = Column(JSONB, nullable=True)  # The actual context content (PostgreSQL optimized)
+    context_data_encrypted = Column(JSONB)  # Encrypted context data with metadata (PostgreSQL optimized)
     context_type = Column(String(50), nullable=False, index=True)  # conversation, tool_usage, etc.
     relevance_score = Column(Float, index=True)  # Relevance score for ranking
     # Security and privacy fields
     data_classification = Column(String(50), default="internal")  # public, internal, confidential, restricted
-    access_control = Column(JSON)  # Access control metadata
-    expires_at = Column(DateTime, nullable=False, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    access_control = Column(JSONB)  # Access control metadata (PostgreSQL optimized)
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=False, index=True)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Indexes for performance
     __table_args__ = (
@@ -120,8 +121,8 @@ class ToolUsageMetrics(Base):
     average_response_time = Column(Float, default=0.0)  # Average response time in seconds
     response_quality_score = Column(Float, default=0.0)  # Average quality score
     usage_count = Column(Integer, default=1)  # Number of times used
-    last_used = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_used = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Indexes for performance
     __table_args__ = (
@@ -172,11 +173,11 @@ class ConversationSummary(Base):
     user_id = Column(String(50), nullable=False, index=True)
     session_id = Column(String(255), index=True)
     summary_text = Column(Text, nullable=False)
-    key_topics = Column(JSON)  # List of key topics discussed
-    important_context = Column(JSON)  # Important context to remember
-    date_range_start = Column(DateTime, index=True)
-    date_range_end = Column(DateTime, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    key_topics = Column(JSONB)  # List of key topics discussed (PostgreSQL optimized)
+    important_context = Column(JSONB)  # Important context to remember (PostgreSQL optimized)
+    date_range_start = Column(TIMESTAMP(timezone=True), index=True)
+    date_range_end = Column(TIMESTAMP(timezone=True), index=True)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Indexes for performance
     __table_args__ = (
@@ -192,12 +193,12 @@ class MemoryConfiguration(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     config_key = Column(String(100), unique=True, nullable=False, index=True)
-    config_value = Column(JSON, nullable=False)  # Flexible JSON configuration
+    config_value = Column(JSONB, nullable=False)  # Flexible JSON configuration (PostgreSQL optimized)
     config_type = Column(String(50), nullable=False)  # retention, performance, etc.
     description = Column(Text)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class MemoryHealthMetrics(Base):
     """Health and performance metrics for the memory system"""
@@ -208,7 +209,7 @@ class MemoryHealthMetrics(Base):
     metric_value = Column(Float, nullable=False)
     metric_unit = Column(String(20))  # seconds, bytes, count, etc.
     metric_category = Column(String(50), index=True)  # performance, storage, quality
-    recorded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    recorded_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     
     # Indexes for performance
     __table_args__ = (
@@ -228,10 +229,10 @@ class EnhancedUserSession(Base):
     is_active = Column(Boolean, default=True, index=True)
     ip_address = Column(String(45))  # IPv4 or IPv6 address
     user_agent = Column(Text)  # Browser/client user agent
-    session_metadata = Column(JSON)  # Additional session metadata
-    last_activity = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
-    expires_at = Column(DateTime, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    session_metadata = Column(JSONB)  # Additional session metadata (PostgreSQL optimized)
+    last_activity = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    expires_at = Column(TIMESTAMP(timezone=True), index=True)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Indexes for performance
     __table_args__ = (
@@ -250,12 +251,12 @@ class DataProcessingConsent(Base):
     consent_id = Column(String(255), unique=True, nullable=False, index=True)
     purpose = Column(String(100), nullable=False, index=True)  # Purpose of data processing
     consent_given = Column(Boolean, nullable=False)
-    consent_timestamp = Column(DateTime, nullable=False)
+    consent_timestamp = Column(TIMESTAMP(timezone=True), nullable=False)
     consent_method = Column(String(50))  # web_form, api, etc.
     consent_version = Column(String(20))  # Version of privacy policy/terms
-    withdrawal_timestamp = Column(DateTime)  # When consent was withdrawn
+    withdrawal_timestamp = Column(TIMESTAMP(timezone=True))  # When consent was withdrawn
     legal_basis = Column(String(50), default="consent")  # GDPR legal basis
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Indexes for performance
     __table_args__ = (
@@ -274,12 +275,12 @@ class DataSubjectRights(Base):
     user_id = Column(String(50), nullable=False, index=True)
     request_type = Column(String(50), nullable=False, index=True)  # access, rectification, erasure, etc.
     status = Column(String(50), default="pending", index=True)  # pending, in_progress, completed, rejected
-    requested_at = Column(DateTime, nullable=False)
-    completed_at = Column(DateTime)
-    request_details = Column(JSON)  # Additional request details
-    response_data = Column(JSON)  # Response data (for access requests)
+    requested_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    completed_at = Column(TIMESTAMP(timezone=True))
+    request_details = Column(JSONB)  # Additional request details (PostgreSQL optimized)
+    response_data = Column(JSONB)  # Response data (for access requests) (PostgreSQL optimized)
     notes = Column(Text)  # Processing notes
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Indexes for performance
     __table_args__ = (

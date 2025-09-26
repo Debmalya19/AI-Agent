@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Page Functionality Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .test-pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .test-fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .test-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Settings Page Enhancement Functionality Test</h1>
+        <div id="test-results"></div>
+        <button id="run-tests" class="btn btn-primary">Run Tests</button>
+        
+        <!-- Hidden iframe to load settings page -->
+        <iframe id="settings-frame" src="admin-dashboard/frontend/settings.html" style="display: none;"></iframe>
+    </div>
+
+    <script>
+        function addTestResult(testName, passed, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'test-pass' : 'test-fail'}`;
+            resultDiv.innerHTML = `
+                <strong>${testName}:</strong> ${passed ? '✓ PASSED' : '✗ FAILED'} - ${message}
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function addTestInfo(message) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result test-info';
+            resultDiv.innerHTML = `<strong>Info:</strong> ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function runTests() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '';
+            
+            addTestInfo('Starting Settings Page Enhancement Tests...');
+            
+            const iframe = document.getElementById('settings-frame');
+            
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Test 1: Modern Dashboard CSS
+                    const cssLinks = iframeDoc.querySelectorAll('link[href*="modern-dashboard.css"]');
+                    addTestResult('Modern Dashboard CSS', cssLinks.length > 0, 
+                        cssLinks.length > 0 ? 'CSS file is properly linked' : 'CSS file not found');
+                    
+                    // Test 2: Enhanced Search Functionality
+                    const searchInput = iframeDoc.getElementById('settings-search');
+                    addTestResult('Settings Search Input', searchInput !== null, 
+                        searchInput ? 'Search input element found' : 'Search input not found');
+                    
+                    // Test 3: Import/Export Buttons
+                    const importBtn = iframeDoc.getElementById('btn-import-settings');
+                    const exportBtn = iframeDoc.getElementById('btn-export-settings');
+                    addTestResult('Import/Export Buttons', importBtn && exportBtn, 
+                        (importBtn && exportBtn) ? 'Both buttons found' : 'One or both buttons missing');
+                    
+                    // Test 4: Enhanced Modals
+                    const backupModal = iframeDoc.getElementById('backup-modal');
+                    const restoreModal = iframeDoc.getElementById('restore-modal');
+                    const resetModal = iframeDoc.getElementById('reset-modal');
+                    const importModal = iframeDoc.getElementById('import-modal');
+                    
+                    const allModals = backupModal && restoreModal && resetModal && importModal;
+                    addTestResult('Enhanced Modals', allModals, 
+                        allModals ? 'All 4 modals found' : 'Some modals missing');
+                    
+                    // Test 5: System Management Cards
+                    const managementCards = iframeDoc.querySelectorAll('.system-management-card');
+                    addTestResult('System Management Cards', managementCards.length >= 4, 
+                        `Found ${managementCards.length} management cards`);
+                    
+                    // Test 6: Enhanced Styling
+                    const settingsActions = iframeDoc.querySelector('.settings-actions');
+                    addTestResult('Enhanced Settings Actions', settingsActions !== null, 
+                        settingsActions ? 'Enhanced actions container found' : 'Actions container not found');
+                    
+                    // Test 7: Form Validation Elements
+                    const confirmCheckbox = iframeDoc.getElementById('confirm-reset-checkbox');
+                    addTestResult('Reset Confirmation Checkbox', confirmCheckbox !== null, 
+                        confirmCheckbox ? 'Confirmation checkbox found' : 'Confirmation checkbox missing');
+                    
+                    // Test 8: JavaScript Integration
+                    const settingsScript = iframeDoc.querySelector('script[src*="settings.js"]');
+                    addTestResult('Settings JavaScript', settingsScript !== null, 
+                        settingsScript ? 'Settings JS file linked' : 'Settings JS file not linked');
+                    
+                    // Test 9: Tab Structure
+                    const tabs = iframeDoc.querySelectorAll('#settings-tabs .nav-link');
+                    addTestResult('Settings Tabs', tabs.length === 5, 
+                        `Found ${tabs.length} tabs (expected 5)`);
+                    
+                    // Test 10: Responsive Design Elements
+                    const responsiveElements = iframeDoc.querySelectorAll('.col-md-4, .col-md-6');
+                    addTestResult('Responsive Design', responsiveElements.length > 0, 
+                        `Found ${responsiveElements.length} responsive elements`);
+                    
+                    addTestInfo('All tests completed!');
+                    
+                } catch (error) {
+                    addTestResult('Test Execution', false, `Error accessing iframe: ${error.message}`);
+                }
+            };
+            
+            // Reload iframe to trigger tests
+            iframe.src = iframe.src;
+        }
+
+        document.getElementById('run-tests').addEventListener('click', runTests);
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html>

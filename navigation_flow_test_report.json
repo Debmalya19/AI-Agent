@@ -1,0 +1,952 @@
+{
+  "timestamp": "2025-09-19T23:23:02.599295",
+  "navigation_analysis": {
+    "index.html": {
+      "sidebar_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [
+            "active"
+          ],
+          "is_active": true
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [],
+          "is_active": false
+        }
+      ],
+      "navbar_links": [],
+      "breadcrumb_links": [],
+      "all_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [
+            "active"
+          ]
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": []
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": []
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": []
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": []
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": []
+        },
+        {
+          "href": "#",
+          "text": "Profile",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Logout",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "/admin/register.html",
+          "text": "Register as Admin",
+          "classes": [
+            "btn",
+            "btn-outline-secondary"
+          ]
+        }
+      ],
+      "active_elements": [
+        {
+          "tag": "a",
+          "classes": [
+            "active"
+          ],
+          "text": "Dashboard"
+        },
+        {
+          "tag": "button",
+          "classes": [
+            "btn",
+            "btn-outline-primary",
+            "active"
+          ],
+          "text": "Week"
+        }
+      ],
+      "page_title": "Admin Dashboard - Customer Support System",
+      "has_sidebar": true,
+      "has_navbar": false,
+      "has_breadcrumbs": true
+    },
+    "tickets.html": {
+      "sidebar_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [
+            "active"
+          ],
+          "is_active": true
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [],
+          "is_active": false
+        }
+      ],
+      "navbar_links": [],
+      "breadcrumb_links": [],
+      "all_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": []
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [
+            "active"
+          ]
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": []
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": []
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": []
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": []
+        },
+        {
+          "href": "#",
+          "text": "Profile",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Logout",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "/admin/register.html",
+          "text": "Register as Admin",
+          "classes": [
+            "btn",
+            "btn-outline-secondary"
+          ]
+        }
+      ],
+      "active_elements": [
+        {
+          "tag": "a",
+          "classes": [
+            "active"
+          ],
+          "text": "Support Tickets"
+        }
+      ],
+      "page_title": "Support Tickets - Admin Dashboard",
+      "has_sidebar": true,
+      "has_navbar": false,
+      "has_breadcrumbs": true
+    },
+    "users.html": {
+      "sidebar_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [
+            "active"
+          ],
+          "is_active": true
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [],
+          "is_active": false
+        }
+      ],
+      "navbar_links": [],
+      "breadcrumb_links": [],
+      "all_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": []
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": []
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [
+            "active"
+          ]
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": []
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": []
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": []
+        },
+        {
+          "href": "#",
+          "text": "Profile",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Logout",
+          "classes": [
+            "dropdown-item"
+          ]
+        }
+      ],
+      "active_elements": [
+        {
+          "tag": "a",
+          "classes": [
+            "active"
+          ],
+          "text": "User Management"
+        }
+      ],
+      "page_title": "User Management - Admin Dashboard",
+      "has_sidebar": true,
+      "has_navbar": false,
+      "has_breadcrumbs": true
+    },
+    "integration.html": {
+      "sidebar_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [
+            "active"
+          ],
+          "is_active": true
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [],
+          "is_active": false
+        }
+      ],
+      "navbar_links": [],
+      "breadcrumb_links": [],
+      "all_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": []
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": []
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": []
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [
+            "active"
+          ]
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": []
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": []
+        },
+        {
+          "href": "#",
+          "text": "Profile",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Logout",
+          "classes": [
+            "dropdown-item"
+          ]
+        }
+      ],
+      "active_elements": [
+        {
+          "tag": "a",
+          "classes": [
+            "active"
+          ],
+          "text": "AI Integration"
+        }
+      ],
+      "page_title": "AI Integration - Admin Dashboard",
+      "has_sidebar": true,
+      "has_navbar": false,
+      "has_breadcrumbs": true
+    },
+    "settings.html": {
+      "sidebar_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [
+            "active"
+          ],
+          "is_active": true
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [],
+          "is_active": false
+        }
+      ],
+      "navbar_links": [],
+      "breadcrumb_links": [],
+      "all_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": []
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": []
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": []
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": []
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [
+            "active"
+          ]
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": []
+        },
+        {
+          "href": "#",
+          "text": "Profile",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Logout",
+          "classes": [
+            "dropdown-item"
+          ]
+        }
+      ],
+      "active_elements": [
+        {
+          "tag": "a",
+          "classes": [
+            "active"
+          ],
+          "text": "Settings"
+        },
+        {
+          "tag": "button",
+          "classes": [
+            "nav-link",
+            "active"
+          ],
+          "text": "General"
+        },
+        {
+          "tag": "div",
+          "classes": [
+            "tab-pane",
+            "fade",
+            "show",
+            "active"
+          ],
+          "text": "Site Title\n\n\n\nSite Description\nAdmin dashboard for"
+        }
+      ],
+      "page_title": "Settings - Admin Dashboard",
+      "has_sidebar": true,
+      "has_navbar": false,
+      "has_breadcrumbs": true
+    },
+    "logs.html": {
+      "sidebar_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": [],
+          "is_active": false
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [
+            "active"
+          ],
+          "is_active": true
+        }
+      ],
+      "navbar_links": [],
+      "breadcrumb_links": [],
+      "all_links": [
+        {
+          "href": "/admin/index.html",
+          "text": "Dashboard",
+          "classes": []
+        },
+        {
+          "href": "/admin/tickets.html",
+          "text": "Support Tickets",
+          "classes": []
+        },
+        {
+          "href": "/admin/users.html",
+          "text": "User Management",
+          "classes": []
+        },
+        {
+          "href": "/admin/integration.html",
+          "text": "AI Integration",
+          "classes": []
+        },
+        {
+          "href": "/admin/settings.html",
+          "text": "Settings",
+          "classes": []
+        },
+        {
+          "href": "/admin/logs.html",
+          "text": "System Logs",
+          "classes": [
+            "active"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Profile",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Logout",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Export as JSON",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Export as CSV",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Export as TXT",
+          "classes": [
+            "dropdown-item"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Previous",
+          "classes": [
+            "page-link"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "1",
+          "classes": [
+            "page-link"
+          ]
+        },
+        {
+          "href": "#",
+          "text": "Next",
+          "classes": [
+            "page-link"
+          ]
+        }
+      ],
+      "active_elements": [
+        {
+          "tag": "a",
+          "classes": [
+            "active"
+          ],
+          "text": "System Logs"
+        },
+        {
+          "tag": "div",
+          "classes": [
+            "real-time-indicator",
+            "inactive"
+          ],
+          "text": "Real-time: Off"
+        },
+        {
+          "tag": "li",
+          "classes": [
+            "page-item",
+            "active"
+          ],
+          "text": "1"
+        }
+      ],
+      "page_title": "System Logs - Admin Dashboard",
+      "has_sidebar": true,
+      "has_navbar": false,
+      "has_breadcrumbs": true
+    }
+  },
+  "consistency_check": {
+    "sidebar_consistency": {
+      "pages_with_sidebar": [
+        "index.html",
+        "tickets.html",
+        "users.html",
+        "integration.html",
+        "settings.html",
+        "logs.html"
+      ],
+      "consistency_score": 100.0
+    },
+    "navbar_consistency": {
+      "pages_with_navbar": [],
+      "consistency_score": 0.0
+    },
+    "breadcrumb_consistency": {
+      "pages_with_breadcrumbs": [
+        "index.html",
+        "tickets.html",
+        "users.html",
+        "integration.html",
+        "settings.html",
+        "logs.html"
+      ],
+      "consistency_score": 100.0
+    },
+    "title_consistency": {
+      "page_titles": {
+        "index.html": "Admin Dashboard - Customer Support System",
+        "tickets.html": "Support Tickets - Admin Dashboard",
+        "users.html": "User Management - Admin Dashboard",
+        "integration.html": "AI Integration - Admin Dashboard",
+        "settings.html": "Settings - Admin Dashboard",
+        "logs.html": "System Logs - Admin Dashboard"
+      },
+      "pages_with_titles": [
+        "index.html",
+        "tickets.html",
+        "users.html",
+        "integration.html",
+        "settings.html",
+        "logs.html"
+      ],
+      "consistency_score": 100.0
+    },
+    "active_state_analysis": {
+      "index.html": {
+        "active_element_count": 2,
+        "has_active_navigation": true
+      },
+      "tickets.html": {
+        "active_element_count": 1,
+        "has_active_navigation": true
+      },
+      "users.html": {
+        "active_element_count": 1,
+        "has_active_navigation": true
+      },
+      "integration.html": {
+        "active_element_count": 1,
+        "has_active_navigation": true
+      },
+      "settings.html": {
+        "active_element_count": 3,
+        "has_active_navigation": true
+      },
+      "logs.html": {
+        "active_element_count": 3,
+        "has_active_navigation": true
+      }
+    }
+  },
+  "link_validation": {
+    "all_links": {
+      "index.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "tickets.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "users.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "integration.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "settings.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "logs.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ]
+    },
+    "broken_links": {
+      "index.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "tickets.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "users.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "integration.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "settings.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ],
+      "logs.html": [
+        "/admin/index.html",
+        "/admin/tickets.html",
+        "/admin/users.html",
+        "/admin/integration.html",
+        "/admin/settings.html",
+        "/admin/logs.html"
+      ]
+    },
+    "total_links": 36,
+    "total_broken": 36
+  },
+  "breadcrumb_analysis": {
+    "index.html": {
+      "has_breadcrumbs": true,
+      "breadcrumb_count": 0,
+      "breadcrumb_items": [],
+      "proper_hierarchy": false
+    },
+    "tickets.html": {
+      "has_breadcrumbs": true,
+      "breadcrumb_count": 0,
+      "breadcrumb_items": [],
+      "proper_hierarchy": false
+    },
+    "users.html": {
+      "has_breadcrumbs": true,
+      "breadcrumb_count": 0,
+      "breadcrumb_items": [],
+      "proper_hierarchy": false
+    },
+    "integration.html": {
+      "has_breadcrumbs": true,
+      "breadcrumb_count": 0,
+      "breadcrumb_items": [],
+      "proper_hierarchy": false
+    },
+    "settings.html": {
+      "has_breadcrumbs": true,
+      "breadcrumb_count": 0,
+      "breadcrumb_items": [],
+      "proper_hierarchy": false
+    },
+    "logs.html": {
+      "has_breadcrumbs": true,
+      "breadcrumb_count": 0,
+      "breadcrumb_items": [],
+      "proper_hierarchy": false
+    }
+  },
+  "overall_score": 60.0
+}

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Debug</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .status-success { color: #198754; }
+        .status-error { color: #dc3545; }
+        .status-warning { color: #fd7e14; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Admin Login Debug</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Debug Information -->
+                        <div class="debug-info">
+                            <h6>Debug Information:</h6>
+                            <div id="debug-info">
+                                <p>Loading debug information...</p>
+                            </div>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form id="login-form">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" value="admin@example.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" value="admin123" required>
+                            </div>
+                            <div class="alert alert-danger d-none" id="login-error"></div>
+                            <div class="alert alert-success d-none" id="login-success"></div>
+                            <button type="submit" class="btn btn-primary w-100" id="login-btn">Login</button>
+                        </form>
+
+                        <!-- Test Results -->
+                        <div class="debug-info mt-3">
+                            <h6>Test Results:</h6>
+                            <div id="test-results">
+                                <p>No tests run yet.</p>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-3">
+                            <button class="btn btn-secondary btn-sm me-2" id="test-api">Test API</button>
+                            <button class="btn btn-secondary btn-sm me-2" id="check-session">Check Session</button>
+                            <button class="btn btn-secondary btn-sm" id="clear-storage">Clear Storage</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Debug information display
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+            const info = {
+                'Current URL': window.location.href,
+                'User Agent': navigator.userAgent,
+                'Local Storage Token': localStorage.getItem('authToken') || 'None',
+                'Local Storage Username': localStorage.getItem('username') || 'None',
+                'Cookies': document.cookie || 'None',
+                'Session Storage': Object.keys(sessionStorage).length + ' items'
+            };
+
+            let html = '';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<strong>${key}:</strong> ${value}<br>`;
+            }
+            debugInfo.innerHTML = html;
+        }
+
+        // Test results display
+        function addTestResult(message, status = 'info') {
+            const testResults = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const statusClass = status === 'success' ? 'status-success' : 
+                               status === 'error' ? 'status-error' : 
+                               status === 'warning' ? 'status-warning' : '';
+            
+            testResults.innerHTML += `<div class="${statusClass}">[${timestamp}] ${message}</div>`;
+        }
+
+        // Clear test results
+        function clearTestResults() {
+            document.getElementById('test-results').innerHTML = '<p>No tests run yet.</p>';
+        }
+
+        // API request helper
+        async function apiRequest(endpoint, options = {}) {
+            const url = `/api${endpoint}`;
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            const data = await response.json();
+            
+            return { response, data };
+        }
+
+        // Test API connectivity
+        async function testAPI() {
+            clearTestResults();
+            addTestResult('Testing API connectivity...', 'info');
+            
+            try {
+                const { response, data } = await apiRequest('/auth/verify');
+                if (response.ok) {
+                    addTestResult('✅ API is accessible', 'success');
+                    addTestResult(`Current user: ${data.user?.username || 'Not authenticated'}`, 'info');
+                } else {
+                    addTestResult(`⚠️ API responded with status ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                addTestResult(`❌ API test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Check session
+        async function checkSession() {
+            clearTestResults();
+            addTestResult('Checking session...', 'info');
+            
+            try {
+                const { response, data } = await apiRequest('/auth/verify');
+                if (response.ok && data.user) {
+                    addTestResult('✅ Valid session found', 'success');
+                    addTestResult(`User: ${data.user.username} (${data.user.email})`, 'info');
+                    addTestResult(`Admin: ${data.user.is_admin}`, 'info');
+                } else {
+                    addTestResult('❌ No valid session', 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Session check failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear storage
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            // Clear cookies by setting them to expire
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            addTestResult('🧹 Storage and cookies cleared', 'info');
+            updateDebugInfo();
+        }
+
+        // Handle login form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('login-error');
+            const loginSuccess = document.getElementById('login-success');
+            const loginBtn = document.getElementById('login-btn');
+            
+            // Clear previous messages
+            loginError.classList.add('d-none');
+            loginSuccess.classList.add('d-none');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            
+            clearTestResults();
+            addTestResult(`Attempting login with ${email}...`, 'info');
+            
+            try {
+                const { response, data } = await apiRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok && data.success) {
+                    addTestResult('✅ Login successful!', 'success');
+                    addTestResult(`Welcome ${data.user.username}!`, 'success');
+                    
+                    loginSuccess.textContent = `Login successful! Welcome ${data.user.username}`;
+                    loginSuccess.classList.remove('d-none');
+                    
+                    // Store user info
+                    if (data.token) {
+                        localStorage.setItem('authToken', data.token);
+                    }
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('isAdmin', data.user.is_admin);
+                    
+                    updateDebugInfo();
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/admin/index.html';
+                    }, 2000);
+                    
+                } else {
+                    const errorMsg = data.message || data.detail || 'Login failed';
+                    addTestResult(`❌ Login failed: ${errorMsg}`, 'error');
+                    loginError.textContent = errorMsg;
+                    loginError.classList.remove('d-none');
+                }
+                
+            } catch (error) {
+                addTestResult(`❌ Login error: ${error.message}`, 'error');
+                loginError.textContent = `Login error: ${error.message}`;
+                loginError.classList.remove('d-none');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+
+        // Event listeners
+        document.getElementById('test-api').addEventListener('click', testAPI);
+        document.getElementById('check-session').addEventListener('click', checkSession);
+        document.getElementById('clear-storage').addEventListener('click', clearStorage);
+
+        // Initialize
+        updateDebugInfo();
+        
+        // Auto-check session on load
+        setTimeout(checkSession, 1000);
+    </script>
+</body>
+</html>

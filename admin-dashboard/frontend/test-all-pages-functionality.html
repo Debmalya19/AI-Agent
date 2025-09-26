@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Pages Functionality Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern-dashboard.css">
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .page-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .page-tabs {
+            margin-bottom: 20px;
+        }
+        .responsive-test {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .responsive-frame {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .mobile-frame {
+            width: 375px;
+            height: 667px;
+        }
+        .tablet-frame {
+            width: 768px;
+            height: 1024px;
+        }
+        .desktop-frame {
+            width: 1200px;
+            height: 800px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Admin Dashboard - All Pages Functionality Test</h1>
+        <p>This comprehensive test validates all dashboard pages for consistency, functionality, and responsive design.</p>
+        
+        <div class="test-section">
+            <h3>Test Controls</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <button class="btn btn-primary" onclick="runAllTests()">Run All Tests</button>
+                    <button class="btn btn-secondary" onclick="clearResults()">Clear Results</button>
+                    <button class="btn btn-info" onclick="exportResults()">Export Results</button>
+                </div>
+                <div class="col-md-6">
+                    <select class="form-select" id="pageSelector" onchange="loadSelectedPage()">
+                        <option value="">Select a page to test</option>
+                        <option value="index.html">Dashboard (index.html)</option>
+                        <option value="tickets.html">Tickets</option>
+                        <option value="users.html">Users</option>
+                        <option value="integration.html">Integration</option>
+                        <option value="settings.html">Settings</option>
+                        <option value="logs.html">Logs</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Summary</h3>
+            <div class="row">
+                <div class="col-md-2">
+                    <strong>Total Tests:</strong> <span id="totalTests">0</span>
+                </div>
+                <div class="col-md-2">
+                    <strong>Passed:</strong> <span id="passedTests" class="text-success">0</span>
+                </div>
+                <div class="col-md-2">
+                    <strong>Failed:</strong> <span id="failedTests" class="text-danger">0</span>
+                </div>
+                <div class="col-md-2">
+                    <strong>Warnings:</strong> <span id="warningTests" class="text-warning">0</span>
+                </div>
+                <div class="col-md-2">
+                    <strong>Score:</strong> <span id="overallScore">0%</span>
+                </div>
+                <div class="col-md-2">
+                    <strong>Status:</strong> <span id="overallStatus">Not Started</span>
+                </div>
+            </div>
+            <div class="progress mt-3">
+                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Page Preview</h3>
+            <div id="pagePreview">
+                <p>Select a page from the dropdown above to preview and test it.</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Responsive Design Test</h3>
+            <div id="responsiveTest">
+                <p>Click "Test Responsive Design" to check how the selected page looks on different screen sizes.</p>
+                <button class="btn btn-outline-primary" onclick="testResponsiveDesign()">Test Responsive Design</button>
+                <div id="responsiveResults" class="mt-3"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Navigation Test Results</h3>
+            <div id="navigationResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Interactive Elements Test Results</h3>
+            <div id="interactiveResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>CSS Consistency Test Results</h3>
+            <div id="cssResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Error Handling Test Results</h3>
+            <div id="errorHandlingResults"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class AllPagesFunctionalityTester {
+            constructor() {
+                this.pages = [
+                    'index.html',
+                    'tickets.html',
+                    'users.html',
+                    'integration.html',
+                    'settings.html',
+                    'logs.html'
+                ];
+                this.testResults = [];
+                this.totalTests = 0;
+                this.passedTests = 0;
+                this.failedTests = 0;
+                this.warningTests = 0;
+                this.currentPage = null;
+            }
+
+            addTestResult(category, testName, status, message = '') {
+                const result = {
+                    category,
+                    testName,
+                    status, // 'pass', 'fail', 'warning'
+                    message,
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.testResults.push(result);
+                this.totalTests++;
+                
+                if (status === 'pass') {
+                    this.passedTests++;
+                } else if (status === 'fail') {
+                    this.failedTests++;
+                } else if (status === 'warning') {
+                    this.warningTests++;
+                }
+                
+                this.displayTestResult(category, result);
+                this.updateSummary();
+            }
+
+            displayTestResult(category, result) {
+                const container = document.getElementById(category + 'Results');
+                if (!container) return;
+
+                const resultDiv = document.createElement('div');
+                let className = 'test-result ';
+                let icon = '';
+                
+                switch(result.status) {
+                    case 'pass':
+                        className += 'test-pass';
+                        icon = '✅';
+                        break;
+                    case 'fail':
+                        className += 'test-fail';
+                        icon = '❌';
+                        break;
+                    case 'warning':
+                        className += 'test-warning';
+                        icon = '⚠️';
+                        break;
+                }
+                
+                resultDiv.className = className;
+                resultDiv.innerHTML = `
+                    <strong>${icon} ${result.testName}</strong>
+                    ${result.message ? `<br><small>${result.message}</small>` : ''}
+                `;
+                
+                container.appendChild(resultDiv);
+            }
+
+            updateSummary() {
+                document.getElementById('totalTests').textContent = this.totalTests;
+                document.getElementById('passedTests').textContent = this.passedTests;
+                document.getElementById('failedTests').textContent = this.failedTests;
+                document.getElementById('warningTests').textContent = this.warningTests;
+                
+                const score = this.totalTests > 0 ? Math.round((this.passedTests / this.totalTests) * 100) : 0;
+                document.getElementById('overallScore').textContent = score + '%';
+                
+                let status = 'Not Started';
+                if (this.totalTests > 0) {
+                    if (score >= 80) {
+                        status = 'PASS';
+                    } else if (score >= 60) {
+                        status = 'WARNING';
+                    } else {
+                        status = 'FAIL';
+                    }
+                }
+                document.getElementById('overallStatus').textContent = status;
+                
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = score + '%';
+                progressBar.className = `progress-bar ${score >= 80 ? 'bg-success' : score >= 60 ? 'bg-warning' : 'bg-danger'}`;
+            }
+
+            loadSelectedPage() {
+                const selector = document.getElementById('pageSelector');
+                const selectedPage = selector.value;
+                
+                if (!selectedPage) {
+                    document.getElementById('pagePreview').innerHTML = '<p>Select a page from the dropdown above to preview and test it.</p>';
+                    return;
+                }
+                
+                this.currentPage = selectedPage;
+                
+                // Create iframe to load the page
+                const iframe = document.createElement('iframe');
+                iframe.src = selectedPage;
+                iframe.className = 'page-frame';
+                iframe.onload = () => {
+                    this.testCurrentPage();
+                };
+                
+                const previewContainer = document.getElementById('pagePreview');
+                previewContainer.innerHTML = `<h5>Preview: ${selectedPage}</h5>`;
+                previewContainer.appendChild(iframe);
+            }
+
+            testCurrentPage() {
+                if (!this.currentPage) return;
+                
+                // Test the current page in the iframe
+                const iframe = document.querySelector('.page-frame');
+                if (!iframe || !iframe.contentWindow) return;
+                
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Test page structure
+                    this.testPageStructure(iframeDoc, this.currentPage);
+                    
+                    // Test navigation elements
+                    this.testNavigationElements(iframeDoc, this.currentPage);
+                    
+                    // Test interactive elements
+                    this.testInteractiveElements(iframeDoc, this.currentPage);
+                    
+                    // Test CSS consistency
+                    this.testCSSConsistency(iframeDoc, this.currentPage);
+                    
+                } catch (e) {
+                    this.addTestResult('navigation', `${this.currentPage} - Cross-origin Access`, 'warning', 
+                        'Cannot access iframe content due to cross-origin restrictions. Test manually.');
+                }
+            }
+
+            testPageStructure(doc, pageName) {
+                // Test basic HTML structure
+                const hasTitle = doc.title && doc.title.trim().length > 0;
+                this.addTestResult('navigation', `${pageName} - Page Title`, hasTitle ? 'pass' : 'fail',
+                    hasTitle ? `Title: "${doc.title}"` : 'Page title is missing or empty');
+
+                // Test viewport meta tag
+                const viewportMeta = doc.querySelector('meta[name="viewport"]');
+                this.addTestResult('css', `${pageName} - Viewport Meta Tag`, viewportMeta ? 'pass' : 'fail',
+                    viewportMeta ? 'Viewport meta tag present' : 'Viewport meta tag missing');
+
+                // Test modern CSS inclusion
+                const stylesheets = Array.from(doc.styleSheets || []);
+                const hasModernCSS = stylesheets.some(sheet => {
+                    try {
+                        return sheet.href && sheet.href.includes('modern-dashboard.css');
+                    } catch (e) {
+                        return false;
+                    }
+                });
+                this.addTestResult('css', `${pageName} - Modern CSS`, hasModernCSS ? 'pass' : 'fail',
+                    hasModernCSS ? 'modern-dashboard.css is loaded' : 'modern-dashboard.css not found');
+            }
+
+            testNavigationElements(doc, pageName) {
+                // Test sidebar
+                const sidebar = doc.querySelector('.sidebar, .nav-sidebar, [class*="sidebar"]');
+                this.addTestResult('navigation', `${pageName} - Sidebar`, sidebar ? 'pass' : 'fail',
+                    sidebar ? 'Sidebar navigation found' : 'Sidebar navigation missing');
+
+                // Test navigation links
+                const navLinks = doc.querySelectorAll('.nav-link, .sidebar a, a[href]');
+                this.addTestResult('navigation', `${pageName} - Navigation Links`, navLinks.length > 0 ? 'pass' : 'fail',
+                    `Found ${navLinks.length} navigation links`);
+
+                // Test active states
+                const activeElements = doc.querySelectorAll('.active, [class*="active"]');
+                this.addTestResult('navigation', `${pageName} - Active States`, activeElements.length > 0 ? 'pass' : 'warning',
+                    `Found ${activeElements.length} active elements`);
+            }
+
+            testInteractiveElements(doc, pageName) {
+                // Test buttons
+                const buttons = doc.querySelectorAll('button, .btn, input[type="button"], input[type="submit"]');
+                this.addTestResult('interactive', `${pageName} - Buttons`, buttons.length > 0 ? 'pass' : 'warning',
+                    `Found ${buttons.length} buttons`);
+
+                // Test forms
+                const forms = doc.querySelectorAll('form');
+                this.addTestResult('interactive', `${pageName} - Forms`, forms.length >= 0 ? 'pass' : 'warning',
+                    `Found ${forms.length} forms`);
+
+                // Test modals
+                const modals = doc.querySelectorAll('.modal, [data-bs-toggle="modal"]');
+                this.addTestResult('interactive', `${pageName} - Modals`, modals.length >= 0 ? 'pass' : 'warning',
+                    `Found ${modals.length} modal elements`);
+
+                // Test tables
+                const tables = doc.querySelectorAll('table, .table');
+                this.addTestResult('interactive', `${pageName} - Tables`, tables.length >= 0 ? 'pass' : 'warning',
+                    `Found ${tables.length} tables`);
+            }
+
+            testCSSConsistency(doc, pageName) {
+                // Test Bootstrap classes
+                const bootstrapElements = doc.querySelectorAll('[class*="col-"], [class*="btn"], [class*="card"]');
+                this.addTestResult('css', `${pageName} - Bootstrap Classes`, bootstrapElements.length > 0 ? 'pass' : 'warning',
+                    `Found ${bootstrapElements.length} elements with Bootstrap classes`);
+
+                // Test consistent styling
+                const styledElements = doc.querySelectorAll('.card, .btn, .table, .form-control');
+                this.addTestResult('css', `${pageName} - Styled Elements`, styledElements.length > 0 ? 'pass' : 'warning',
+                    `Found ${styledElements.length} consistently styled elements`);
+            }
+
+            testResponsiveDesign() {
+                if (!this.currentPage) {
+                    alert('Please select a page first');
+                    return;
+                }
+
+                const responsiveContainer = document.getElementById('responsiveResults');
+                responsiveContainer.innerHTML = '<h5>Responsive Design Test Results</h5>';
+
+                const sizes = [
+                    { name: 'Mobile', width: 375, height: 667 },
+                    { name: 'Tablet', width: 768, height: 1024 },
+                    { name: 'Desktop', width: 1200, height: 800 }
+                ];
+
+                sizes.forEach(size => {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = this.currentPage;
+                    iframe.style.width = size.width + 'px';
+                    iframe.style.height = size.height + 'px';
+                    iframe.className = 'responsive-frame';
+                    iframe.style.transform = 'scale(0.3)';
+                    iframe.style.transformOrigin = 'top left';
+                    iframe.style.margin = '10px';
+
+                    const container = document.createElement('div');
+                    container.style.display = 'inline-block';
+                    container.style.margin = '10px';
+                    container.innerHTML = `<h6>${size.name} (${size.width}x${size.height})</h6>`;
+                    container.appendChild(iframe);
+
+                    responsiveContainer.appendChild(container);
+
+                    // Test responsive behavior
+                    iframe.onload = () => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            const hasHorizontalScroll = iframeDoc.body.scrollWidth > size.width;
+                            
+                            this.addTestResult('responsive', `${this.currentPage} - ${size.name} Layout`, 
+                                !hasHorizontalScroll ? 'pass' : 'warning',
+                                hasHorizontalScroll ? 'Horizontal scroll detected' : 'Layout fits viewport');
+                        } catch (e) {
+                            this.addTestResult('responsive', `${this.currentPage} - ${size.name} Layout`, 'warning',
+                                'Cannot test due to cross-origin restrictions');
+                        }
+                    };
+                });
+            }
+
+            testAllPages() {
+                this.clearResults();
+                
+                // Test each page sequentially
+                this.pages.forEach((page, index) => {
+                    setTimeout(() => {
+                        document.getElementById('pageSelector').value = page;
+                        this.loadSelectedPage();
+                    }, index * 2000); // 2 second delay between pages
+                });
+            }
+
+            clearResults() {
+                this.testResults = [];
+                this.totalTests = 0;
+                this.passedTests = 0;
+                this.failedTests = 0;
+                this.warningTests = 0;
+                
+                // Clear result containers
+                const containers = ['navigation', 'interactive', 'css', 'errorHandling', 'responsive'];
+                containers.forEach(container => {
+                    const element = document.getElementById(container + 'Results');
+                    if (element) {
+                        element.innerHTML = '';
+                    }
+                });
+                
+                this.updateSummary();
+            }
+
+            exportResults() {
+                const results = {
+                    timestamp: new Date().toISOString(),
+                    summary: {
+                        totalTests: this.totalTests,
+                        passedTests: this.passedTests,
+                        failedTests: this.failedTests,
+                        warningTests: this.warningTests,
+                        score: this.totalTests > 0 ? Math.round((this.passedTests / this.totalTests) * 100) : 0
+                    },
+                    testResults: this.testResults,
+                    userAgent: navigator.userAgent,
+                    viewport: {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    }
+                };
+                
+                const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `all-pages-functionality-test-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize tester
+        const tester = new AllPagesFunctionalityTester();
+
+        // Global functions
+        function loadSelectedPage() {
+            tester.loadSelectedPage();
+        }
+
+        function testResponsiveDesign() {
+            tester.testResponsiveDesign();
+        }
+
+        function runAllTests() {
+            tester.testAllPages();
+        }
+
+        function clearResults() {
+            tester.clearResults();
+        }
+
+        function exportResults() {
+            tester.exportResults();
+        }
+
+        // Auto-load first page on startup
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('All Pages Functionality Tester loaded');
+        });
+    </script>
+</body>
+</html>

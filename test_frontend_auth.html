@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend Auth</title>
+</head>
+<body>
+    <h1>Test Frontend Authentication</h1>
+    
+    <div id="login-section">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email" value="admin@example.com">
+        <input type="password" id="password" placeholder="Password" value="admin123">
+        <button onclick="testLogin()">Login</button>
+    </div>
+    
+    <div id="test-section" style="display: none;">
+        <h2>Test API Calls</h2>
+        <button onclick="testTicketStats()">Test Ticket Stats</button>
+        <button onclick="testTickets()">Test Tickets</button>
+        <button onclick="testUsers()">Test Users</button>
+        <div id="results"></div>
+    </div>
+    
+    <script>
+        // Simple API client for testing
+        const API_BASE_URL = '/api';
+        
+        function getTokenFromCookies() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'session_token') {
+                    return value;
+                }
+            }
+            return null;
+        }
+        
+        function getAuthHeader() {
+            const token = localStorage.getItem('authToken') || getTokenFromCookies();
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (data.success) {
+                    // Check if token is in response or cookies
+                    const token = data.token || getTokenFromCookies();
+                    console.log('Token from response:', data.token);
+                    console.log('Token from cookies:', getTokenFromCookies());
+                    console.log('All cookies:', document.cookie);
+                    
+                    if (token) {
+                        localStorage.setItem('authToken', token);
+                        console.log('Token stored in localStorage');
+                    }
+                    
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('isAdmin', data.user.is_admin);
+                    
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('test-section').style.display = 'block';
+                    
+                    addResult('✅ Login successful!');
+                } else {
+                    addResult('❌ Login failed: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                addResult('❌ Login error: ' + error.message);
+            }
+        }
+        
+        async function testTicketStats() {
+            try {
+                const response = await fetch('/api/tickets/stats', {
+                    headers: getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('✅ Ticket stats loaded: ' + JSON.stringify(data, null, 2));
+                } else {
+                    const error = await response.text();
+                    addResult('❌ Ticket stats failed: ' + error);
+                }
+            } catch (error) {
+                addResult('❌ Ticket stats error: ' + error.message);
+            }
+        }
+        
+        async function testTickets() {
+            try {
+                const response = await fetch('/api/tickets?limit=5', {
+                    headers: getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('✅ Tickets loaded: ' + data.tickets.length + ' tickets');
+                } else {
+                    const error = await response.text();
+                    addResult('❌ Tickets failed: ' + error);
+                }
+            } catch (error) {
+                addResult('❌ Tickets error: ' + error.message);
+            }
+        }
+        
+        async function testUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: getAuthHeader()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('✅ Users loaded: ' + data.users.length + ' users');
+                } else {
+                    const error = await response.text();
+                    addResult('❌ Users failed: ' + error);
+                }
+            } catch (error) {
+                addResult('❌ Users error: ' + error.message);
+            }
+        }
+        
+        function addResult(message) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.innerHTML = '<pre>' + message + '</pre>';
+            results.appendChild(div);
+        }
+    </script>
+</body>
+</html>

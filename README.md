@@ -62,6 +62,10 @@ A comprehensive AI-powered customer support system built with FastAPI and Google
 #### Backend Architecture
 ```
 backend/
+├── unified_startup.py         # Unified application startup system
+├── unified_config.py          # Centralized configuration management
+├── health_checks.py           # System health monitoring
+├── unified_error_handler.py   # Unified error handling
 ├── intelligent_chat/          # Intelligent chat UI components
 │   ├── chat_manager.py        # Central chat coordinator
 │   ├── tool_orchestrator.py   # Tool selection and execution
@@ -72,13 +76,11 @@ backend/
 ├── tools.py                   # Multi-tool system implementation
 ├── models.py                  # Database models
 ├── database.py               # Database configuration
-├── security_manager.py       # Security and privacy management
 ├── voice_api.py              # Voice interaction API endpoints
-├── voice_analytics.py        # Voice usage analytics
-├── voice_models.py           # Voice data models
-├── ticking_service.py        # Support ticket management
-├── enhanced_rag_orchestrator.py # Advanced RAG system
-└── gdpr_compliance.py        # GDPR compliance utilities
+├── analytics_service.py      # Analytics and monitoring
+├── data_sync_service.py      # Data synchronization
+├── admin_integration.py      # Admin dashboard integration
+└── enhanced_rag_orchestrator.py # Advanced RAG system
 ```
 
 #### Frontend Architecture
@@ -156,63 +158,69 @@ frontend/
 
 ### 1. Environment Setup
 ```bash
-# Clone the repository
-git clone <repository-url>
+# Navigate to the ai-agent directory
 cd ai-agent
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Database Configuration
+### 2. Database Setup
 ```bash
 # Install PostgreSQL and create database
+# Make sure PostgreSQL is running on your system
 createdb knowledge_base
 
-# Update .env file with required environment variables
-DATABASE_URL=postgresql://postgres:password@localhost:5432/knowledge_base
-GOOGLE_API_KEY=your_google_gemini_api_key_here
-DEBUG=True
-HOST=0.0.0.0
-PORT=8000
-
-# Optional: Voice and analytics configuration
-VOICE_ANALYTICS_ENABLED=true
-VOICE_ERROR_TRACKING=true
-PERFORMANCE_MONITORING=true
+# The .env file is already configured with:
+# DATABASE_URL=postgresql://postgres:password@localhost:5432/knowledge_base
+# GOOGLE_API_KEY=AIzaSyDeiOQQB9fHDHtsczKxqWcEqN9B5tDGCZE
+# Update the database password if needed
 ```
 
-### 3. Database Initialization
+### 3. Start the Application
 ```bash
-# Run database migrations
-python scripts/migrate_postgres_schema.py
-
-# Initialize with sample data (optional)
-python scripts/database_init.py
-
-# Verify memory layer setup
-python scripts/verify_memory_schema.py
-```
-
-### 4. Launch Application
-```bash
-# Start the FastAPI server
+# Start the AI Agent application
 python main.py
-
-# Or use uvicorn directly
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 5. Access the System
-- **Web Interface**: http://localhost:8000 (Login page)
-- **Chat Interface**: http://localhost:8000/chat.html (Voice-enabled chat)
-- **API Documentation**: http://localhost:8000/docs (Interactive API docs)
-- **Health Check**: http://localhost:8000/health (System status)
-- **Voice Features**: Available in chat interface with microphone access
+**That's it! The application will:**
+- Automatically initialize the database
+- Set up all required tables and schemas
+- Initialize AI components and memory layer
+- Start the unified FastAPI server
+
+### 4. Access the System
+- **Login Page**: http://localhost:8080
+- **Chat Interface**: http://localhost:8080/chat.html (after login)
+- **Registration**: http://localhost:8080/register.html
+- **API Documentation**: http://localhost:8080/docs
+- **Health Check**: http://localhost:8080/health
+- **Admin Dashboard**: http://localhost:8080/admin (if enabled)
+
+### Alternative Start Methods
+```bash
+# Using uvicorn directly (recommended for Windows)
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8080
+
+# Try different ports if 8080 is also blocked
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 3000
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 5000
+
+# For development with auto-reload
+python main.py --reload
+
+# For production
+python main.py --workers 4
+```
 
 ## 💡 Usage Examples
 
@@ -470,6 +478,33 @@ python tests/test_enhanced_session_memory.py
 - **User Experience Metrics**: Response quality scoring and user satisfaction tracking
 
 ## 🔧 Troubleshooting
+
+### Windows Port Permission Issues
+
+If you get `[WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions`:
+
+**Solution 1: Use a different port**
+```bash
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8080
+# Or try: 3000, 5000, 9000
+```
+
+**Solution 2: Run as Administrator**
+```bash
+# Right-click Command Prompt/PowerShell and "Run as Administrator"
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Solution 3: Check what's using port 8000**
+```bash
+netstat -ano | findstr :8000
+# Kill the process if needed: taskkill /PID <process_id> /F
+```
+
+**Solution 4: Use localhost instead of 0.0.0.0**
+```bash
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 
 ### Common Issues & Solutions
 
@@ -761,12 +796,14 @@ pytest tests/
 - **Responsive UI**: Mobile-friendly chat interface with voice controls
 
 ### 🚧 Advanced Features
+- **Unified Startup System**: Centralized application initialization and configuration
 - **Intelligent Context Retrieval**: Enhanced RAG with conversation history
 - **Voice Analytics**: Usage tracking and performance optimization
-- **Error Recovery**: Intelligent fallback mechanisms for voice and tools
-- **Real-time Status Updates**: Live tool execution feedback
+- **Error Recovery**: Intelligent fallback mechanisms with unified error handling
+- **Real-time Status Updates**: Live tool execution feedback and health monitoring
 - **Memory Management**: Configurable retention policies and cleanup
 - **Performance Optimization**: Caching, parallel processing, and monitoring
+- **Admin Dashboard Integration**: Complete admin interface with data synchronization
 
 ### 📊 Technical Specifications
 - **Backend**: Python 3.8+, FastAPI, SQLAlchemy, PostgreSQL

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Session Manager Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .danger:hover {
+            background-color: #c82333;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Session Manager Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>Session Manager Status</h2>
+        <button onclick="showDiagnostics()">Show Diagnostics</button>
+        <button onclick="enableDebugMode()">Enable Debug Mode</button>
+        <button onclick="disableDebugMode()">Disable Debug Mode</button>
+        <div id="diagnostics-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Session Storage Tests</h2>
+        <button onclick="testSessionStorage()">Test Session Storage</button>
+        <button onclick="testMultipleStorageStrategies()">Test Multiple Storage Strategies</button>
+        <button onclick="testSessionRecovery()">Test Session Recovery</button>
+        <div id="storage-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Session Validation Tests</h2>
+        <button onclick="testSessionValidation()">Test Session Validation</button>
+        <button onclick="testInactivityDetection()">Test Inactivity Detection</button>
+        <button onclick="testExpirationHandling()">Test Expiration Handling</button>
+        <div id="validation-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Cross-Tab Synchronization Tests</h2>
+        <button onclick="testCrossTabSync()">Test Cross-Tab Sync</button>
+        <button onclick="simulateTabSessionChange()">Simulate Tab Session Change</button>
+        <div id="crosstab-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Authentication Headers Tests</h2>
+        <button onclick="testAuthHeaders()">Test Auth Headers</button>
+        <button onclick="testAuthenticatedFetch()">Test Authenticated Fetch</button>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Session Cleanup Tests</h2>
+        <button onclick="testSessionCleanup()">Test Session Cleanup</button>
+        <button class="danger" onclick="clearAllSessions()">Clear All Sessions</button>
+        <div id="cleanup-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Event Handling Tests</h2>
+        <button onclick="testSessionEvents()">Test Session Events</button>
+        <button onclick="testActivityTracking()">Test Activity Tracking</button>
+        <div id="events-result"></div>
+    </div>
+
+    <script src="js/session-manager.js"></script>
+    <script>
+        let sessionManager;
+        let testResults = {};
+
+        // Initialize session manager
+        function initSessionManager() {
+            if (sessionManager) {
+                sessionManager.destroy();
+            }
+            sessionManager = new SessionManager();
+            return sessionManager;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initSessionManager();
+            
+            // Listen for session events
+            window.addEventListener('sessionExpired', (event) => {
+                showResult('events-result', 'Session expired event received', 'info', event.detail);
+            });
+        });
+
+        function showResult(containerId, message, type = 'info', data = null) {
+            const container = document.getElementById(containerId);
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            
+            let content = `<strong>${message}</strong>`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            resultDiv.innerHTML = content;
+            container.appendChild(resultDiv);
+            
+            // Auto-scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        // Diagnostics Tests
+        function showDiagnostics() {
+            clearResults('diagnostics-result');
+            const diagnostics = sessionManager.getDiagnostics();
+            showResult('diagnostics-result', 'Session Manager Diagnostics', 'info', diagnostics);
+        }
+
+        function enableDebugMode() {
+            localStorage.setItem('admin_debug', 'true');
+            initSessionManager();
+            showResult('diagnostics-result', 'Debug mode enabled', 'success');
+        }
+
+        function disableDebugMode() {
+            localStorage.removeItem('admin_debug');
+            initSessionManager();
+            showResult('diagnostics-result', 'Debug mode disabled', 'success');
+        }
+
+        // Storage Tests
+        async function testSessionStorage() {
+            clearResults('storage-result');
+            
+            const testSession = {
+                token: 'test_token_' + Date.now(),
+                user: { id: 1, username: 'testuser', email: 'test@example.com' },
+                expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour
+                refresh_token: 'refresh_token_' + Date.now()
+            };
+
+            try {
+                const stored = await sessionManager.storeSession(testSession);
+                if (stored) {
+                    showResult('storage-result', 'Session stored successfully', 'success');
+                    
+                    // Verify retrieval
+                    const token = sessionManager.getSessionToken();
+                    const user = sessionManager.getStoredUser();
+                    
+                    if (token === testSession.token && user.username === testSession.user.username) {
+                        showResult('storage-result', 'Session retrieval successful', 'success');
+                    } else {
+                        showResult('storage-result', 'Session retrieval failed', 'error', { 
+                            expected: testSession, 
+                            actual: { token, user } 
+                        });
+                    }
+                } else {
+                    showResult('storage-result', 'Session storage failed', 'error');
+                }
+            } catch (error) {
+                showResult('storage-result', 'Session storage error', 'error', { error: error.message });
+            }
+        }
+
+        async function testMultipleStorageStrategies() {
+            clearResults('storage-result');
+            
+            // Test each storage strategy individually
+            const testSession = {
+                token: 'strategy_test_' + Date.now(),
+                user: { id: 2, username: 'strategytest' },
+                expires_at: new Date(Date.now() + 3600000).toISOString()
+            };
+
+            try {
+                // Test localStorage
+                const localResult = await sessionManager.storeInLocalStorage(testSession);
+                showResult('storage-result', 'localStorage test', localResult ? 'success' : 'error');
+
+                // Test sessionStorage
+                const sessionResult = await sessionManager.storeInSessionStorage(testSession);
+                showResult('storage-result', 'sessionStorage test', sessionResult ? 'success' : 'error');
+
+                // Test cookies
+                const cookieResult = await sessionManager.storeInCookies(testSession);
+                showResult('storage-result', 'Cookies test', cookieResult ? 'success' : 'error');
+
+            } catch (error) {
+                showResult('storage-result', 'Storage strategy test error', 'error', { error: error.message });
+            }
+        }
+
+        async function testSessionRecovery() {
+            clearResults('storage-result');
+            
+            // First store a session
+            const testSession = {
+                token: 'recovery_test_' + Date.now(),
+                user: { id: 3, username: 'recoverytest' },
+                expires_at: new Date(Date.now() + 3600000).toISOString()
+            };
+
+            await sessionManager.storeSession(testSession);
+            
+            // Simulate partial data loss (remove from sessionStorage only)
+            sessionStorage.removeItem(sessionManager.tokenKey);
+            sessionStorage.removeItem(sessionManager.userKey);
+            
+            // Test recovery
+            const recovered = sessionManager.recoverFromAlternativeStorage();
+            showResult('storage-result', 'Session recovery test', recovered ? 'success' : 'error');
+            
+            if (recovered) {
+                const token = sessionManager.getSessionToken();
+                showResult('storage-result', 'Recovered session token', 'info', { token });
+            }
+        }
+
+        // Validation Tests
+        async function testSessionValidation() {
+            clearResults('validation-result');
+            
+            const isValid = sessionManager.validateStoredSession();
+            showResult('validation-result', 'Current session validation', isValid ? 'success' : 'error');
+            
+            // Test validation with recovery
+            const validatedWithRecovery = await sessionManager.validateAndRecoverSession();
+            showResult('validation-result', 'Validation with recovery', validatedWithRecovery ? 'success' : 'error');
+        }
+
+        function testInactivityDetection() {
+            clearResults('validation-result');
+            
+            const isInactive = sessionManager.isSessionInactive();
+            const lastActivity = sessionManager.getLastActivity();
+            
+            showResult('validation-result', 'Inactivity detection', 'info', {
+                isInactive: isInactive,
+                lastActivity: lastActivity ? lastActivity.toISOString() : 'No activity recorded'
+            });
+            
+            // Update activity and test again
+            sessionManager.updateLastActivity();
+            const isInactiveAfterUpdate = sessionManager.isSessionInactive();
+            showResult('validation-result', 'After activity update', 'info', {
+                isInactive: isInactiveAfterUpdate
+            });
+        }
+
+        function testExpirationHandling() {
+            clearResults('validation-result');
+            
+            // Create an expired session
+            const expiredSession = {
+                token: 'expired_test_' + Date.now(),
+                user: { id: 4, username: 'expiredtest' },
+                expires_at: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+            };
+
+            sessionManager.storeSession(expiredSession).then(() => {
+                // Test validation of expired session
+                const isValid = sessionManager.validateStoredSession();
+                showResult('validation-result', 'Expired session validation', !isValid ? 'success' : 'error');
+                
+                // Check if session was cleaned up
+                const token = sessionManager.getSessionToken();
+                showResult('validation-result', 'Expired session cleanup', !token ? 'success' : 'error');
+            });
+        }
+
+        // Cross-Tab Tests
+        function testCrossTabSync() {
+            clearResults('crosstab-result');
+            
+            // Simulate session sync
+            sessionManager.syncSessionAcrossTabs();
+            showResult('crosstab-result', 'Cross-tab sync executed', 'success');
+            
+            // Show current session ID
+            const sessionId = sessionManager.getFromStorage('localStorage', sessionManager.sessionIdKey);
+            showResult('crosstab-result', 'Current session ID', 'info', { sessionId });
+        }
+
+        function simulateTabSessionChange() {
+            clearResults('crosstab-result');
+            
+            // Simulate a session change from another tab
+            const newSessionId = sessionManager.generateSessionId();
+            localStorage.setItem(sessionManager.sessionIdKey, newSessionId);
+            
+            // Trigger storage event manually
+            const event = new StorageEvent('storage', {
+                key: sessionManager.sessionIdKey,
+                newValue: newSessionId,
+                oldValue: null
+            });
+            
+            window.dispatchEvent(event);
+            showResult('crosstab-result', 'Simulated tab session change', 'success', { newSessionId });
+        }
+
+        // Authentication Tests
+        function testAuthHeaders() {
+            clearResults('auth-result');
+            
+            const headers = sessionManager.getAuthHeaders();
+            showResult('auth-result', 'Authentication headers', 'info', headers);
+        }
+
+        async function testAuthenticatedFetch() {
+            clearResults('auth-result');
+            
+            try {
+                // Test with a simple endpoint (this will likely fail but we can see the headers)
+                const response = await sessionManager.authenticatedFetch('/api/auth/me', {
+                    method: 'GET'
+                });
+                
+                showResult('auth-result', 'Authenticated fetch attempt', 'info', {
+                    status: response.status,
+                    statusText: response.statusText
+                });
+            } catch (error) {
+                showResult('auth-result', 'Authenticated fetch error (expected)', 'info', {
+                    error: error.message
+                });
+            }
+        }
+
+        // Cleanup Tests
+        function testSessionCleanup() {
+            clearResults('cleanup-result');
+            
+            sessionManager.cleanupExpiredSessions();
+            showResult('cleanup-result', 'Session cleanup executed', 'success');
+            
+            const diagnostics = sessionManager.getDiagnostics();
+            showResult('cleanup-result', 'Post-cleanup diagnostics', 'info', diagnostics);
+        }
+
+        function clearAllSessions() {
+            clearResults('cleanup-result');
+            
+            sessionManager.clearSession();
+            showResult('cleanup-result', 'All sessions cleared', 'success');
+            
+            const diagnostics = sessionManager.getDiagnostics();
+            showResult('cleanup-result', 'Post-clear diagnostics', 'info', diagnostics);
+        }
+
+        // Event Tests
+        function testSessionEvents() {
+            clearResults('events-result');
+            
+            // Test session expiration notification
+            sessionManager.notifySessionExpired('test_reason');
+            showResult('events-result', 'Session expiration event triggered', 'success');
+        }
+
+        function testActivityTracking() {
+            clearResults('events-result');
+            
+            const beforeActivity = sessionManager.getLastActivity();
+            
+            // Simulate user activity
+            document.dispatchEvent(new Event('mousedown'));
+            document.dispatchEvent(new Event('keypress'));
+            
+            setTimeout(() => {
+                const afterActivity = sessionManager.getLastActivity();
+                showResult('events-result', 'Activity tracking test', 'info', {
+                    before: beforeActivity ? beforeActivity.toISOString() : 'No activity',
+                    after: afterActivity ? afterActivity.toISOString() : 'No activity',
+                    updated: afterActivity && beforeActivity && afterActivity > beforeActivity
+                });
+            }, 100);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (sessionManager) {
+                sessionManager.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

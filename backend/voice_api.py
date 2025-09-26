@@ -10,7 +10,8 @@ import logging
 from datetime import datetime, timezone
 
 from backend.database import get_db
-from backend.models import User, UserSession, VoiceSettings as VoiceSettingsDB, VoiceAnalytics as VoiceAnalyticsDB
+from backend.unified_models import UnifiedUser, UnifiedUserSession, UnifiedVoiceSettings as VoiceSettingsDB, UnifiedVoiceAnalytics as VoiceAnalyticsDB
+from backend.unified_auth import get_current_user_flexible, AuthenticatedUser
 from backend.voice_models import (
     VoiceSettings, VoiceSettingsUpdate, VoiceAnalytics, VoiceCapabilities,
     VoiceSettingsResponse, VoiceAnalyticsResponse, VoiceErrorResponse,
@@ -23,24 +24,9 @@ logger = logging.getLogger(__name__)
 voice_router = APIRouter(prefix="/voice", tags=["voice"])
 
 
-def get_current_user(session_token: str = Cookie(None), db: Session = Depends(get_db)) -> str:
-    """Get current user ID from session token"""
-    if not session_token:
-        raise HTTPException(status_code=401, detail="Unauthorized: No session token")
-
-    user_session = db.query(UserSession).filter(
-        UserSession.session_id == session_token,
-        UserSession.is_active == True
-    ).first()
-    
-    if not user_session:
-        raise HTTPException(status_code=401, detail="Invalid or expired session")
-    
-    # Update last accessed time
-    user_session.last_accessed = datetime.now(timezone.utc)
-    db.commit()
-    
-    return user_session.user_id
+def get_current_user(current_user: AuthenticatedUser = Depends(get_current_user_flexible)) -> str:
+    """Get current user ID from unified authentication"""
+    return current_user.user_id
 
 
 @voice_router.get("/capabilities", response_model=VoiceCapabilities)

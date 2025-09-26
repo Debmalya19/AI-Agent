@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Fix Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
+    <style>
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .test-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Admin Login Fix Test</h1>
+        <p>This page tests the admin login functionality to ensure it works without page refresh issues.</p>
+        
+        <div id="test-results">
+            <div class="test-result test-info">
+                <strong>Test Status:</strong> <span id="test-status">Initializing...</span>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Manual Login Test</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="test-login-form">
+                            <div class="mb-3">
+                                <label for="test-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="test-email" value="admin@example.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="test-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="test-password" value="admin123">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Test Login</button>
+                        </form>
+                        <div id="login-result" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Authentication State</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="auth-state">
+                            <p><strong>Auth Token:</strong> <span id="auth-token-status">Checking...</span></p>
+                            <p><strong>Admin Token:</strong> <span id="admin-token-status">Checking...</span></p>
+                            <p><strong>User Data:</strong> <span id="user-data-status">Checking...</span></p>
+                            <p><strong>Session Valid:</strong> <span id="session-status">Checking...</span></p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="checkAuthState()">Refresh Status</button>
+                        <button class="btn btn-warning btn-sm" onclick="clearAuthData()">Clear Auth Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Test Log</h5>
+            </div>
+            <div class="card-body">
+                <div id="test-log" style="height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px;">
+                    <!-- Test log will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Load authentication dependencies -->
+    <script src="/admin/js/session-manager.js"></script>
+    <script src="/admin/js/auth-error-handler.js"></script>
+    <script src="/admin/js/api-connectivity-checker.js"></script>
+    <script src="/admin/js/admin-auth-service.js"></script>
+    
+    <script>
+        let adminAuthService = null;
+        let testLog = [];
+        
+        function log(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            testLog.push(logEntry);
+            
+            if (data) {
+                testLog.push(`    Data: ${JSON.stringify(data, null, 2)}`);
+            }
+            
+            updateTestLog();
+            console.log(message, data);
+        }
+        
+        function updateTestLog() {
+            const logElement = document.getElementById('test-log');
+            logElement.innerHTML = testLog.join('\n');
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function updateTestStatus(status, isPass = null) {
+            const statusElement = document.getElementById('test-status');
+            statusElement.textContent = status;
+            
+            const resultElement = statusElement.closest('.test-result');
+            resultElement.className = 'test-result';
+            
+            if (isPass === true) {
+                resultElement.classList.add('test-pass');
+            } else if (isPass === false) {
+                resultElement.classList.add('test-fail');
+            } else {
+                resultElement.classList.add('test-info');
+            }
+        }
+        
+        function checkAuthState() {
+            log('Checking authentication state...');
+            
+            // Check localStorage tokens
+            const authToken = localStorage.getItem('authToken');
+            const adminToken = localStorage.getItem('admin_session_token');
+            const userData = localStorage.getItem('admin_user_data');
+            
+            document.getElementById('auth-token-status').textContent = authToken ? '✓ Present' : '✗ Missing';
+            document.getElementById('admin-token-status').textContent = adminToken ? '✓ Present' : '✗ Missing';
+            document.getElementById('user-data-status').textContent = userData ? '✓ Present' : '✗ Missing';
+            
+            // Check session validity
+            if (adminAuthService && adminAuthService.isAuthenticated()) {
+                document.getElementById('session-status').textContent = '✓ Valid';
+                log('Session is valid');
+            } else {
+                document.getElementById('session-status').textContent = '✗ Invalid';
+                log('Session is invalid');
+            }
+            
+            log('Auth state check completed', {
+                authToken: !!authToken,
+                adminToken: !!adminToken,
+                userData: !!userData,
+                sessionValid: adminAuthService ? adminAuthService.isAuthenticated() : false
+            });
+        }
+        
+        function clearAuthData() {
+            log('Clearing authentication data...');
+            
+            // Clear localStorage
+            const keys = ['authToken', 'admin_session_token', 'admin_user_data', 'username', 'userEmail', 'isAdmin'];
+            keys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            
+            // Clear session manager if available
+            if (adminAuthService && adminAuthService.sessionManager) {
+                adminAuthService.sessionManager.clearSession();
+            }
+            
+            log('Authentication data cleared');
+            checkAuthState();
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            const resultElement = document.getElementById('login-result');
+            
+            log(`Testing login with email: ${email}`);
+            updateTestStatus('Testing login...', null);
+            
+            try {
+                if (!adminAuthService) {
+                    throw new Error('AdminAuthService not available');
+                }
+                
+                const result = await adminAuthService.login({
+                    email: email,
+                    password: password
+                });
+                
+                log('Login result received', result);
+                
+                if (result.success) {
+                    resultElement.innerHTML = '<div class="alert alert-success">Login successful!</div>';
+                    updateTestStatus('Login test passed', true);
+                    log('Login test PASSED');
+                    
+                    // Check if tokens are stored
+                    setTimeout(() => {
+                        checkAuthState();
+                    }, 500);
+                } else {
+                    resultElement.innerHTML = `<div class="alert alert-danger">Login failed: ${result.message || 'Unknown error'}</div>`;
+                    updateTestStatus('Login test failed', false);
+                    log('Login test FAILED', result);
+                }
+            } catch (error) {
+                log('Login test ERROR', { error: error.message });
+                resultElement.innerHTML = `<div class="alert alert-danger">Login error: ${error.message}</div>`;
+                updateTestStatus('Login test error', false);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('Initializing admin login test page...');
+            updateTestStatus('Loading authentication service...', null);
+            
+            try {
+                // Initialize AdminAuthService
+                adminAuthService = new AdminAuthService();
+                log('AdminAuthService initialized');
+                
+                // Set up form handler
+                document.getElementById('test-login-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    testLogin();
+                });
+                
+                updateTestStatus('Ready for testing', true);
+                log('Test page initialization complete');
+                
+                // Initial auth state check
+                checkAuthState();
+                
+            } catch (error) {
+                log('Initialization error', { error: error.message });
+                updateTestStatus('Initialization failed', false);
+            }
+        });
+    </script>
+</body>
+</html>

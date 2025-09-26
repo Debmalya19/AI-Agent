@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, JSON, Enum, Boolean
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID, ARRAY
 from sqlalchemy.orm import relationship
 from backend.database import Base
 from datetime import datetime, timezone
@@ -28,25 +29,27 @@ class TicketCategory(enum.Enum):
 
 class KnowledgeEntry(Base):
     __tablename__ = "knowledge_entries"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), index=True)
     content = Column(Text)
     source = Column(String(255))
-    embedding = Column(JSON)  # Store vector embeddings
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    embedding = Column(JSONB)  # Store vector embeddings (PostgreSQL optimized)
+    created_at = Column(TIMESTAMP(timezone=True), default=datetime.utcnow)
+    updated_at = Column(TIMESTAMP(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Customer(Base):
     __tablename__ = "customers"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     customer_id = Column(Integer, unique=True, index=True)
     name = Column(String(255))
     email = Column(String(255), unique=True, index=True)
     phone = Column(String(50))
     address = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(TIMESTAMP(timezone=True), default=datetime.utcnow)
     
     # Ticket relationships
     tickets = relationship("Ticket", foreign_keys="Ticket.customer_id", back_populates="customer")
@@ -55,7 +58,8 @@ class Customer(Base):
 
 class Ticket(Base):
     __tablename__ = 'tickets'
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
@@ -67,10 +71,10 @@ class Ticket(Base):
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
     assigned_agent_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
     
-    # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    resolved_at = Column(DateTime, nullable=True)
+    # Timestamps (PostgreSQL optimized)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    resolved_at = Column(TIMESTAMP(timezone=True), nullable=True)
     
     # Additional fields
     tags = Column(String(500), nullable=True)
@@ -84,13 +88,14 @@ class Ticket(Base):
 
 class TicketComment(Base):
     __tablename__ = 'ticket_comments'
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     ticket_id = Column(Integer, ForeignKey('tickets.id'), nullable=False)
     author_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
     comment = Column(Text, nullable=False)
     is_internal = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     ticket = relationship("Ticket", back_populates="comments")
@@ -98,13 +103,14 @@ class TicketComment(Base):
 
 class TicketActivity(Base):
     __tablename__ = 'ticket_activities'
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     ticket_id = Column(Integer, ForeignKey('tickets.id'), nullable=False)
     activity_type = Column(String(50), nullable=False)  # status_change, comment_added, assigned, etc.
     description = Column(Text, nullable=False)
     performed_by_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     ticket = relationship("Ticket", back_populates="activities")
@@ -112,53 +118,58 @@ class TicketActivity(Base):
 
 class Order(Base):
     __tablename__ = "orders"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, unique=True, index=True)
     customer_id = Column(Integer, ForeignKey("customers.customer_id"))
-    order_date = Column(DateTime)
+    order_date = Column(TIMESTAMP(timezone=True))
     amount = Column(Float)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     customer = relationship("Customer", back_populates="orders")
 
 class SupportIntent(Base):
     __tablename__ = "support_intents"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     intent_id = Column(String(50), unique=True, index=True)
     intent_name = Column(String(255))
     description = Column(Text)
     category = Column(String(100))
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     responses = relationship("SupportResponse", back_populates="intent")
 
 class SupportResponse(Base):
     __tablename__ = "support_responses"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     intent_id = Column(String(50), ForeignKey("support_intents.intent_id"))
     response_text = Column(Text)
     response_type = Column(String(50))
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     intent = relationship("SupportIntent", back_populates="responses")
 
 class ChatHistory(Base):
     __tablename__ = "chat_history"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(255), index=True)
     user_message = Column(Text)
     bot_response = Column(Text)
-    tools_used = Column(JSON)
-    sources = Column(JSON)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    tools_used = Column(JSONB)  # PostgreSQL optimized
+    sources = Column(JSONB)  # PostgreSQL optimized
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 class User(Base):
     __tablename__ = "users"
-    
+    __table_args__ = {'extend_existing': True}
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(50), unique=True, index=True, nullable=False)
     username = Column(String(100), unique=True, index=True, nullable=False)
@@ -167,8 +178,8 @@ class User(Base):
     full_name = Column(String(255))
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     sessions = relationship("UserSession", back_populates="user")
     voice_settings = relationship("VoiceSettings", back_populates="user", uselist=False)
@@ -181,9 +192,9 @@ class UserSession(Base):
     session_id = Column(String(255), unique=True, index=True, nullable=False)
     user_id = Column(String(50), ForeignKey("users.user_id"), nullable=False)
     token_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    expires_at = Column(DateTime, nullable=False)
-    last_accessed = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    last_accessed = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
     
     user = relationship("User", back_populates="sessions")
@@ -202,8 +213,8 @@ class VoiceSettings(Base):
     language = Column(String(10), default="en-US", nullable=False)
     microphone_sensitivity = Column(Float, default=0.5, nullable=False)
     noise_cancellation = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     
     # Relationship
     user = relationship("User", back_populates="voice_settings")
@@ -221,8 +232,8 @@ class VoiceAnalytics(Base):
     text_length = Column(Integer)
     accuracy_score = Column(Float)
     error_message = Column(Text)
-    analytics_metadata = Column(JSON)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    analytics_metadata = Column(JSONB)  # PostgreSQL optimized (renamed from 'metadata' to avoid SQLAlchemy conflict)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     # Relationship
     user = relationship("User", back_populates="voice_analytics")

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Manager Browser Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .test-result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-result.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.active {
+            background-color: #28a745;
+        }
+        .status-indicator.inactive {
+            background-color: #dc3545;
+        }
+        .status-indicator.unknown {
+            background-color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Session Manager Browser Test Suite</h1>
+        <p>This page tests the enhanced session manager functionality in a real browser environment.</p>
+        
+        <div class="controls">
+            <button onclick="enableDebugMode()">Enable Debug Mode</button>
+            <button onclick="disableDebugMode()">Disable Debug Mode</button>
+            <button onclick="runAllTests()">Run All Tests</button>
+            <button onclick="clearAllData()">Clear All Data</button>
+            <button onclick="showDiagnostics()">Show Diagnostics</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Session Manager Status</h2>
+        <div id="status-display">
+            <p><span class="status-indicator unknown"></span>Session Manager: Not initialized</p>
+            <p><span class="status-indicator unknown"></span>Session Valid: Unknown</p>
+            <p><span class="status-indicator unknown"></span>Storage Available: Unknown</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>1. Basic Session Storage Test</h3>
+            <button onclick="testBasicStorage()">Test Basic Storage</button>
+            <div id="basic-storage-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Multiple Storage Strategies Test</h3>
+            <button onclick="testMultipleStorage()">Test Multiple Storage</button>
+            <div id="multiple-storage-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Session Validation Test</h3>
+            <button onclick="testSessionValidation()">Test Session Validation</button>
+            <div id="validation-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Session Recovery Test</h3>
+            <button onclick="testSessionRecovery()">Test Session Recovery</button>
+            <div id="recovery-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Cross-Tab Synchronization Test</h3>
+            <button onclick="testCrossTabSync()">Test Cross-Tab Sync</button>
+            <button onclick="openNewTab()">Open New Tab</button>
+            <div id="cross-tab-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. Activity Tracking Test</h3>
+            <button onclick="testActivityTracking()">Test Activity Tracking</button>
+            <div id="activity-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>7. Session Expiration Test</h3>
+            <button onclick="testSessionExpiration()">Test Session Expiration</button>
+            <div id="expiration-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>8. Browser Compatibility Test</h3>
+            <button onclick="testBrowserCompatibility()">Test Browser Compatibility</button>
+            <div id="compatibility-results"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Debug Information</h2>
+        <div id="debug-info" class="debug-info">Debug information will appear here...</div>
+    </div>
+
+    <div class="container">
+        <h2>Event Log</h2>
+        <div id="event-log" class="debug-info">Events will be logged here...</div>
+    </div>
+
+    <!-- Load the session manager -->
+    <script src="js/session-manager.js"></script>
+
+    <script>
+        let sessionManager = null;
+        let eventLog = [];
+
+        // Initialize session manager
+        function initializeSessionManager() {
+            try {
+                sessionManager = new SessionManager();
+                updateStatus();
+                logEvent('Session Manager initialized successfully');
+                
+                // Set up event listeners for session events
+                window.addEventListener('sessionExpired', (event) => {
+                    logEvent('Session expired: ' + event.detail.reason);
+                    updateStatus();
+                });
+
+                return true;
+            } catch (error) {
+                logEvent('Failed to initialize Session Manager: ' + error.message);
+                return false;
+            }
+        }
+
+        // Update status display
+        function updateStatus() {
+            if (!sessionManager) {
+                document.getElementById('status-display').innerHTML = `
+                    <p><span class="status-indicator inactive"></span>Session Manager: Not initialized</p>
+                    <p><span class="status-indicator unknown"></span>Session Valid: Unknown</p>
+                    <p><span class="status-indicator unknown"></span>Storage Available: Unknown</p>
+                `;
+                return;
+            }
+
+            const diagnostics = sessionManager.getDiagnostics();
+            const hasValidSession = diagnostics.isValid;
+            const storageAvailable = diagnostics.storageAvailable;
+
+            document.getElementById('status-display').innerHTML = `
+                <p><span class="status-indicator active"></span>Session Manager: Active</p>
+                <p><span class="status-indicator ${hasValidSession ? 'active' : 'inactive'}"></span>Session Valid: ${hasValidSession ? 'Yes' : 'No'}</p>
+                <p><span class="status-indicator ${storageAvailable.localStorage ? 'active' : 'inactive'}"></span>localStorage: ${storageAvailable.localStorage ? 'Available' : 'Not Available'}</p>
+                <p><span class="status-indicator ${storageAvailable.sessionStorage ? 'active' : 'inactive'}"></span>sessionStorage: ${storageAvailable.sessionStorage ? 'Available' : 'Not Available'}</p>
+                <p><span class="status-indicator ${storageAvailable.cookies ? 'active' : 'inactive'}"></span>Cookies: ${storageAvailable.cookies ? 'Enabled' : 'Disabled'}</p>
+            `;
+        }
+
+        // Log events
+        function logEvent(message) {
+            const timestamp = new Date().toISOString();
+            eventLog.push(`[${timestamp}] ${message}`);
+            
+            const logElement = document.getElementById('event-log');
+            logElement.textContent = eventLog.slice(-20).join('\n'); // Show last 20 events
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Show result in specified container
+        function showResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            container.appendChild(resultDiv);
+            
+            logEvent(message);
+        }
+
+        // Clear results in container
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        // Enable debug mode
+        function enableDebugMode() {
+            localStorage.setItem('admin_debug', 'true');
+            logEvent('Debug mode enabled');
+            if (sessionManager) {
+                sessionManager.debugMode = true;
+            }
+        }
+
+        // Disable debug mode
+        function disableDebugMode() {
+            localStorage.removeItem('admin_debug');
+            logEvent('Debug mode disabled');
+            if (sessionManager) {
+                sessionManager.debugMode = false;
+            }
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (sessionManager) {
+                sessionManager.clearSession();
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            logEvent('All data cleared');
+            updateStatus();
+        }
+
+        // Show diagnostics
+        function showDiagnostics() {
+            if (!sessionManager) {
+                showResult('debug-info', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            const diagnostics = sessionManager.getDiagnostics();
+            document.getElementById('debug-info').textContent = JSON.stringify(diagnostics, null, 2);
+            logEvent('Diagnostics displayed');
+        }
+
+        // Test basic storage
+        async function testBasicStorage() {
+            clearResults('basic-storage-results');
+            
+            if (!sessionManager) {
+                showResult('basic-storage-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            try {
+                const testSession = {
+                    token: 'test_token_' + Date.now(),
+                    user: { id: 1, username: 'testuser', email: 'test@example.com' },
+                    expires_at: new Date(Date.now() + 3600000).toISOString(),
+                    refresh_token: 'refresh_' + Date.now()
+                };
+
+                const stored = await sessionManager.storeSession(testSession);
+                if (stored) {
+                    showResult('basic-storage-results', 'Session stored successfully', 'success');
+                    
+                    const retrievedToken = sessionManager.getSessionToken();
+                    const retrievedUser = sessionManager.getStoredUser();
+                    
+                    if (retrievedToken === testSession.token) {
+                        showResult('basic-storage-results', 'Token retrieved correctly', 'success');
+                    } else {
+                        showResult('basic-storage-results', 'Token retrieval failed', 'error');
+                    }
+                    
+                    if (retrievedUser && retrievedUser.username === testSession.user.username) {
+                        showResult('basic-storage-results', 'User data retrieved correctly', 'success');
+                    } else {
+                        showResult('basic-storage-results', 'User data retrieval failed', 'error');
+                    }
+                } else {
+                    showResult('basic-storage-results', 'Session storage failed', 'error');
+                }
+                
+                updateStatus();
+            } catch (error) {
+                showResult('basic-storage-results', 'Test error: ' + error.message, 'error');
+            }
+        }
+
+        // Test multiple storage strategies
+        async function testMultipleStorage() {
+            clearResults('multiple-storage-results');
+            
+            if (!sessionManager) {
+                showResult('multiple-storage-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            try {
+                const testSession = {
+                    token: 'multi_token_' + Date.now(),
+                    user: { id: 2, username: 'multiuser' },
+                    expires_at: new Date(Date.now() + 3600000).toISOString()
+                };
+
+                // Test individual storage methods
+                const localResult = await sessionManager.storeInLocalStorage(testSession);
+                const sessionResult = await sessionManager.storeInSessionStorage(testSession);
+                const cookieResult = await sessionManager.storeInCookies(testSession);
+
+                showResult('multiple-storage-results', `localStorage: ${localResult ? 'Success' : 'Failed'}`, localResult ? 'success' : 'error');
+                showResult('multiple-storage-results', `sessionStorage: ${sessionResult ? 'Success' : 'Failed'}`, sessionResult ? 'success' : 'error');
+                showResult('multiple-storage-results', `Cookies: ${cookieResult ? 'Success' : 'Failed'}`, cookieResult ? 'success' : 'error');
+
+                // Verify data is actually stored
+                const localToken = localStorage.getItem(sessionManager.tokenKey);
+                const sessionToken = sessionStorage.getItem(sessionManager.tokenKey);
+                
+                if (localToken === testSession.token) {
+                    showResult('multiple-storage-results', 'localStorage verification: Success', 'success');
+                } else {
+                    showResult('multiple-storage-results', 'localStorage verification: Failed', 'error');
+                }
+                
+                if (sessionToken === testSession.token) {
+                    showResult('multiple-storage-results', 'sessionStorage verification: Success', 'success');
+                } else {
+                    showResult('multiple-storage-results', 'sessionStorage verification: Failed', 'error');
+                }
+
+            } catch (error) {
+                showResult('multiple-storage-results', 'Test error: ' + error.message, 'error');
+            }
+        }
+
+        // Test session validation
+        async function testSessionValidation() {
+            clearResults('validation-results');
+            
+            if (!sessionManager) {
+                showResult('validation-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            try {
+                // Clear any existing session
+                sessionManager.clearSession();
+                
+                // Test with no session
+                let isValid = sessionManager.validateStoredSession();
+                showResult('validation-results', `No session validation: ${!isValid ? 'Correct (Invalid)' : 'Incorrect (Should be invalid)'}`, !isValid ? 'success' : 'error');
+
+                // Test with valid session
+                const validSession = {
+                    token: 'valid_token_' + Date.now(),
+                    user: { id: 3, username: 'validuser' },
+                    expires_at: new Date(Date.now() + 3600000).toISOString()
+                };
+
+                await sessionManager.storeSession(validSession);
+                isValid = sessionManager.validateStoredSession();
+                showResult('validation-results', `Valid session validation: ${isValid ? 'Correct (Valid)' : 'Incorrect (Should be valid)'}`, isValid ? 'success' : 'error');
+
+                // Test with expired session
+                const expiredSession = {
+                    token: 'expired_token_' + Date.now(),
+                    user: { id: 4, username: 'expireduser' },
+                    expires_at: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+                };
+
+                sessionManager.clearSession();
+                await sessionManager.storeSession(expiredSession);
+                isValid = sessionManager.validateStoredSession();
+                showResult('validation-results', `Expired session validation: ${!isValid ? 'Correct (Invalid)' : 'Incorrect (Should be invalid)'}`, !isValid ? 'success' : 'error');
+
+                updateStatus();
+            } catch (error) {
+                showResult('validation-results', 'Test error: ' + error.message, 'error');
+            }
+        }
+
+        // Test session recovery
+        async function testSessionRecovery() {
+            clearResults('recovery-results');
+            
+            if (!sessionManager) {
+                showResult('recovery-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            try {
+                // Set up session in localStorage only
+                const testSession = {
+                    token: 'recovery_token_' + Date.now(),
+                    user: { id: 5, username: 'recoveryuser' },
+                    expires_at: new Date(Date.now() + 3600000).toISOString()
+                };
+
+                localStorage.setItem(sessionManager.tokenKey, testSession.token);
+                localStorage.setItem(sessionManager.userKey, JSON.stringify(testSession.user));
+                localStorage.setItem(sessionManager.expiryKey, testSession.expires_at);
+
+                // Clear sessionStorage to simulate partial data loss
+                sessionStorage.removeItem(sessionManager.tokenKey);
+                sessionStorage.removeItem(sessionManager.userKey);
+
+                showResult('recovery-results', 'Set up partial session data (localStorage only)', 'info');
+
+                // Test recovery
+                const recovered = sessionManager.recoverFromAlternativeStorage();
+                showResult('recovery-results', `Session recovery: ${recovered ? 'Success' : 'Failed'}`, recovered ? 'success' : 'error');
+
+                if (recovered) {
+                    const recoveredToken = sessionManager.getSessionToken();
+                    if (recoveredToken === testSession.token) {
+                        showResult('recovery-results', 'Recovered token matches original', 'success');
+                    } else {
+                        showResult('recovery-results', 'Recovered token does not match', 'error');
+                    }
+                }
+
+                updateStatus();
+            } catch (error) {
+                showResult('recovery-results', 'Test error: ' + error.message, 'error');
+            }
+        }
+
+        // Test cross-tab synchronization
+        function testCrossTabSync() {
+            clearResults('cross-tab-results');
+            
+            if (!sessionManager) {
+                showResult('cross-tab-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            showResult('cross-tab-results', 'Cross-tab sync test requires multiple tabs. Click "Open New Tab" to test.', 'info');
+            
+            // Set up storage event listener to detect changes from other tabs
+            const originalHandler = window.onstorage;
+            window.onstorage = function(event) {
+                if (event.key && event.key.startsWith('admin_')) {
+                    showResult('cross-tab-results', `Detected change from other tab: ${event.key} = ${event.newValue}`, 'success');
+                }
+                if (originalHandler) originalHandler(event);
+            };
+
+            // Create a test session that other tabs can detect
+            const testSession = {
+                token: 'cross_tab_token_' + Date.now(),
+                user: { id: 6, username: 'crosstabuser' },
+                expires_at: new Date(Date.now() + 3600000).toISOString()
+            };
+
+            sessionManager.storeSession(testSession);
+            showResult('cross-tab-results', 'Test session created. Changes should be visible in other tabs.', 'info');
+        }
+
+        // Open new tab for cross-tab testing
+        function openNewTab() {
+            window.open(window.location.href, '_blank');
+        }
+
+        // Test activity tracking
+        function testActivityTracking() {
+            clearResults('activity-results');
+            
+            if (!sessionManager) {
+                showResult('activity-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            try {
+                // Update activity
+                sessionManager.updateLastActivity();
+                const lastActivity = sessionManager.getLastActivity();
+                
+                if (lastActivity) {
+                    showResult('activity-results', `Last activity recorded: ${lastActivity.toISOString()}`, 'success');
+                    
+                    // Test inactivity detection (should not be inactive immediately)
+                    const isInactive = sessionManager.isSessionInactive();
+                    showResult('activity-results', `Inactivity check: ${!isInactive ? 'Correct (Not inactive)' : 'Incorrect (Should not be inactive)'}`, !isInactive ? 'success' : 'error');
+                } else {
+                    showResult('activity-results', 'Failed to record activity', 'error');
+                }
+
+                // Simulate mouse activity
+                document.dispatchEvent(new Event('mousedown'));
+                setTimeout(() => {
+                    const newActivity = sessionManager.getLastActivity();
+                    if (newActivity && newActivity > lastActivity) {
+                        showResult('activity-results', 'Activity tracking responds to mouse events', 'success');
+                    } else {
+                        showResult('activity-results', 'Activity tracking not responding to events', 'error');
+                    }
+                }, 100);
+
+            } catch (error) {
+                showResult('activity-results', 'Test error: ' + error.message, 'error');
+            }
+        }
+
+        // Test session expiration
+        async function testSessionExpiration() {
+            clearResults('expiration-results');
+            
+            if (!sessionManager) {
+                showResult('expiration-results', 'Session Manager not initialized', 'error');
+                return;
+            }
+
+            try {
+                // Create session that expires in 2 seconds
+                const shortSession = {
+                    token: 'short_token_' + Date.now(),
+                    user: { id: 7, username: 'shortuser' },
+                    expires_at: new Date(Date.now() + 2000).toISOString() // 2 seconds
+                };
+
+                await sessionManager.storeSession(shortSession);
+                showResult('expiration-results', 'Created session that expires in 2 seconds', 'info');
+
+                // Check immediately - should be valid
+                let isValid = sessionManager.validateStoredSession();
+                showResult('expiration-results', `Immediate validation: ${isValid ? 'Valid' : 'Invalid'}`, isValid ? 'success' : 'error');
+
+                // Wait 3 seconds and check again
+                setTimeout(() => {
+                    isValid = sessionManager.validateStoredSession();
+                    showResult('expiration-results', `After expiration validation: ${!isValid ? 'Correctly Invalid' : 'Incorrectly Valid'}`, !isValid ? 'success' : 'error');
+                    updateStatus();
+                }, 3000);
+
+            } catch (error) {
+                showResult('expiration-results', 'Test error: ' + error.message, 'error');
+            }
+        }
+
+        // Test browser compatibility
+        function testBrowserCompatibility() {
+            clearResults('compatibility-results');
+            
+            const features = [
+                { name: 'localStorage', test: () => !!localStorage && typeof localStorage.setItem === 'function' },
+                { name: 'sessionStorage', test: () => !!sessionStorage && typeof sessionStorage.setItem === 'function' },
+                { name: 'Cookies', test: () => navigator.cookieEnabled },
+                { name: 'Fetch API', test: () => typeof fetch === 'function' },
+                { name: 'JSON', test: () => typeof JSON === 'object' && typeof JSON.parse === 'function' },
+                { name: 'CustomEvent', test: () => typeof CustomEvent === 'function' },
+                { name: 'addEventListener', test: () => typeof window.addEventListener === 'function' }
+            ];
+
+            features.forEach(feature => {
+                try {
+                    const supported = feature.test();
+                    showResult('compatibility-results', `${feature.name}: ${supported ? 'Supported' : 'Not Supported'}`, supported ? 'success' : 'error');
+                } catch (error) {
+                    showResult('compatibility-results', `${feature.name}: Error testing - ${error.message}`, 'error');
+                }
+            });
+
+            // Test storage functionality
+            try {
+                localStorage.setItem('__test__', 'test');
+                localStorage.removeItem('__test__');
+                showResult('compatibility-results', 'localStorage functionality: Working', 'success');
+            } catch (error) {
+                showResult('compatibility-results', 'localStorage functionality: Failed - ' + error.message, 'error');
+            }
+
+            try {
+                sessionStorage.setItem('__test__', 'test');
+                sessionStorage.removeItem('__test__');
+                showResult('compatibility-results', 'sessionStorage functionality: Working', 'success');
+            } catch (error) {
+                showResult('compatibility-results', 'sessionStorage functionality: Failed - ' + error.message, 'error');
+            }
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            logEvent('Running all tests...');
+            
+            await testBasicStorage();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testMultipleStorage();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testSessionValidation();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testSessionRecovery();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testCrossTabSync();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testActivityTracking();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testSessionExpiration();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testBrowserCompatibility();
+            
+            logEvent('All tests completed');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            logEvent('Page loaded, initializing Session Manager...');
+            if (initializeSessionManager()) {
+                logEvent('Session Manager ready for testing');
+            } else {
+                logEvent('Failed to initialize Session Manager');
+            }
+        });
+
+        // Clean up when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (sessionManager) {
+                sessionManager.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+{
+  "migration_id": "20250926_155147",
+  "execution_time": "2025-09-26T15:51:52.320990",
+  "overall_success": false,
+  "migration_summary": {
+    "total_tables": 39,
+    "successful_tables": 39,
+    "failed_tables": 0,
+    "total_records": 119,
+    "migrated_records": 119,
+    "migration_success": true
+  },
+  "validation_summary": {
+    "data_integrity_valid": true,
+    "table_comparisons": 39,
+    "integrity_checks": {
+      "foreign_keys_checked": 34,
+      "integrity_issues": 0,
+      "all_constraints_valid": true
+    }
+  },
+  "functionality_summary": {
+    "all_tests_passed": false,
+    "test_categories": {
+      "database_connection": {
+        "success": true,
+        "message": "Database connection successful"
+      },
+      "model_operations": {
+        "success": true,
+        "message": "Model operations successful. Found 16 users"
+      },
+      "authentication": {
+        "success": true,
+        "message": "Authentication tests passed"
+      },
+      "admin_dashboard": {
+        "success": false,
+        "message": "Admin dashboard tests failed: "
+      }
+    }
+  },
+  "detailed_results": {
+    "migration_report": {
+      "start_time": "2025-09-26T15:51:47.723503",
+      "end_time": "2025-09-26T15:51:48.205003",
+      "total_tables": 39,
+      "successful_tables": 39,
+      "failed_tables": 0,
+      "total_records": 119,
+      "migrated_records": 119,
+      "errors": [],
+      "rollback_available": true,
+      "table_results": [
+        {
+          "table_name": "knowledge_entries",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "customers",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "users",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "user_sessions",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "voice_settings",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "voice_analytics",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "tickets",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "ticket_comments",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "ticket_activities",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "orders",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "support_intents",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "support_responses",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "chat_history",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_users",
+          "source_count": 16,
+          "migrated_count": 16,
+          "errors": [],
+          "duration_seconds": 0.111224,
+          "success": true
+        },
+        {
+          "table_name": "unified_user_sessions",
+          "source_count": 79,
+          "migrated_count": 79,
+          "errors": [],
+          "duration_seconds": 0.051498,
+          "success": true
+        },
+        {
+          "table_name": "unified_tickets",
+          "source_count": 11,
+          "migrated_count": 11,
+          "errors": [],
+          "duration_seconds": 0.034888,
+          "success": true
+        },
+        {
+          "table_name": "unified_ticket_comments",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_ticket_activities",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_chat_sessions",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_chat_messages",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_performance_metrics",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_customer_satisfaction",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_voice_settings",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_voice_analytics",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_knowledge_entries",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_orders",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_support_intents",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_support_responses",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "unified_chat_history",
+          "source_count": 12,
+          "migrated_count": 12,
+          "errors": [],
+          "duration_seconds": 0.039341,
+          "success": true
+        },
+        {
+          "table_name": "diagnostic_error_logs",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "enhanced_chat_history",
+          "source_count": 1,
+          "migrated_count": 1,
+          "errors": [],
+          "duration_seconds": 0.021,
+          "success": true
+        },
+        {
+          "table_name": "memory_context_cache",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "tool_usage_metrics",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "conversation_summaries",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "memory_configuration",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "memory_health_metrics",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "enhanced_user_sessions",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "data_processing_consent",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        },
+        {
+          "table_name": "data_subject_rights",
+          "source_count": 0,
+          "migrated_count": 0,
+          "errors": [],
+          "duration_seconds": 0.0,
+          "success": true
+        }
+      ]
+    },
+    "validation_results": {
+      "overall_success": true,
+      "table_comparisons": {
+        "data_processing_consent": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "voice_analytics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_orders": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "enhanced_chat_history": {
+          "sqlite_count": 1,
+          "postgresql_count": 1,
+          "match": true,
+          "difference": 0
+        },
+        "memory_context_cache": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_knowledge_entries": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_users": {
+          "sqlite_count": 16,
+          "postgresql_count": 16,
+          "match": true,
+          "difference": 0
+        },
+        "unified_user_sessions": {
+          "sqlite_count": 79,
+          "postgresql_count": 79,
+          "match": true,
+          "difference": 0
+        },
+        "memory_health_metrics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_voice_analytics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "ticket_activities": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_chat_messages": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_customer_satisfaction": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_chat_history": {
+          "sqlite_count": 12,
+          "postgresql_count": 12,
+          "match": true,
+          "difference": 0
+        },
+        "user_sessions": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "support_intents": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_support_intents": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "conversation_summaries": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "enhanced_user_sessions": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "voice_settings": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "tickets": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "tool_usage_metrics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_performance_metrics": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "support_responses": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "knowledge_entries": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "diagnostic_error_logs": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "data_subject_rights": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "orders": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "ticket_comments": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "chat_history": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "memory_configuration": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_ticket_activities": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_chat_sessions": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "users": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_ticket_comments": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "customers": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_support_responses": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        },
+        "unified_tickets": {
+          "sqlite_count": 11,
+          "postgresql_count": 11,
+          "match": true,
+          "difference": 0
+        },
+        "unified_voice_settings": {
+          "sqlite_count": 0,
+          "postgresql_count": 0,
+          "match": true,
+          "difference": 0
+        }
+      },
+      "integrity_checks": {
+        "foreign_keys_checked": 34,
+        "integrity_issues": 0,
+        "all_constraints_valid": true
+      },
+      "errors": []
+    },
+    "test_results": {
+      "overall_success": false,
+      "test_categories": {
+        "database_connection": {
+          "success": true,
+          "message": "Database connection successful"
+        },
+        "model_operations": {
+          "success": true,
+          "message": "Model operations successful. Found 16 users"
+        },
+        "authentication": {
+          "success": true,
+          "message": "Authentication tests passed"
+        },
+        "admin_dashboard": {
+          "success": false,
+          "message": "Admin dashboard tests failed: "
+        }
+      },
+      "errors": [
+        "Admin dashboard tests failed: "
+      ]
+    }
+  },
+  "recommendations": [
+    "Fix application functionality issues before deploying to production"
+  ]
+}

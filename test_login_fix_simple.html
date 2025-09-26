@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Login Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Admin Login Test</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="status" class="alert alert-info">
+                            Ready to test login...
+                        </div>
+                        
+                        <button id="testLogin" class="btn btn-primary">Test Login</button>
+                        <button id="clearStorage" class="btn btn-secondary">Clear Storage</button>
+                        
+                        <div class="mt-3">
+                            <h6>Storage Status:</h6>
+                            <div id="storageStatus">
+                                <p>authToken: <span id="authTokenStatus">-</span></p>
+                                <p>admin_session_token: <span id="adminTokenStatus">-</span></p>
+                                <p>username: <span id="usernameStatus">-</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Test Log:</h6>
+                            <div id="testLog" style="height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let testLog = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            testLog.push(`[${timestamp}] ${message}`);
+            document.getElementById('testLog').innerHTML = testLog.join('\n');
+            document.getElementById('testLog').scrollTop = document.getElementById('testLog').scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `alert alert-${type}`;
+        }
+        
+        function checkStorage() {
+            const authToken = localStorage.getItem('authToken');
+            const adminToken = localStorage.getItem('admin_session_token');
+            const username = localStorage.getItem('username');
+            
+            document.getElementById('authTokenStatus').textContent = authToken ? '✓ Present' : '✗ Missing';
+            document.getElementById('adminTokenStatus').textContent = adminToken ? '✓ Present' : '✗ Missing';
+            document.getElementById('usernameStatus').textContent = username || '✗ Missing';
+        }
+        
+        async function testLogin() {
+            log('Starting login test...');
+            updateStatus('Testing login...', 'warning');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                log(`Response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Login response: ${JSON.stringify(data, null, 2)}`);
+                    
+                    if (data.success && (data.token || data.access_token)) {
+                        // Simulate what the auth service would do
+                        const token = data.token || data.access_token;
+                        const user = data.user || {};
+                        
+                        localStorage.setItem('authToken', token);
+                        localStorage.setItem('admin_session_token', token);
+                        localStorage.setItem('username', user.username || user.email || 'admin');
+                        localStorage.setItem('userEmail', user.email || 'admin@example.com');
+                        localStorage.setItem('isAdmin', user.is_admin ? 'true' : 'false');
+                        
+                        log('Tokens stored successfully');
+                        updateStatus('Login successful! Tokens stored.', 'success');
+                        checkStorage();
+                        
+                        // Test redirect to admin page
+                        setTimeout(() => {
+                            log('Redirecting to admin page...');
+                            window.location.href = '/admin';
+                        }, 2000);
+                    } else {
+                        log('Login failed: No token in response');
+                        updateStatus('Login failed: No token received', 'danger');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`Login failed: ${errorText}`);
+                    updateStatus(`Login failed: ${response.status}`, 'danger');
+                }
+            } catch (error) {
+                log(`Login error: ${error.message}`);
+                updateStatus(`Login error: ${error.message}`, 'danger');
+            }
+        }
+        
+        function clearStorage() {
+            const keys = ['authToken', 'admin_session_token', 'username', 'userEmail', 'isAdmin'];
+            keys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            
+            log('Storage cleared');
+            updateStatus('Storage cleared', 'info');
+            checkStorage();
+        }
+        
+        document.getElementById('testLogin').addEventListener('click', testLogin);
+        document.getElementById('clearStorage').addEventListener('click', clearStorage);
+        
+        // Initial check
+        checkStorage();
+        log('Test page loaded');
+    </script>
+</body>
+</html>

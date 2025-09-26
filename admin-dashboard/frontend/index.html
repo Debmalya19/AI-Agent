@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Customer Support System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/modern-dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Dashboard</h3>
+                <span class="badge">v2.0</span>
+            </div>
+            <div class="sidebar-user">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=667eea&color=fff&size=50" alt="User" class="user-avatar">
+                <div class="user-info">
+                    <h6 id="user-name">Admin User</h6>
+                    <span id="user-role" class="badge">Administrator</span>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="index.html" class="active" id="nav-dashboard">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="tickets.html" id="nav-tickets">
+                        <i class="bi bi-ticket-perforated"></i> Support Tickets
+                    </a>
+                </li>
+                <li>
+                    <a href="users.html" id="nav-users">
+                        <i class="bi bi-people"></i> User Management
+                    </a>
+                </li>
+                <li>
+                    <a href="integration.html" id="nav-integration">
+                        <i class="bi bi-link-45deg"></i> AI Integration
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.html" id="nav-settings">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="logs.html" id="nav-logs">
+                        <i class="bi bi-file-text"></i> System Logs
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <div class="top-nav">
+                <button id="sidebar-toggle" class="btn btn-outline-secondary btn-sm d-lg-none">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search dashboard...">
+                </div>
+                <div class="top-nav-right">
+                    <div class="notification">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="username">Admin</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="nav-profile">Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="nav-logout-dropdown">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Wrapper -->
+            <div class="content-wrapper">
+                <!-- Content Header -->
+                <div class="content-header">
+                    <h1 id="page-title">
+                        <i class="bi bi-speedometer2"></i>
+                        Dashboard
+                    </h1>
+                    <nav class="breadcrumb">
+                        <!-- Breadcrumbs will be populated by navigation.js -->
+                    </nav>
+                </div>
+
+                <!-- Dashboard content -->
+                <div id="content-dashboard" class="content-section">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-content">
+                                <div class="stat-card-info">
+                                    <h3 id="total-tickets">0</h3>
+                                    <p>Total Tickets</p>
+                                </div>
+                                <div class="stat-card-icon primary">
+                                    <i class="bi bi-ticket-perforated"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-content">
+                                <div class="stat-card-info">
+                                    <h3 id="open-tickets">0</h3>
+                                    <p>Open Tickets</p>
+                                </div>
+                                <div class="stat-card-icon success">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-content">
+                                <div class="stat-card-info">
+                                    <h3 id="pending-tickets">0</h3>
+                                    <p>Pending Tickets</p>
+                                </div>
+                                <div class="stat-card-icon warning">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-content">
+                                <div class="stat-card-info">
+                                    <h3 id="urgent-tickets">0</h3>
+                                    <p>Urgent Tickets</p>
+                                </div>
+                                <div class="stat-card-icon danger">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="row mb-4">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Ticket Activity</h5>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary active">Week</button>
+                                        <button type="button" class="btn btn-outline-primary">Month</button>
+                                        <button type="button" class="btn btn-outline-primary">Year</button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="ticketActivityChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Ticket Categories</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="ticketCategoriesChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Tickets -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Tickets</h5>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-refresh">
+                                    <i class="bi bi-arrow-repeat"></i> Refresh
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-export">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Title</th>
+                                            <th>Customer</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-tickets-table">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 mb-0">Loading tickets...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integration status section -->
+                <div id="content-integration" class="content-section d-none">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">AI Agent Integration Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div id="integration-status-indicator" class="status-indicator me-3"></div>
+                                    <h4 id="integration-status-text">Checking integration status...</h4>
+                                </div>
+                                <p id="integration-status-message">Verifying connection to AI Agent backend...</p>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">Synchronization Status</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group list-group-flush">
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Users Synchronized
+                                                    <span class="badge bg-primary rounded-pill" id="users-synced">0</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Tickets Synchronized
+                                                    <span class="badge bg-primary rounded-pill" id="tickets-synced">0</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Last Synchronization
+                                                    <span id="last-sync-time">Never</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">Actions</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <button class="btn btn-primary mb-2 w-100" id="btn-sync-now">
+                                                <i class="bi bi-arrow-repeat me-2"></i> Synchronize Now
+                                            </button>
+                                            <button class="btn btn-outline-secondary mb-2 w-100" id="btn-test-connection">
+                                                <i class="bi bi-lightning me-2"></i> Test Connection
+                                            </button>
+                                            <button class="btn btn-outline-secondary w-100" id="btn-view-logs">
+                                                <i class="bi bi-file-text me-2"></i> View Integration Logs
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="integration-config-form">
+                                        <div class="mb-3">
+                                            <label for="ai-agent-url" class="form-label">AI Agent Backend URL</label>
+                                            <input type="text" class="form-control" id="ai-agent-url" placeholder="http://localhost:8000">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="sync-interval" class="form-label">Synchronization Interval (minutes)</label>
+                                            <input type="number" class="form-control" id="sync-interval" min="5" value="15">
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="auto-sync" checked>
+                                            <label class="form-check-label" for="auto-sync">Enable Automatic Synchronization</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Save Configuration</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other content sections would be added here -->
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="alert alert-danger d-none" id="login-error"></div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p class="mb-2">Don't have an admin account?</p>
+                        <a href="register.html" class="btn btn-outline-secondary">Register as Admin</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+    
+    <!-- Enhanced Authentication System -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/auth-error-handler.js"></script>
+    <script src="js/api-connectivity-checker.js"></script>
+    <script src="js/admin-auth-service.js"></script>
+    
+    <!-- Legacy API Support -->
+    <script src="js/unified_api.js"></script>
+    <script src="js/api.js"></script>
+    
+    <!-- Navigation System -->
+    <script src="js/navigation.js"></script>
+    
+    <!-- UI Feedback System -->
+    <script src="js/ui-feedback.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/integration.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- Simple Auth Fix - Override complex authentication -->
+    <script src="js/simple-auth-fix.js"></script>
+</body>
+</html>

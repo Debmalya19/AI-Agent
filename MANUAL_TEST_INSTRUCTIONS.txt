@@ -1,0 +1,66 @@
+=== MANUAL TESTING INSTRUCTIONS ===
+
+1. Start your backend server:
+   python main.py
+
+2. Open browser to: http://localhost:8000/admin
+
+3. You should see:
+   - Login modal appears
+   - Email field pre-filled or enter: admin@example.com
+   - Password field enter: admin123
+
+4. Click "Login" button
+
+5. Expected result:
+   ✅ Login modal disappears immediately
+   ✅ Dashboard content becomes visible
+   ✅ Username appears in top-right dropdown
+   ✅ No page refresh occurs
+   ✅ You can navigate the dashboard
+
+6. If issues persist, check browser console (F12) for errors
+
+7. Alternative test page: http://localhost:8000/admin-dashboard/frontend/test-simple-login.html
+
+=== DEBUGGING STEPS ===
+
+If login modal still persists:
+
+1. Open browser console (F12)
+2. Check for JavaScript errors
+3. Run these commands in console:
+
+   // Check if tokens are stored
+   console.log('Tokens:', {
+       authToken: localStorage.getItem('authToken'),
+       adminToken: localStorage.getItem('admin_session_token')
+   });
+
+   // Force hide modal
+   const modal = document.getElementById('loginModal');
+   if (modal) {
+       modal.style.display = 'none';
+       document.body.classList.remove('modal-open');
+       document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+   }
+
+   // Check if simple auth fix loaded
+   console.log('Simple auth functions:', {
+       hideLoginModal: typeof hideLoginModal,
+       showDashboardContent: typeof showDashboardContent,
+       handleSimpleLogin: typeof handleSimpleLogin
+   });
+
+=== EXPECTED BROWSER CONSOLE LOGS ===
+
+When login works correctly, you should see:
+- "Simple auth fix loaded"
+- "Simple login handler attached"
+- "Simple login handler triggered"
+- "Sending login request..."
+- "Login response status: 200"
+- "Login successful, processing..."
+- "Tokens stored, hiding modal..."
+- "Modal hidden using direct DOM manipulation"
+- "Showing dashboard content..."

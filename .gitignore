@@ -1,0 +1,87 @@
+# Environment variables - NEVER commit these files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+ai_agent.db
+test_*.db
+
+# Logs
+*.log
+logs/
+admin_dashboard.log
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Flask
+instance/
+.webassets-cache
+
+# Migration backups
+migration_backups/
+migration_validation_backups/
+
+# Test artifacts
+test_report_*.json
+*_validation_*.json
+cookies.txt
+
+# Temporary files
+*.tmp
+*.temp
+debug_*.html

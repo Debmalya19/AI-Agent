@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - AI Agent Customer Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        select, button {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card h3 {
+            color: #667eea;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .metric-change.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .metric-change.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chart-container h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .customer-profile {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .customer-search {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .customer-search input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .timeline {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            padding: 1rem;
+            border-left: 3px solid #667eea;
+            margin-left: 1rem;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .timeline-item .timestamp {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item .event-type {
+            font-weight: 600;
+            color: #667eea;
+            text-transform: capitalize;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Analytics Dashboard</h1>
+        <p>Unified analytics combining AI Agent and Admin Dashboard metrics</p>
+    </div>
+
+    <div class="container">
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="period">Time Period</label>
+                <select id="period">
+                    <option value="day">Last 24 Hours</option>
+                    <option value="week" selected>Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="year">Last Year</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="groupBy">Group By</label>
+                <select id="groupBy">
+                    <option value="hour">Hour</option>
+                    <option value="day" selected>Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                </select>
+            </div>
+            <button onclick="refreshDashboard()">🔄 Refresh Data</button>
+            <button onclick="exportReport()">📄 Export Report</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">Loading analytics data...</div>
+
+        <!-- Error State -->
+        <div id="error" class="error" style="display: none;"></div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" style="display: none;">
+            <!-- Key Metrics -->
+            <div class="dashboard-grid" id="metrics-grid">
+                <!-- Metrics will be populated by JavaScript -->
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-container">
+                <h3>📈 Conversation Volume Trends</h3>
+                <div id="conversation-chart" class="chart-placeholder">
+                    Conversation volume chart will be displayed here
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>🎯 AI Agent Performance</h3>
+                <div id="performance-chart" class="chart-placeholder">
+                    AI agent performance metrics will be displayed here
+                </div>
+            </div>
+
+            <!-- Customer Profile Section -->
+            <div class="customer-profile">
+                <h3>👤 Customer Profile Lookup</h3>
+                <div class="customer-search">
+                    <input type="number" id="customerId" placeholder="Enter Customer ID">
+                    <button onclick="loadCustomerProfile()">🔍 Load Profile</button>
+                </div>
+                <div id="customer-data" style="display: none;">
+                    <div id="customer-info"></div>
+                    <h4>Recent Activity Timeline</h4>
+                    <div id="customer-timeline" class="timeline"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentAnalytics = null;
+        let sessionToken = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get session token from cookie
+            sessionToken = getCookie('session_token');
+            
+            if (!sessionToken) {
+                showError('Please log in to access the analytics dashboard');
+                return;
+            }
+
+            // Load initial data
+            refreshDashboard();
+        });
+
+        // Utility function to get cookie value
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Refresh dashboard data
+        async function refreshDashboard() {
+            showLoading();
+            
+            try {
+                const period = document.getElementById('period').value;
+                const response = await fetch(`/api/analytics/unified-dashboard?period=${period}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentAnalytics = data.analytics;
+                    displayAnalytics(data.analytics);
+                    loadConversationStatistics();
+                } else {
+                    throw new Error(data.message || 'Failed to load analytics');
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                showError(`Failed to load analytics: ${error.message}`);
+            }
+        }
+
+        // Load AI conversation statistics
+        async function loadConversationStatistics() {
+            try {
+                const period = document.getElementById('period').value;
+                const groupBy = document.getElementById('groupBy').value;
+                
+                const response = await fetch(`/api/analytics/ai-conversations?period=${period}&group_by=${groupBy}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        displayConversationChart(data.conversation_statistics);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading conversation statistics:', error);
+            }
+        }
+
+        // Display analytics data
+        function displayAnalytics(analytics) {
+            const metricsGrid = document.getElementById('metrics-grid');
+            metricsGrid.innerHTML = '';
+
+            // AI Agent Metrics
+            const aiMetrics = [
+                {
+                    title: '🤖 Total Conversations',
+                    value: analytics.conversation_metrics.total_conversations,
+                    label: 'AI interactions',
+                    change: '+12%'
+                },
+                {
+                    title: '✅ Success Rate',
+                    value: `${analytics.conversation_metrics.success_rate}%`,
+                    label: 'conversations resolved',
+                    change: '+5%'
+                },
+                {
+                    title: '👥 Unique Users',
+                    value: analytics.conversation_metrics.unique_users,
+                    label: 'active users',
+                    change: '+8%'
+                },
+                {
+                    title: '⚡ Avg Response Time',
+                    value: `${analytics.conversation_metrics.response_time_avg}s`,
+                    label: 'response time',
+                    change: '-3%'
+                }
+            ];
+
+            // Support Metrics
+            const supportMetrics = [
+                {
+                    title: '🎫 Total Tickets',
+                    value: analytics.ticket_metrics.total_tickets,
+                    label: 'support tickets',
+                    change: '+2%'
+                },
+                {
+                    title: '⏱️ Resolution Time',
+                    value: `${analytics.ticket_metrics.avg_resolution_time}h`,
+                    label: 'average resolution',
+                    change: '-10%'
+                },
+                {
+                    title: '😊 Satisfaction',
+                    value: `${analytics.ticket_metrics.satisfaction_avg}/5`,
+                    label: 'customer rating',
+                    change: '+0.2'
+                },
+                {
+                    title: '🔧 Open Tickets',
+                    value: analytics.ticket_metrics.open_tickets,
+                    label: 'currently open',
+                    change: '-5%'
+                }
+            ];
+
+            // User Engagement Metrics
+            const engagementMetrics = [
+                {
+                    title: '📅 Daily Active Users',
+                    value: analytics.user_engagement.active_users_daily,
+                    label: 'last 24 hours',
+                    change: '+15%'
+                },
+                {
+                    title: '📊 Weekly Active Users',
+                    value: analytics.user_engagement.active_users_weekly,
+                    label: 'last 7 days',
+                    change: '+7%'
+                },
+                {
+                    title: '🆕 New Users',
+                    value: analytics.user_engagement.new_users,
+                    label: 'this period',
+                    change: '+20%'
+                },
+                {
+                    title: '🔄 Retention Rate',
+                    value: `${analytics.user_engagement.user_retention_rate}%`,
+                    label: 'user retention',
+                    change: '+3%'
+                }
+            ];
+
+            // Combine all metrics
+            const allMetrics = [...aiMetrics, ...supportMetrics, ...engagementMetrics];
+
+            // Create metric cards
+            allMetrics.forEach(metric => {
+                const card = createMetricCard(metric);
+                metricsGrid.appendChild(card);
+            });
+
+            hideLoading();
+        }
+
+        // Create metric card element
+        function createMetricCard(metric) {
+            const card = document.createElement('div');
+            card.className = 'metric-card';
+            
+            const changeClass = metric.change.startsWith('+') ? 'positive' : 'negative';
+            
+            card.innerHTML = `
+                <h3>${metric.title}</h3>
+                <div class="metric-value">${metric.value}</div>
+                <div class="metric-label">${metric.label}</div>
+                <span class="metric-change ${changeClass}">${metric.change}</span>
+            `;
+            
+            return card;
+        }
+
+        // Display conversation chart data
+        function displayConversationChart(stats) {
+            const chartContainer = document.getElementById('conversation-chart');
+            
+            // Simple text-based chart for now
+            let chartHTML = '<div style="padding: 1rem;">';
+            chartHTML += `<p><strong>Period:</strong> ${stats.period.start_date} to ${stats.period.end_date}</p>`;
+            chartHTML += `<p><strong>Total Conversations:</strong> ${stats.summary.total_conversations}</p>`;
+            chartHTML += `<p><strong>Success Rate:</strong> ${stats.summary.success_rate}%</p>`;
+            
+            if (stats.tool_usage && Object.keys(stats.tool_usage).length > 0) {
+                chartHTML += '<h4>Most Used Tools:</h4><ul>';
+                Object.entries(stats.tool_usage)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 5)
+                    .forEach(([tool, count]) => {
+                        chartHTML += `<li>${tool}: ${count} uses</li>`;
+                    });
+                chartHTML += '</ul>';
+            }
+            
+            chartHTML += '</div>';
+            chartContainer.innerHTML = chartHTML;
+        }
+
+        // Load customer profile
+        async function loadCustomerProfile() {
+            const customerId = document.getElementById('customerId').value;
+            
+            if (!customerId) {
+                alert('Please enter a customer ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/analytics/customer/${customerId}/profile`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayCustomerProfile(data.customer_profile);
+                } else {
+                    throw new Error(data.message || 'Failed to load customer profile');
+                }
+            } catch (error) {
+                console.error('Error loading customer profile:', error);
+                alert(`Failed to load customer profile: ${error.message}`);
+            }
+        }
+
+        // Display customer profile
+        function displayCustomerProfile(profile) {
+            const customerData = document.getElementById('customer-data');
+            const customerInfo = document.getElementById('customer-info');
+            const customerTimeline = document.getElementById('customer-timeline');
+
+            // Display customer info
+            customerInfo.innerHTML = `
+                <h4>Customer Information</h4>
+                <p><strong>Name:</strong> ${profile.customer.full_name || 'N/A'}</p>
+                <p><strong>Email:</strong> ${profile.customer.email}</p>
+                <p><strong>Username:</strong> ${profile.customer.username}</p>
+                <p><strong>Role:</strong> ${profile.customer.role}</p>
+                <p><strong>Member Since:</strong> ${new Date(profile.customer.created_at).toLocaleDateString()}</p>
+                
+                <h4>Activity Summary</h4>
+                <p><strong>Total Conversations:</strong> ${profile.summary.total_conversations}</p>
+                <p><strong>Support Tickets:</strong> ${profile.summary.total_tickets}</p>
+                <p><strong>Average Satisfaction:</strong> ${profile.summary.avg_satisfaction}/5</p>
+                <p><strong>Voice Usage:</strong> ${profile.summary.voice_usage_count} interactions</p>
+            `;
+
+            // Display timeline
+            customerTimeline.innerHTML = '';
+            
+            if (profile.timeline && profile.timeline.length > 0) {
+                profile.timeline.forEach(event => {
+                    const timelineItem = document.createElement('div');
+                    timelineItem.className = 'timeline-item';
+                    
+                    timelineItem.innerHTML = `
+                        <div class="timestamp">${new Date(event.timestamp).toLocaleString()}</div>
+                        <div class="event-type">${event.type}</div>
+                        <div class="description">${event.description}</div>
+                        ${event.outcome ? `<div><strong>Outcome:</strong> ${event.outcome}</div>` : ''}
+                    `;
+                    
+                    customerTimeline.appendChild(timelineItem);
+                });
+            } else {
+                customerTimeline.innerHTML = '<p>No recent activity found.</p>';
+            }
+
+            customerData.style.display = 'block';
+        }
+
+        // Export report
+        async function exportReport() {
+            try {
+                const period = document.getElementById('period').value;
+                const response = await fetch(`/api/analytics/reports/unified?report_type=detailed`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        // Create and download JSON file
+                        const blob = new Blob([JSON.stringify(data.report, null, 2)], {
+                            type: 'application/json'
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }
+                }
+            } catch (error) {
+                console.error('Error exporting report:', error);
+                alert('Failed to export report');
+            }
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('dashboard-content').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(refreshDashboard, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

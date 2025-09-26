@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Registration - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/admin/css/styles.css">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card mt-5">
+                    <div class="card-header text-center">
+                        <h3><i class="bi bi-person-plus"></i> Admin Registration</h3>
+                        <p class="text-muted">Create a new admin account</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="register-form">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="full-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full-name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm-password" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirm-password" required>
+                            </div>
+                            <div id="register-error" class="alert alert-danger d-none"></div>
+                            <div id="register-success" class="alert alert-success d-none"></div>
+                            <button type="submit" class="btn btn-primary w-100">Register</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <a href="/admin" class="btn btn-link">Back to Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/js/unified_api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const registerForm = document.getElementById('register-form');
+            const registerError = document.getElementById('register-error');
+            const registerSuccess = document.getElementById('register-success');
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                registerError.classList.add('d-none');
+                registerSuccess.classList.add('d-none');
+
+                const username = document.getElementById('username').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const fullName = document.getElementById('full-name').value.trim();
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+
+                // Validation
+                if (!username || !email || !password) {
+                    registerError.textContent = 'Please fill in all required fields.';
+                    registerError.classList.remove('d-none');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    registerError.textContent = 'Passwords do not match.';
+                    registerError.classList.remove('d-none');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    registerError.textContent = 'Password must be at least 6 characters long.';
+                    registerError.classList.remove('d-none');
+                    return;
+                }
+
+                try {
+                    const data = await unifiedApi.register({
+                        username: username,
+                        email: email,
+                        full_name: fullName || null,
+                        password: password
+                    });
+
+                    if (data.success) {
+                        registerSuccess.textContent = 'Registration successful! You can now login.';
+                        registerSuccess.classList.remove('d-none');
+                        
+                        // Clear form
+                        registerForm.reset();
+                        
+                        // Redirect to login after 2 seconds
+                        setTimeout(() => {
+                            window.location.href = '/admin';
+                        }, 2000);
+                    } else {
+                        throw new Error(data.message || 'Registration failed');
+                    }
+                } catch (error) {
+                    registerError.textContent = error.message || 'An error occurred during registration. Please try again.';
+                    registerError.classList.remove('d-none');
+                    console.error('Registration error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

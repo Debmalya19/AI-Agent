@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Functionality Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .page-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Admin Dashboard Functionality Test</h1>
+        <p>This page tests the functionality of the admin dashboard pages.</p>
+        
+        <div class="test-section">
+            <h3>Test Controls</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <button class="btn btn-primary" onclick="runAllTests()">Run All Tests</button>
+                    <button class="btn btn-secondary" onclick="clearResults()">Clear Results</button>
+                    <button class="btn btn-success" onclick="testAdminLogin()">Test Admin Login</button>
+                </div>
+                <div class="col-md-6">
+                    <select class="form-select" id="pageSelector" onchange="loadPage()">
+                        <option value="">Select a page to test</option>
+                        <option value="index.html">Dashboard (index.html)</option>
+                        <option value="tickets.html">Tickets</option>
+                        <option value="users.html">Users</option>
+                        <option value="integration.html">Integration</option>
+                        <option value="settings.html">Settings</option>
+                        <option value="logs.html">Logs</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Results</h3>
+            <div id="testResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Page Preview</h3>
+            <div id="pagePreview">
+                <p>Select a page from the dropdown above to preview it.</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>File Existence Check</h3>
+            <div id="fileCheck"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class AdminFunctionalityTester {
+            constructor() {
+                this.pages = [
+                    'index.html',
+                    'tickets.html',
+                    'users.html',
+                    'integration.html',
+                    'settings.html',
+                    'logs.html'
+                ];
+                this.jsFiles = [
+                    'js/dashboard.js',
+                    'js/main.js',
+                    'js/auth.js',
+                    'js/navigation.js',
+                    'js/ui-feedback.js',
+                    'js/simple-auth-fix.js'
+                ];
+                this.cssFiles = [
+                    'css/modern-dashboard.css'
+                ];
+                this.testResults = [];
+            }
+
+            addTestResult(testName, status, message = '') {
+                const result = {
+                    testName,
+                    status, // 'pass', 'fail', 'warning'
+                    message,
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.testResults.push(result);
+                this.displayTestResult(result);
+            }
+
+            displayTestResult(result) {
+                const container = document.getElementById('testResults');
+                const resultDiv = document.createElement('div');
+                
+                let className = 'test-result ';
+                let icon = '';
+                
+                switch(result.status) {
+                    case 'pass':
+                        className += 'test-pass';
+                        icon = '✅';
+                        break;
+                    case 'fail':
+                        className += 'test-fail';
+                        icon = '❌';
+                        break;
+                    case 'warning':
+                        className += 'test-warning';
+                        icon = '⚠️';
+                        break;
+                }
+                
+                resultDiv.className = className;
+                resultDiv.innerHTML = `
+                    <strong>${icon} ${result.testName}</strong>
+                    ${result.message ? `<br><small>${result.message}</small>` : ''}
+                `;
+                
+                container.appendChild(resultDiv);
+            }
+
+            async testFileExistence() {
+                console.log('Testing file existence...');
+                
+                // Test HTML pages
+                for (const page of this.pages) {
+                    try {
+                        const response = await fetch(page, { method: 'HEAD' });
+                        if (response.ok) {
+                            this.addTestResult(`File: ${page}`, 'pass', 'File exists and accessible');
+                        } else {
+                            this.addTestResult(`File: ${page}`, 'fail', `HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) {
+                        this.addTestResult(`File: ${page}`, 'fail', `Error: ${error.message}`);
+                    }
+                }
+
+                // Test JavaScript files
+                for (const jsFile of this.jsFiles) {
+                    try {
+                        const response = await fetch(jsFile, { method: 'HEAD' });
+                        if (response.ok) {
+                            this.addTestResult(`JS: ${jsFile}`, 'pass', 'JavaScript file exists');
+                        } else {
+                            this.addTestResult(`JS: ${jsFile}`, 'fail', `HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) {
+                        this.addTestResult(`JS: ${jsFile}`, 'fail', `Error: ${error.message}`);
+                    }
+                }
+
+                // Test CSS files
+                for (const cssFile of this.cssFiles) {
+                    try {
+                        const response = await fetch(cssFile, { method: 'HEAD' });
+                        if (response.ok) {
+                            this.addTestResult(`CSS: ${cssFile}`, 'pass', 'CSS file exists');
+                        } else {
+                            this.addTestResult(`CSS: ${cssFile}`, 'fail', `HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) {
+                        this.addTestResult(`CSS: ${cssFile}`, 'fail', `Error: ${error.message}`);
+                    }
+                }
+            }
+
+            async testPageLoading() {
+                console.log('Testing page loading...');
+                
+                for (const page of this.pages) {
+                    try {
+                        const response = await fetch(page);
+                        if (response.ok) {
+                            const html = await response.text();
+                            
+                            // Check for basic HTML structure
+                            const hasDoctype = html.includes('<!DOCTYPE html>');
+                            const hasTitle = html.includes('<title>');
+                            const hasBootstrap = html.includes('bootstrap');
+                            const hasModernCSS = html.includes('modern-dashboard.css');
+                            
+                            let issues = [];
+                            if (!hasDoctype) issues.push('Missing DOCTYPE');
+                            if (!hasTitle) issues.push('Missing title');
+                            if (!hasBootstrap) issues.push('Missing Bootstrap');
+                            if (!hasModernCSS) issues.push('Missing modern CSS');
+                            
+                            if (issues.length === 0) {
+                                this.addTestResult(`Page Structure: ${page}`, 'pass', 'All required elements present');
+                            } else {
+                                this.addTestResult(`Page Structure: ${page}`, 'warning', `Issues: ${issues.join(', ')}`);
+                            }
+                        } else {
+                            this.addTestResult(`Page Structure: ${page}`, 'fail', `Cannot load page: HTTP ${response.status}`);
+                        }
+                    } catch (error) {
+                        this.addTestResult(`Page Structure: ${page}`, 'fail', `Error loading page: ${error.message}`);
+                    }
+                }
+            }
+
+            testJavaScriptLoading() {
+                console.log('Testing JavaScript loading...');
+                
+                // Test if Bootstrap is loaded
+                if (typeof bootstrap !== 'undefined') {
+                    this.addTestResult('Bootstrap JS', 'pass', 'Bootstrap JavaScript is loaded');
+                } else {
+                    this.addTestResult('Bootstrap JS', 'fail', 'Bootstrap JavaScript not loaded');
+                }
+
+                // Test if jQuery is available (optional)
+                if (typeof $ !== 'undefined') {
+                    this.addTestResult('jQuery', 'pass', 'jQuery is available');
+                } else {
+                    this.addTestResult('jQuery', 'warning', 'jQuery not available (may not be required)');
+                }
+
+                // Test local storage
+                try {
+                    localStorage.setItem('test', 'value');
+                    const testValue = localStorage.getItem('test');
+                    localStorage.removeItem('test');
+                    if (testValue === 'value') {
+                        this.addTestResult('Local Storage', 'pass', 'Local storage is functional');
+                    } else {
+                        this.addTestResult('Local Storage', 'fail', 'Local storage read/write failed');
+                    }
+                } catch (error) {
+                    this.addTestResult('Local Storage', 'fail', `Local storage error: ${error.message}`);
+                }
+            }
+
+            loadPage() {
+                const selector = document.getElementById('pageSelector');
+                const selectedPage = selector.value;
+                
+                if (!selectedPage) {
+                    document.getElementById('pagePreview').innerHTML = '<p>Select a page from the dropdown above to preview it.</p>';
+                    return;
+                }
+                
+                // Create iframe to load the page
+                const iframe = document.createElement('iframe');
+                iframe.src = selectedPage;
+                iframe.className = 'page-frame';
+                iframe.onload = () => {
+                    this.addTestResult(`Page Load: ${selectedPage}`, 'pass', 'Page loaded successfully in iframe');
+                };
+                iframe.onerror = () => {
+                    this.addTestResult(`Page Load: ${selectedPage}`, 'fail', 'Failed to load page in iframe');
+                };
+                
+                const previewContainer = document.getElementById('pagePreview');
+                previewContainer.innerHTML = `<h5>Preview: ${selectedPage}</h5>`;
+                previewContainer.appendChild(iframe);
+            }
+
+            async testAdminLogin() {
+                console.log('Testing admin login functionality...');
+                
+                // Test if we can access the login endpoint
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: 'test@example.com',
+                            password: 'test'
+                        })
+                    });
+                    
+                    if (response.status === 404) {
+                        this.addTestResult('Login Endpoint', 'warning', 'Login endpoint not found (404) - backend may not be running');
+                    } else if (response.status === 401 || response.status === 400) {
+                        this.addTestResult('Login Endpoint', 'pass', 'Login endpoint is accessible (returned expected error for test credentials)');
+                    } else {
+                        this.addTestResult('Login Endpoint', 'warning', `Login endpoint returned status: ${response.status}`);
+                    }
+                } catch (error) {
+                    this.addTestResult('Login Endpoint', 'fail', `Cannot reach login endpoint: ${error.message}`);
+                }
+                
+                // Test if login modal exists
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) {
+                    this.addTestResult('Login Modal', 'pass', 'Login modal element exists');
+                } else {
+                    this.addTestResult('Login Modal', 'fail', 'Login modal element not found');
+                }
+            }
+
+            async runAllTests() {
+                console.log('Running all tests...');
+                this.clearResults();
+                
+                // Run tests sequentially
+                await this.testFileExistence();
+                await this.testPageLoading();
+                this.testJavaScriptLoading();
+                await this.testAdminLogin();
+                
+                console.log('All tests completed');
+                
+                // Summary
+                const totalTests = this.testResults.length;
+                const passedTests = this.testResults.filter(r => r.status === 'pass').length;
+                const failedTests = this.testResults.filter(r => r.status === 'fail').length;
+                const warningTests = this.testResults.filter(r => r.status === 'warning').length;
+                
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'test-result test-' + (failedTests > 0 ? 'fail' : warningTests > 0 ? 'warning' : 'pass');
+                summaryDiv.innerHTML = `
+                    <strong>Test Summary</strong><br>
+                    Total: ${totalTests} | Passed: ${passedTests} | Failed: ${failedTests} | Warnings: ${warningTests}
+                `;
+                
+                const container = document.getElementById('testResults');
+                container.insertBefore(summaryDiv, container.firstChild);
+            }
+
+            clearResults() {
+                this.testResults = [];
+                document.getElementById('testResults').innerHTML = '';
+            }
+        }
+
+        // Initialize tester
+        const tester = new AdminFunctionalityTester();
+
+        // Global functions
+        function runAllTests() {
+            tester.runAllTests();
+        }
+
+        function clearResults() {
+            tester.clearResults();
+        }
+
+        function loadPage() {
+            tester.loadPage();
+        }
+
+        function testAdminLogin() {
+            tester.testAdminLogin();
+        }
+
+        // Auto-run basic tests on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin Functionality Tester loaded');
+            // Uncomment to auto-run tests
+            // setTimeout(() => tester.runAllTests(), 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2025-09-26T09:58:57.469374+00:00",
+  "database_url": "localhost:5432/ai_agent",
+  "tables": [],
+  "indexes": [],
+  "constraints": [],
+  "sequences": []
+}

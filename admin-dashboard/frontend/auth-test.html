@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Authentication Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
+    <style>
+        .debug-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .log-output {
+            background-color: #000;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 0.875rem;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Enhanced Authentication Test</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="test-login-form">
+                            <div class="mb-3">
+                                <label for="test-email" class="form-label">Email/Username</label>
+                                <input type="text" class="form-control" id="test-email" value="admin@example.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="test-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="test-password" value="admin123">
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="debug-mode" checked>
+                                <label class="form-check-label" for="debug-mode">Enable Debug Mode</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="test-login-btn">Test Login</button>
+                        </form>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-secondary btn-sm me-2" id="test-connectivity">Test Connectivity</button>
+                            <button class="btn btn-secondary btn-sm me-2" id="test-session">Check Session</button>
+                            <button class="btn btn-danger btn-sm" id="clear-session">Clear Session</button>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3 d-none" id="test-result"></div>
+                        <div class="alert alert-danger mt-3 d-none" id="test-error"></div>
+                    </div>
+                </div>
+                
+                <div class="debug-section mt-4">
+                    <h6>Session Diagnostics</h6>
+                    <div id="session-diagnostics">
+                        <p class="text-muted">Click "Check Session" to view diagnostics</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Debug Log</h5>
+                        <button class="btn btn-sm btn-outline-secondary" id="clear-log">Clear Log</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="log-output" id="debug-log"></div>
+                    </div>
+                </div>
+                
+                <div class="debug-section mt-4">
+                    <h6>Error Statistics</h6>
+                    <div id="error-stats">
+                        <p class="text-muted">No errors logged yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/js/session-manager.js"></script>
+    <script src="/admin/js/auth-error-handler.js"></script>
+    <script src="/admin/js/api-connectivity-checker.js"></script>
+    <script src="/admin/js/admin-auth-service.js"></script>
+    
+    <script>
+        let adminAuthService;
+        let logContainer;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            logContainer = document.getElementById('debug-log');
+            
+            // Enable debug mode by default for testing
+            localStorage.setItem('admin_debug', 'true');
+            
+            // Initialize enhanced auth service
+            adminAuthService = new AdminAuthService();
+            
+            log('Enhanced Authentication Test Page Loaded');
+            log('AdminAuthService initialized');
+            
+            // Override console.log to capture debug output
+            const originalLog = console.log;
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                if (args[0] && args[0].includes('[AdminAuthService]') || 
+                    args[0] && args[0].includes('[SessionManager]') ||
+                    args[0] && args[0].includes('[AuthErrorHandler]') ||
+                    args[0] && args[0].includes('[APIConnectivityChecker]')) {
+                    log(args.join(' '));
+                }
+            };
+            
+            // Test form handler
+            document.getElementById('test-login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('test-email').value;
+                const password = document.getElementById('test-password').value;
+                const debugMode = document.getElementById('debug-mode').checked;
+                
+                localStorage.setItem('admin_debug', debugMode ? 'true' : 'false');
+                
+                log(`Testing login with email: ${email}`);
+                
+                try {
+                    const result = await adminAuthService.login({ email, password });
+                    
+                    if (result.success) {
+                        showResult('Login successful!', 'success');
+                        log(`Login successful for user: ${result.user.username}`);
+                    } else {
+                        showResult('Login failed: ' + result.error.message, 'error');
+                        log(`Login failed: ${result.error.message}`);
+                    }
+                } catch (error) {
+                    showResult('Login error: ' + error.message, 'error');
+                    log(`Login error: ${error.message}`);
+                }
+            });
+            
+            // Connectivity test
+            document.getElementById('test-connectivity').addEventListener('click', async () => {
+                log('Testing API connectivity...');
+                
+                try {
+                    const checker = new APIConnectivityChecker();
+                    const report = await checker.generateReport();
+                    
+                    log(`Connectivity test completed. Status: ${report.overall_status}`);
+                    showResult(`Connectivity: ${report.overall_status}`, 
+                              report.overall_status === 'healthy' ? 'success' : 'error');
+                    
+                    console.log('Connectivity Report:', report);
+                } catch (error) {
+                    log(`Connectivity test failed: ${error.message}`);
+                    showResult('Connectivity test failed: ' + error.message, 'error');
+                }
+            });
+            
+            // Session check
+            document.getElementById('test-session').addEventListener('click', () => {
+                log('Checking session status...');
+                
+                const isAuth = adminAuthService.isAuthenticated();
+                const user = adminAuthService.getCurrentUser();
+                const diagnostics = adminAuthService.sessionManager.getDiagnostics();
+                
+                log(`Session authenticated: ${isAuth}`);
+                if (user) {
+                    log(`Current user: ${user.username || user.email}`);
+                }
+                
+                // Display diagnostics
+                const diagContainer = document.getElementById('session-diagnostics');
+                diagContainer.innerHTML = `
+                    <div class="row">
+                        <div class="col-6"><strong>Authenticated:</strong></div>
+                        <div class="col-6">${isAuth ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>Has Token:</strong></div>
+                        <div class="col-6">${diagnostics.hasToken ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>Has User:</strong></div>
+                        <div class="col-6">${diagnostics.hasUser ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>Session Valid:</strong></div>
+                        <div class="col-6">${diagnostics.isValid ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>LocalStorage:</strong></div>
+                        <div class="col-6">${diagnostics.storageAvailable.localStorage ? 'Available' : 'Unavailable'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>Cookies:</strong></div>
+                        <div class="col-6">${diagnostics.storageAvailable.cookies ? 'Enabled' : 'Disabled'}</div>
+                    </div>
+                `;
+                
+                showResult(`Session check completed. Authenticated: ${isAuth}`, 
+                          isAuth ? 'success' : 'error');
+            });
+            
+            // Clear session
+            document.getElementById('clear-session').addEventListener('click', () => {
+                log('Clearing session...');
+                adminAuthService.sessionManager.clearSession();
+                log('Session cleared');
+                showResult('Session cleared', 'success');
+            });
+            
+            // Clear log
+            document.getElementById('clear-log').addEventListener('click', () => {
+                logContainer.innerHTML = '';
+            });
+            
+            // Update error statistics periodically
+            setInterval(updateErrorStats, 5000);
+        });
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContainer.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function showResult(message, type) {
+            const resultElement = document.getElementById('test-result');
+            const errorElement = document.getElementById('test-error');
+            
+            // Hide both first
+            resultElement.classList.add('d-none');
+            errorElement.classList.add('d-none');
+            
+            if (type === 'success') {
+                resultElement.textContent = message;
+                resultElement.classList.remove('d-none');
+            } else {
+                errorElement.textContent = message;
+                errorElement.classList.remove('d-none');
+            }
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                resultElement.classList.add('d-none');
+                errorElement.classList.add('d-none');
+            }, 5000);
+        }
+        
+        function updateErrorStats() {
+            if (window.AuthErrorHandler) {
+                const errorHandler = new AuthErrorHandler();
+                const stats = errorHandler.getErrorStatistics();
+                
+                const statsContainer = document.getElementById('error-stats');
+                if (stats.total_errors > 0) {
+                    statsContainer.innerHTML = `
+                        <div><strong>Total Errors:</strong> ${stats.total_errors}</div>
+                        <div><strong>By Category:</strong></div>
+                        <ul class="mb-0">
+                            ${Object.entries(stats.by_category).map(([cat, count]) => 
+                                `<li>${cat}: ${count}</li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                } else {
+                    statsContainer.innerHTML = '<p class="text-muted mb-0">No errors logged yet</p>';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

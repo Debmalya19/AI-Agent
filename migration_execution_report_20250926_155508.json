@@ -1,0 +1,325 @@
+{
+  "start_time": "2025-09-26T15:55:08.617942",
+  "end_time": "2025-09-26T15:55:09.073324",
+  "total_tables": 39,
+  "successful_tables": 39,
+  "failed_tables": 0,
+  "total_records": 119,
+  "migrated_records": 119,
+  "errors": [],
+  "rollback_available": true,
+  "table_results": [
+    {
+      "table_name": "knowledge_entries",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "customers",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "users",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "user_sessions",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "voice_settings",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "voice_analytics",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "tickets",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "ticket_comments",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "ticket_activities",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "orders",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "support_intents",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "support_responses",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "chat_history",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_users",
+      "source_count": 16,
+      "migrated_count": 16,
+      "errors": [],
+      "duration_seconds": 0.101004,
+      "success": true
+    },
+    {
+      "table_name": "unified_user_sessions",
+      "source_count": 79,
+      "migrated_count": 79,
+      "errors": [],
+      "duration_seconds": 0.05032,
+      "success": true
+    },
+    {
+      "table_name": "unified_tickets",
+      "source_count": 11,
+      "migrated_count": 11,
+      "errors": [],
+      "duration_seconds": 0.030253,
+      "success": true
+    },
+    {
+      "table_name": "unified_ticket_comments",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_ticket_activities",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_chat_sessions",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_chat_messages",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_performance_metrics",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_customer_satisfaction",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_voice_settings",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_voice_analytics",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_knowledge_entries",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_orders",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_support_intents",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_support_responses",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "unified_chat_history",
+      "source_count": 12,
+      "migrated_count": 12,
+      "errors": [],
+      "duration_seconds": 0.039288,
+      "success": true
+    },
+    {
+      "table_name": "diagnostic_error_logs",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "enhanced_chat_history",
+      "source_count": 1,
+      "migrated_count": 1,
+      "errors": [],
+      "duration_seconds": 0.021703,
+      "success": true
+    },
+    {
+      "table_name": "memory_context_cache",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "tool_usage_metrics",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "conversation_summaries",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "memory_configuration",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "memory_health_metrics",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "enhanced_user_sessions",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "data_processing_consent",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    },
+    {
+      "table_name": "data_subject_rights",
+      "source_count": 0,
+      "migrated_count": 0,
+      "errors": [],
+      "duration_seconds": 0.0,
+      "success": true
+    }
+  ]
+}

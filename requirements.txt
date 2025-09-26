@@ -11,7 +11,10 @@ pandas
 python-multipart
 httpx
 bcrypt
+PyJWT
 pytest
 google-generativeai
 jinja2
 psycopg2-binary
+cryptography
+tabulate
